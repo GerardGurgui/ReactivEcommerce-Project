@@ -1,10 +1,10 @@
-package Ecommerce.Reactive.UserManagement_service;
+package Ecommerce.usermanagement;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class UserManagementServiceApplicationTests {
+class AppUserManagementTests {
 
 	@Test
 	void contextLoads() {

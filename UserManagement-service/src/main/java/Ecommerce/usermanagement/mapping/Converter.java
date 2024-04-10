@@ -1,0 +1,39 @@
+package Ecommerce.usermanagement.mapping;
+
+import Ecommerce.usermanagement.document.User;
+import Ecommerce.usermanagement.dto.input.UserInputDto;
+import Ecommerce.usermanagement.dto.output.UserBasicOutputDto;
+import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Component;
+
+@Component
+public class Converter {
+
+    public static User convertFromDtoToUser(UserInputDto userDto) {
+
+        User user = new User();
+
+        BeanUtils.copyProperties(userDto, user);
+        return user;
+
+    }
+
+    public static UserBasicOutputDto convertToDtoBasic(User user) {
+
+        UserBasicOutputDto userDto = new UserBasicOutputDto();
+
+        BeanUtils.copyProperties(user, userDto);
+
+        return userDto;
+    }
+
+    public static UserInfoOutputDto convertToDtoInfo(User user) {
+
+        UserInfoOutputDto userDto = new UserInfoOutputDto();
+
+        BeanUtils.copyProperties(user, userDto);
+
+        return userDto;
+    }
+}
