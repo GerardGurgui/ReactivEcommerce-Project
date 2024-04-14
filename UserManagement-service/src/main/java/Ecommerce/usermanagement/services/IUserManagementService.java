@@ -11,9 +11,9 @@ public interface IUserManagementService {
 
     Mono<?> addUser(UserInputDto userInputDto);
 
-    Mono<UserBasicOutputDto> getUserByUuid(UserUuidDto userUuidDto);
+    Mono<UserBasicOutputDto> getUserByUuid(String userUuidDto);
 
-    Mono<UserInfoOutputDto> getUserInfoByUuid(UserUuidDto userUuidDto);
+    Mono<UserInfoOutputDto> getUserInfoByUuid(String userUuidDto);
 
     Mono<UserBasicOutputDto> getUserByEmail(UserEmailDto userEmailDto);
 }

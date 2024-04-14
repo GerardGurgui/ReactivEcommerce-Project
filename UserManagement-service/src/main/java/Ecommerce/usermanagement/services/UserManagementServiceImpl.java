@@ -31,6 +31,7 @@ public class UserManagementServiceImpl implements IUserManagementService {
     private PasswordEncoder passwordEncoder;
 
 
+
     private Set<Roles> assignRole(Set<String> rolenames){
 
         Set<Roles> userRoles = new HashSet<>();
@@ -102,19 +103,19 @@ public class UserManagementServiceImpl implements IUserManagementService {
     }
 
     @Override
-    public Mono<UserBasicOutputDto> getUserByUuid(UserUuidDto userUuidDto) {
+    public Mono<UserBasicOutputDto> getUserByUuid(String userUuidDto) {
 
-    return userRepository.findByUuid(userUuidDto.getUuid())
+    return userRepository.findByUuid(userUuidDto)
             .map(Converter::convertToDtoBasic)
-            .switchIfEmpty(Mono.error(new UserNotFoundException("User not found", userUuidDto.getUuid())));
+            .switchIfEmpty(Mono.error(new UserNotFoundException("User not found", userUuidDto)));
     }
 
     @Override
-    public Mono<UserInfoOutputDto> getUserInfoByUuid(UserUuidDto userUuidDto) {
+    public Mono<UserInfoOutputDto> getUserInfoByUuid(String userUuidDto) {
 
-        return userRepository.findByUuid(userUuidDto.getUuid())
+        return userRepository.findByUuid(userUuidDto)
                 .map(Converter::convertToDtoInfo)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User not found", userUuidDto.getUuid())));
+                .switchIfEmpty(Mono.error(new UserNotFoundException("User not found", userUuidDto)));
 
     }
 
@@ -125,6 +126,10 @@ public class UserManagementServiceImpl implements IUserManagementService {
                 .map(Converter::convertToDtoBasic)
                 .switchIfEmpty(Mono.error(new EmailNotFoundException("Email not found", userEmailDto.getEmail())));
     }
+
+    ////COMUNICACION CON MICROSERVICIO MYDATA
+
+
 
 
 }
