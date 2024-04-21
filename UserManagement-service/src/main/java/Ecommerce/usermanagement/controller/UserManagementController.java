@@ -1,5 +1,6 @@
 package Ecommerce.usermanagement.controller;
 
+import Ecommerce.usermanagement.document.User;
 import Ecommerce.usermanagement.dto.input.UserEmailDto;
 import Ecommerce.usermanagement.dto.input.UserInputDto;
 import Ecommerce.usermanagement.dto.input.UserUuidDto;
@@ -38,6 +39,15 @@ public class UserManagementController {
     public Mono<?> getUserInfoByEmail(@PathVariable UserEmailDto email) {
 
         return userManagementService.getUserByEmail(email);
+    }
+
+    ////CONNECTION WITH MYDATA-SERVICE
+    //CARTS
+
+    @PutMapping("/updateUserHasCart/{uuid}")
+    public Mono<User> updateUserHasCart(@PathVariable String uuid){
+
+        return userManagementService.updateUserHasCart(uuid);
     }
 
 

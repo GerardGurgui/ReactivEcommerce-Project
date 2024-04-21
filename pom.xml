@@ -25,6 +25,7 @@
 	</properties>
 
 	<modules>
+		<module>ApiGateway-service</module>
 		<module>MyData-service</module>
 		<module>Payment-service</module>
 		<module>UserAuthentication-service</module>

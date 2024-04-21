@@ -24,10 +24,13 @@ import java.util.Set;
 @Document(collection = "users")
 public class User {
 
+    //COMPROBAR CONSTRASEÑA? INTRODUCIR 2 VECES?
+
     @Id
     private ObjectId id;
 
     @Field(name = "uuid")
+    @Indexed(unique = true)
     private String uuid;
 
     @Field(name = "username")

@@ -5,48 +5,32 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.*;
-import java.util.LinkedHashSet;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "carts")
+@Table("carts")
 public class Cart {
 
     //falta mejorar e implementar bien atributos, metodos y calculos
     // eliminar productos, calcular total, ordenar productos, etc
+    //faltan validations! o en dtos??
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(name = "user_uuid")
+    @Column("user_uuid")
     private String userUuid;
-    @Column(name = "cart_name")
     private String name;
-    @Column(name = "products_quantity")
-    private int quantity;
-    @Column(name = "total_price")
-    private double total;
+    private int total_products;
+    private double total_price;
 
-    @ManyToMany
-    @JoinTable(
-        name = "cart_products",
-        joinColumns = @JoinColumn(name = "cart_id"),
-        inverseJoinColumns = @JoinColumn(name = "product_id"))
-    private LinkedHashSet<Product> cartProducts; // LinkedHashSet is used to maintain the order of insertion
-
-
-    ////-----------------Methods-----------------////
-
-    public void addProduct(Product product){
-
-        if(cartProducts == null){
-            cartProducts = new LinkedHashSet<>();
-        }
-        cartProducts.add(product);
-    }
+    //que mas atributos deberia tener un carrito??
 
 
 }

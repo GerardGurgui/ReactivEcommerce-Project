@@ -4,7 +4,6 @@ import Ecommerce.usermanagement.document.Roles;
 import Ecommerce.usermanagement.document.User;
 import Ecommerce.usermanagement.dto.input.UserEmailDto;
 import Ecommerce.usermanagement.dto.input.UserInputDto;
-import Ecommerce.usermanagement.dto.input.UserUuidDto;
 import Ecommerce.usermanagement.dto.output.UserBasicOutputDto;
 import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;
 import Ecommerce.usermanagement.exceptions.EmailExistsException;
@@ -102,6 +101,8 @@ public class UserManagementServiceImpl implements IUserManagementService {
         }));
     }
 
+    ////GETS
+
     @Override
     public Mono<UserBasicOutputDto> getUserByUuid(String userUuidDto) {
 
@@ -129,7 +130,18 @@ public class UserManagementServiceImpl implements IUserManagementService {
 
     ////COMUNICACION CON MICROSERVICIO MYDATA
 
+    ////CARTS
+    public Mono<User> updateUserHasCart(String userUuid) {
 
+        //faltan comprobaciones y mejoras
+        // pero creo que no hace falta comprobar si el user existe, ya que la llamada
+        //viene de myData service ya se hace alli la comprobacion
 
+        return userRepository.findByUuid(userUuid)
+                .flatMap(user -> {
+                    user.setActiveCart(true);
+                    return userRepository.save(user);
+                });
+    }
 
 }

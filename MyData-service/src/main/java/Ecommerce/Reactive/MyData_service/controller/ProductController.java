@@ -1,5 +1,6 @@
 package Ecommerce.Reactive.MyData_service.controller;
 
+import Ecommerce.Reactive.MyData_service.DTO.ProductDTO;
 import Ecommerce.Reactive.MyData_service.entity.Product;
 import Ecommerce.Reactive.MyData_service.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +15,9 @@ public class ProductController {
     private ProductService productService;
 
     @PostMapping("/add")
-    public Mono<Product> addProduct(@RequestBody Product product) {
+    public Mono<Product> addProduct(@RequestBody ProductDTO productDTO) {
 
-       return productService.addProduct(product);
+       return productService.addProduct(productDTO);
 
     }
 
