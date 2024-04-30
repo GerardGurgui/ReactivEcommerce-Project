@@ -1,4 +1,4 @@
-package Ecommerce.Reactive.MyData_service.entity;
+package ReactiveEcommerce.ProductCatalog_service.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,8 +7,6 @@ import lombok.Setter;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
-
-import java.util.List;
 
 @Getter @Setter
 @NoArgsConstructor

@@ -2,7 +2,6 @@ package Ecommerce.Reactive.MyData_service.controller;
 
 import Ecommerce.Reactive.MyData_service.DTO.CartDto;
 import Ecommerce.Reactive.MyData_service.entity.Cart;
-import Ecommerce.Reactive.MyData_service.entity.Product;
 import Ecommerce.Reactive.MyData_service.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

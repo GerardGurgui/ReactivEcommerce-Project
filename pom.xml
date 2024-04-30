@@ -30,6 +30,7 @@
 		<module>Payment-service</module>
 		<module>UserAuthentication-service</module>
 		<module>UserManagement-service</module>
+		<module>ProductCatalog-service</module>
 	</modules>
 
 	<dependencies>

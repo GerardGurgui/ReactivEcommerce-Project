@@ -5,7 +5,6 @@ import Ecommerce.Reactive.MyData_service.exceptions.CartNotFoundException;
 import Ecommerce.Reactive.MyData_service.exceptions.UserNotFoundException;
 import Ecommerce.Reactive.MyData_service.mapping.IMapper;
 import Ecommerce.Reactive.MyData_service.repository.ICartRepository;
-import Ecommerce.Reactive.MyData_service.repository.IProductRepository;
 import Ecommerce.Reactive.MyData_service.service.userManagement.UserManagementConnectorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,8 +20,6 @@ public class CartService {
 
     private final ICartRepository cartRepository;
 
-    private final IProductRepository productRepository;
-
     private final UserManagementConnectorService userMngConnectorService;
 
     @Autowired
@@ -30,10 +27,8 @@ public class CartService {
 
     @Autowired
     public CartService(ICartRepository cartRepository,
-                       IProductRepository productRepository,
                        UserManagementConnectorService userMngConnectorService) {
         this.cartRepository = cartRepository;
-        this.productRepository = productRepository;
         this.userMngConnectorService = userMngConnectorService;
     }
 

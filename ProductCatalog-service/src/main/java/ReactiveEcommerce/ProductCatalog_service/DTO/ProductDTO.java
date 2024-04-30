@@ -1,11 +1,9 @@
-package Ecommerce.Reactive.MyData_service.DTO;
+package ReactiveEcommerce.ProductCatalog_service.DTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.List;
 
 @Getter
 @Setter
