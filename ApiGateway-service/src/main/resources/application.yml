@@ -1,0 +1,13 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: mydata_service
+          uri: lb://mydata-service
+          predicates:
+            - Path=/mydata/**
+        - id: payment_service
+          uri: lb://payment-service
+          predicates:
+            - Path=/payment/**
+      # Agrega más rutas según sea necesario
