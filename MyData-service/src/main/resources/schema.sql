@@ -8,10 +8,10 @@ CREATE TABLE IF NOT EXISTS products (
 
 CREATE TABLE IF NOT EXISTS carts (
   id SERIAL PRIMARY KEY,
-  user_uuid varchar(255) DEFAULT NULL,
+  userUuid varchar(255) DEFAULT NULL,
   name varchar(255) DEFAULT NULL,
-  total_products int DEFAULT NULL,
-  total_price double precision DEFAULT NULL
+  totalProducts int DEFAULT NULL,
+  totalPrice double precision DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS cart_products (

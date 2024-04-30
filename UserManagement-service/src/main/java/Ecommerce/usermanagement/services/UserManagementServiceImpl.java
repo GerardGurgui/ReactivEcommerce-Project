@@ -15,6 +15,7 @@ import Ecommerce.usermanagement.repository.IUsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.text.SimpleDateFormat;
@@ -24,11 +25,11 @@ import java.util.*;
 @Service
 public class UserManagementServiceImpl implements IUserManagementService {
 
+
     @Autowired
     private IUsersRepository userRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
-
 
 
     private Set<Roles> assignRole(Set<String> rolenames){
@@ -44,9 +45,7 @@ public class UserManagementServiceImpl implements IUserManagementService {
                 userRoles.add(Roles.USER);
             }
         }
-
         return userRoles;
-
     }
 
     ////CHECKS
@@ -70,7 +69,7 @@ public class UserManagementServiceImpl implements IUserManagementService {
 
     ///// CRUD
     @Override
-    public Mono<?> addUser(UserInputDto userInputDto) {
+    public Mono<UserInfoOutputDto> addUser(UserInputDto userInputDto) {
 
     return Mono.when(
             checkIfUserExistsByEmail(userInputDto.getEmail())
@@ -98,7 +97,8 @@ public class UserManagementServiceImpl implements IUserManagementService {
             user.setActive(true);
             user.addRoleUser(); //default role
             return userRepository.save(user);
-        }));
+        }))
+        .map(Converter::convertToDtoInfo);
     }
 
     ////GETS
@@ -128,10 +128,26 @@ public class UserManagementServiceImpl implements IUserManagementService {
                 .switchIfEmpty(Mono.error(new EmailNotFoundException("Email not found", userEmailDto.getEmail())));
     }
 
+
+    public Flux<UserInfoOutputDto> getAllUsersInfo() {
+
+        return userRepository.findAll()
+                .map(Converter::convertToDtoInfo);
+    }
+
+    ////--> FLUX con operador .filter para filtrar por:
+    // 1. user.isActive == true
+    // 2. user.isActiveCart == true
+    // 3. user.totalSpent > 0
+    // 4. user.totalPurchase > 0
+    // 5. user.getRoles().contains(Roles.USER)
+    // 6. user.getRoles().contains(Roles.ADMIN) etc
+
+
     ////COMUNICACION CON MICROSERVICIO MYDATA
 
     ////CARTS
-    public Mono<User> updateUserHasCart(String userUuid) {
+    public Mono<UserInfoOutputDto> updateUserHasCart(String userUuid) {
 
         //faltan comprobaciones y mejoras
         // pero creo que no hace falta comprobar si el user existe, ya que la llamada
@@ -141,7 +157,8 @@ public class UserManagementServiceImpl implements IUserManagementService {
                 .flatMap(user -> {
                     user.setActiveCart(true);
                     return userRepository.save(user);
-                });
+                })
+                .map(Converter::convertToDtoInfo);
     }
 
 }

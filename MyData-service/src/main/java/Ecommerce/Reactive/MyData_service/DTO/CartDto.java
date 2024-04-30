@@ -10,9 +10,9 @@ import lombok.Setter;
 @NoArgsConstructor
 public class CartDto {
 
-    private String user_uuid;
+    private String userUuid;
     private String name;
-    private int total_products;
-    private double total_price;
+    private int totalProducts;
+    private double totalPrice;
 
 }

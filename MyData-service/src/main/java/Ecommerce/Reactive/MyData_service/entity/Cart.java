@@ -9,9 +9,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,9 +23,14 @@ public class Cart {
     private Long id;
     @Column("user_uuid")
     private String userUuid;
+
     private String name;
-    private int total_products;
-    private double total_price;
+
+    @Column("total_products")
+    private int totalProducts;
+
+    @Column("total_price")
+    private double totalPrice;
 
     //que mas atributos deberia tener un carrito??
 

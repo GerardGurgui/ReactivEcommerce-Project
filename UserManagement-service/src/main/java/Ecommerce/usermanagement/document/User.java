@@ -39,11 +39,9 @@ public class User {
     private String username;
 
     @NotNull
-    @Field(name = "firstname")
     private String firstname;
 
     @NotNull
-    @Field(name = "lastname")
     private String lastname;
 
     @Field(name = "phone")
@@ -82,6 +80,10 @@ public class User {
     @Field(name = "roles")
     @JsonManagedReference // manejar serializacion de los usuarios
     private Set<Roles> roles;
+
+    //pendiente de implementar
+
+//    private Set<Cart> carts;
 
     //falta relaciones, carritos etc
     //posible ampliacion, ultima conexion etc
