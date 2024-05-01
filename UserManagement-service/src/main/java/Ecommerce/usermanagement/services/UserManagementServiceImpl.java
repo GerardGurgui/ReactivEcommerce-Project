@@ -28,6 +28,7 @@ public class UserManagementServiceImpl implements IUserManagementService {
 
     @Autowired
     private IUsersRepository userRepository;
+
     @Autowired
     private PasswordEncoder passwordEncoder;
 

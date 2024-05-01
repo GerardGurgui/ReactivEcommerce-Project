@@ -4,6 +4,7 @@ import Ecommerce.Reactive.MyData_service.DTO.CartDto;
 import Ecommerce.Reactive.MyData_service.entity.Cart;
 import Ecommerce.Reactive.MyData_service.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -23,17 +24,9 @@ public class CartController {
     @PostMapping("/createCart/{userUuid}")
     public ResponseEntity<Mono<Cart>> createCart(@RequestBody CartDto cartDto, @PathVariable String userUuid) {
 
-        //revisar responseEntity o como lo hago
-
-        return ResponseEntity.ok(cartService.saveCartForUser(cartDto, userUuid));
+        return new ResponseEntity<>(cartService.saveCartForUser(cartDto, userUuid), HttpStatus.CREATED);
     }
 
-//    @PostMapping("/addProductToCart/{idProduct}/{idCart}")
-//    public ResponseEntity<Mono<Cart>> addToCart(@PathVariable Long idProduct, @PathVariable Long idCart) {
-//
-//        return ResponseEntity.ok(cartService.addProductToCart(idProduct, idCart));
-//
-//    }
 
     @GetMapping("/getCart/{idCart}")
     public ResponseEntity<Mono<Cart>> getCart(@PathVariable Long idCart) {

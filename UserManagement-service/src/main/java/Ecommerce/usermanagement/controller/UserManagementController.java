@@ -19,8 +19,12 @@ import reactor.core.publisher.Mono;
 public class UserManagementController {
 
 
-    @Autowired
     private UserManagementServiceImpl userManagementService;
+
+    @Autowired
+    public UserManagementController(UserManagementServiceImpl userManagementService) {
+        this.userManagementService = userManagementService;
+    }
 
 
     @PostMapping("/addUser")

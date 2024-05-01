@@ -39,7 +39,7 @@ public class UserManagementConnectorService {
                 .uri("/getUserBasic/{uuid}", uuid)
                 .retrieve()
                 //si llega un 4xx error desde el otro servicio lo capturamos aquí
-                .onStatus(HttpStatus::is4xxClientError,
+                .onStatus(HttpStatus -> HttpStatus.is4xxClientError(),
                         clientResponse ->  Mono.error(new UserNotFoundException(
                         "Error during GET request to getUserByUuidBasic with UUID: " + uuid)))
 

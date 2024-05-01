@@ -64,18 +64,6 @@ public class CartService {
     }
 
 
-//    public Mono<Cart> addProductToCart(Long idProduct, Long idCart) {
-//
-//        //buscar que exista el producto
-//
-//        return cartRepository.findById(idCart)
-//                .flatMap(cart -> getProductById(idProduct)
-//                        .flatMap(product -> {
-//                            cart.addProduct(product);
-//                            return cartRepository.save(cart);
-//                        }));
-//    }
-
     public Mono<Cart> getCartById(Long idCart) {
 
         return cartRepository.findById(idCart);

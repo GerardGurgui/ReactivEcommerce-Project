@@ -1,13 +1,12 @@
+server:
+  port: 9090
 spring:
   cloud:
-    gateway:
+    discovery:
+      reactive:
+        enabled: true
       routes:
-        - id: mydata_service
-          uri: lb://mydata-service
+        - id: user_management_route # User Management Service
+          uri: http://localhost:8085
           predicates:
-            - Path=/mydata/**
-        - id: payment_service
-          uri: lb://payment-service
-          predicates:
-            - Path=/payment/**
-      # Agrega más rutas según sea necesario
+            - Path=/api/usermanagement/**

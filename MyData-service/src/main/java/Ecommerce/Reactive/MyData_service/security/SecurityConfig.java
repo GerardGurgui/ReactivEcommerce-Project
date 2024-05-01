@@ -13,11 +13,14 @@ public class SecurityConfig {
     //integrar 2 perfiles (dev y prod)??
     //pruebas basicas sin seguridad por ahora
 
+    //deprecated
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+
         return http
                 .csrf().disable()
                 .authorizeExchange()
+                .pathMatchers("/api/MyData/**").permitAll()
                 .anyExchange().permitAll()
                 .and().build();
     }
