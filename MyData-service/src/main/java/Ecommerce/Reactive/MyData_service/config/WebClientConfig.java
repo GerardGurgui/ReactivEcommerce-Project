@@ -1,4 +1,4 @@
-package Ecommerce.usermanagement.config;
+package Ecommerce.Reactive.MyData_service.config;
 
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;

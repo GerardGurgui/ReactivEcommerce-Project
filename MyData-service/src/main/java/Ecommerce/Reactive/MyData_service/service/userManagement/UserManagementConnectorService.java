@@ -1,6 +1,7 @@
 package Ecommerce.Reactive.MyData_service.service.userManagement;
 import Ecommerce.Reactive.MyData_service.DTO.UserDto;
 import Ecommerce.Reactive.MyData_service.exceptions.UserNotFoundException;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -27,6 +28,7 @@ public class UserManagementConnectorService {
         this.webClient = webClientBuilder.baseUrl(USERMANAGEMENT_URL).build();
     }
 
+    //faltan comprobaciones a nivel global de los metodos, nulls etc
 
     public Mono<UserDto> getUserByUuidBasic(String uuid) {
 
