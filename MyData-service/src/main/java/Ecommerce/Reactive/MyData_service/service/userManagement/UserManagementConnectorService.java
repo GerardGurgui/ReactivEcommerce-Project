@@ -20,7 +20,7 @@ public class UserManagementConnectorService {
     private final static Logger LOGGER = Logger.getLogger(UserManagementConnectorService.class.getName());
 
     private final WebClient webClient;
-    private static final String USERMANAGEMENT_URL = "http://localhost:8085/api/usermanagement";
+    private static final String USERMANAGEMENT_URL = "lb://UserManagement-service/api/usermanagement";
 
 
     public UserManagementConnectorService(WebClient.Builder webClientBuilder) {
