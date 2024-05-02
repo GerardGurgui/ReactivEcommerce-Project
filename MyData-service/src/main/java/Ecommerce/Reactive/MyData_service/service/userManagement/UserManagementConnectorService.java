@@ -58,7 +58,7 @@ public class UserManagementConnectorService {
 
 
         LOGGER.info("Initiating PUT request to updateUserHasCart with UUID: {" +
-                "uuid" + "}");
+                uuid + "}");
 
         //faltaria comprobar algun error en la respuesta relacionado con los carritos
 
