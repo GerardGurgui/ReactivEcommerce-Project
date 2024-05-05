@@ -1,12 +1,15 @@
 package Ecommerce.usermanagement.dto.output;
 
 
+import Ecommerce.usermanagement.dto.cart.CartDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,5 +29,7 @@ public class UserInfoOutputDto {
     private LocalDate loginDate;
     private String latestAcces;
     private Set<String> roles;
+    private List<CartDto> carts;
+
 
 }

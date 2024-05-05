@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
-public class Mapper implements IMapper {
+public class Converter implements IConverter {
 
 
     @Override
@@ -19,7 +19,7 @@ public class Mapper implements IMapper {
     }
 
     @Override
-    public Mono<CartDto> CartToCartDto(Cart cart) {
+    public Mono<CartDto> cartToDto(Cart cart) {
 
         CartDto cartDto = new CartDto();
         BeanUtils.copyProperties(cart, cartDto);

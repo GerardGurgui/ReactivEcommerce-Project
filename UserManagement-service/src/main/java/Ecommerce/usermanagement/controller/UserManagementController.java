@@ -1,9 +1,8 @@
 package Ecommerce.usermanagement.controller;
 
-import Ecommerce.usermanagement.document.User;
+import Ecommerce.usermanagement.dto.cart.UserCartDto;
 import Ecommerce.usermanagement.dto.input.UserEmailDto;
 import Ecommerce.usermanagement.dto.input.UserInputDto;
-import Ecommerce.usermanagement.dto.input.UserUuidDto;
 import Ecommerce.usermanagement.dto.output.UserBasicOutputDto;
 import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;
 import Ecommerce.usermanagement.services.UserManagementServiceImpl;
@@ -63,10 +62,10 @@ public class UserManagementController {
     //CARTS
 
     //actualiza el campo hasCart del usuario en caso de que añada un nuevo carrito a su lista
-    @PutMapping("/updateUserHasCart/{uuid}")
-    public ResponseEntity<Mono<UserInfoOutputDto>> updateUserHasCart(@PathVariable String uuid){
+    @PutMapping("/updateUserHasCart/")
+    public ResponseEntity<Mono<UserInfoOutputDto>> updateUserHasCart(@RequestBody UserCartDto userDto){
 
-        return new ResponseEntity<>(userManagementService.updateUserHasCart(uuid), HttpStatus.OK);
+        return new ResponseEntity<>(userManagementService.updateUserHasCart(userDto), HttpStatus.OK);
     }
 
 

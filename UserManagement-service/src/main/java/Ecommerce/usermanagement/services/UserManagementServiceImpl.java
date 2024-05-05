@@ -2,8 +2,10 @@ package Ecommerce.usermanagement.services;
 
 import Ecommerce.usermanagement.document.Roles;
 import Ecommerce.usermanagement.document.User;
+import Ecommerce.usermanagement.dto.cart.UserCartDto;
 import Ecommerce.usermanagement.dto.input.UserEmailDto;
 import Ecommerce.usermanagement.dto.input.UserInputDto;
+import Ecommerce.usermanagement.dto.input.UserDto;
 import Ecommerce.usermanagement.dto.output.UserBasicOutputDto;
 import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;
 import Ecommerce.usermanagement.exceptions.EmailExistsException;
@@ -149,18 +151,18 @@ public class UserManagementServiceImpl implements IUserManagementService {
     ////COMUNICACION CON MICROSERVICIO MYDATA
 
     ////CARTS
-    public Mono<UserInfoOutputDto> updateUserHasCart(String userUuid) {
+    public Mono<UserInfoOutputDto> updateUserHasCart(UserCartDto userCartDto) {
 
-        //faltan comprobaciones y mejoras
-        // pero creo que no hace falta comprobar si el user existe, ya que la llamada
-        //viene de myData service ya se hace alli la comprobacion
+        //faltan comprobaciones y mejoras, de seguridad eso seguro
 
-        return userRepository.findByUuid(userUuid)
+        return userRepository.findByUuid(userCartDto.getUserDto().getUuid())
                 .flatMap(user -> {
                     user.setActiveCart(true);
+                    user.addCart(userCartDto.getCartDto());
                     return userRepository.save(user);
                 })
-                .map(Converter::convertToDtoInfo);
+                .map(Converter::convertToDtoInfo)
+        .switchIfEmpty(Mono.error(new UserNotFoundException("User not found", userCartDto.getUserDto().getUuid())));
     }
 
 }

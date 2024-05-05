@@ -21,6 +21,7 @@ public class Cart {
 
     @Id
     private Long id;
+
     @Column("user_uuid")
     private String userUuid;
 
@@ -32,7 +33,11 @@ public class Cart {
     @Column("total_price")
     private double totalPrice;
 
+    private String status;
+
     //que mas atributos deberia tener un carrito??
+
+    //falta lista productos
 
 
 }

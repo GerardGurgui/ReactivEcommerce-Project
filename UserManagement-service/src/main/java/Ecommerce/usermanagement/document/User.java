@@ -1,5 +1,6 @@
 package Ecommerce.usermanagement.document;
 
+import Ecommerce.usermanagement.dto.cart.CartDto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.AllArgsConstructor;
@@ -15,7 +16,9 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -82,15 +85,22 @@ public class User {
     @JsonManagedReference // manejar serializacion de los usuarios
     private Set<Roles> roles;
 
-    //pendiente de implementar
-
-//    private Set<Cart> carts;
+    @Field(name = "carts")
+    private List<CartDto> carts;
 
     //falta relaciones, carritos etc
     //posible ampliacion, ultima conexion etc
 
     //operaciones y funciones, añadir producto al carro, eliminar producto del carro, comprar, etc
     //de dinero??
+
+    public void addCart(CartDto cartDto) {
+
+        if (carts == null) {
+            carts = new ArrayList<>();
+        }
+        carts.add(cartDto);
+    }
 
     public void addRoleUser() {
 

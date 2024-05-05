@@ -5,11 +5,11 @@ import Ecommerce.Reactive.MyData_service.DTO.CartDto;
 import Ecommerce.Reactive.MyData_service.entity.Cart;
 import reactor.core.publisher.Mono;
 
-public interface IMapper {
+public interface IConverter {
 
     //Mono para la entrada y la salida por que es un flujo de datos y no sabemos cuando se va a terminar
     Mono<Cart> cartDtoToCart(CartDto cartDto);
 
-    Mono<CartDto> CartToCartDto(Cart cart);
+    Mono<CartDto> cartToDto(Cart cart);
 
 }

@@ -1,0 +1,44 @@
+# Nombre de la aplicaci�n
+spring:
+  application:
+    name: ApiGateway-service
+  cloud:
+    gateway:
+      routes:
+        - id: ${UserManagement.service.name}  # USERMANAGEMENT 8085
+          uri: lb://${UserManagement.service.name}
+          predicates:
+            - Path=${UserManagement.service.route}
+        - id: ${MyData.service.name}  # MYDATA 8082
+          uri: lb://${MyData.service.name}
+          predicates:
+            - Path=${MyData.service.route}
+
+# Puerto del servidor
+server:
+  port: 8080
+
+# Configuraci�n del cliente Eureka
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+
+# Nombre de los servicios centralizados
+UserManagement:
+  service:
+    name: UserManagement-service
+    route: /api/usermanagement/**
+
+MyData:
+  service:
+    name: MyData-service
+    route: /api/MyData/**
+
+# Configuraci�n de los logs
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.netflix.discovery: DEBUG

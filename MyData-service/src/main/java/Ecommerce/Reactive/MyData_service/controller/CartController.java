@@ -1,7 +1,7 @@
 package Ecommerce.Reactive.MyData_service.controller;
 
 import Ecommerce.Reactive.MyData_service.DTO.CartDto;
-import Ecommerce.Reactive.MyData_service.entity.Cart;
+import Ecommerce.Reactive.MyData_service.DTO.UserDto;
 import Ecommerce.Reactive.MyData_service.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,16 +22,16 @@ public class CartController {
 
 
     @PostMapping("/createCart/{userUuid}")
-    public ResponseEntity<Mono<Cart>> createCart(@RequestBody CartDto cartDto, @PathVariable String userUuid) {
+    public ResponseEntity<Mono<CartDto>> createCart(@RequestBody CartDto cartDto, @PathVariable String userUuid) {
 
-        return new ResponseEntity<>(cartService.saveCartForUser(cartDto, userUuid), HttpStatus.CREATED);
+        return new ResponseEntity<>(cartService.createCartForUser(cartDto, userUuid), HttpStatus.CREATED);
     }
 
 
     @GetMapping("/getCart/{idCart}")
-    public ResponseEntity<Mono<Cart>> getCart(@PathVariable Long idCart) {
+    public ResponseEntity<Mono<CartDto>> getCart(@PathVariable Long idCart) {
 
-        return ResponseEntity.ok(cartService.getCartById(idCart));
+        return new ResponseEntity<>(cartService.getCartById(idCart), HttpStatus.FOUND);
     }
 
 
