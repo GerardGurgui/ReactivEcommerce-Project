@@ -31,5 +31,4 @@ public class UserInfoOutputDto {
     private Set<String> roles;
     private List<CartDto> carts;
 
-
 }

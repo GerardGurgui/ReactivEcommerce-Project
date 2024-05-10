@@ -1,4 +1,4 @@
-package Ecommerce.usermanagement.exceptions;
+package Ecommerce.Reactive.MyData_service.exceptions;
 
 import lombok.Getter;
 
@@ -6,15 +6,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Getter
-public class UsernameAlreadyExistsException extends RuntimeException{
-
-    private final String username;
+public class ResourceNullException extends RuntimeException {
 
     private final LocalDateTime timestamp;
 
-    public UsernameAlreadyExistsException(String message, String username) {
+    public ResourceNullException(String message) {
         super(message);
-        this.username = username;
         this.timestamp = LocalDateTime.now();
     }
 
@@ -27,5 +24,4 @@ public class UsernameAlreadyExistsException extends RuntimeException{
     public String toString() {
         return super.toString() + " at " + getFormattedTimestamp();
     }
-
 }

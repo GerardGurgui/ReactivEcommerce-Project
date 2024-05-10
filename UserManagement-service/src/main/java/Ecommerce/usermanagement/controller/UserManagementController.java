@@ -6,19 +6,25 @@ import Ecommerce.usermanagement.dto.input.UserInputDto;
 import Ecommerce.usermanagement.dto.output.UserBasicOutputDto;
 import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;
 import Ecommerce.usermanagement.services.UserManagementServiceImpl;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.validation.*;
+
+
 @RestController
 @RequestMapping(value = "/api/usermanagement")
+@Validated
 public class UserManagementController {
 
 
-    private UserManagementServiceImpl userManagementService;
+    private final UserManagementServiceImpl userManagementService;
 
     @Autowired
     public UserManagementController(UserManagementServiceImpl userManagementService) {
@@ -26,10 +32,10 @@ public class UserManagementController {
     }
 
 
-    @PostMapping("/addUser")
-    public ResponseEntity<Mono<UserInfoOutputDto>> addUser(@RequestBody UserInputDto userInputDto) {
+    @PostMapping("/createAndSaveUser")
+    public ResponseEntity<Mono<UserInfoOutputDto>> addUser(@Valid @RequestBody UserInputDto userInputDto) {
 
-        return new ResponseEntity<>(userManagementService.addUser(userInputDto), HttpStatus.CREATED);
+        return new ResponseEntity<>(userManagementService.createAndSaveUser(userInputDto), HttpStatus.CREATED);
     }
 
     ////GETS

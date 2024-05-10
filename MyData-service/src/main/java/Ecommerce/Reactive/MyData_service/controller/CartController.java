@@ -3,14 +3,18 @@ package Ecommerce.Reactive.MyData_service.controller;
 import Ecommerce.Reactive.MyData_service.DTO.CartDto;
 import Ecommerce.Reactive.MyData_service.DTO.UserDto;
 import Ecommerce.Reactive.MyData_service.service.CartService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api/MyData/cart")
+@Validated
 public class CartController {
 
     private final CartService cartService;
@@ -22,7 +26,7 @@ public class CartController {
 
 
     @PostMapping("/createCart/{userUuid}")
-    public ResponseEntity<Mono<CartDto>> createCart(@RequestBody CartDto cartDto, @PathVariable String userUuid) {
+    public ResponseEntity<Mono<CartDto>> createCart(@Valid @RequestBody CartDto cartDto, @PathVariable String userUuid) {
 
         return new ResponseEntity<>(cartService.createCartForUser(cartDto, userUuid), HttpStatus.CREATED);
     }
@@ -32,6 +36,12 @@ public class CartController {
     public ResponseEntity<Mono<CartDto>> getCart(@PathVariable Long idCart) {
 
         return new ResponseEntity<>(cartService.getCartById(idCart), HttpStatus.FOUND);
+    }
+
+    @GetMapping("/getAllCartsFromUserUuid/{userUuid}")
+    public ResponseEntity<Flux<CartDto>> getAllCartsFromUserUuid(@PathVariable String userUuid) {
+
+        return new ResponseEntity<>(cartService.getAllCartsByUserUuid(userUuid), HttpStatus.FOUND);
     }
 
 

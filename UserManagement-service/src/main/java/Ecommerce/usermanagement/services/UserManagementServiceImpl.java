@@ -5,21 +5,25 @@ import Ecommerce.usermanagement.document.User;
 import Ecommerce.usermanagement.dto.cart.UserCartDto;
 import Ecommerce.usermanagement.dto.input.UserEmailDto;
 import Ecommerce.usermanagement.dto.input.UserInputDto;
-import Ecommerce.usermanagement.dto.input.UserDto;
 import Ecommerce.usermanagement.dto.output.UserBasicOutputDto;
 import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;
-import Ecommerce.usermanagement.exceptions.EmailExistsException;
-import Ecommerce.usermanagement.exceptions.EmailNotFoundException;
-import Ecommerce.usermanagement.exceptions.UserNotFoundException;
-import Ecommerce.usermanagement.exceptions.UsernameAlreadyExistsException;
+import Ecommerce.usermanagement.exceptions.*;
 import Ecommerce.usermanagement.mapping.Converter;
 import Ecommerce.usermanagement.repository.IUsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Valid;
+import javax.validation.Validator;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.*;
@@ -27,12 +31,16 @@ import java.util.*;
 @Service
 public class UserManagementServiceImpl implements IUserManagementService {
 
-
-    @Autowired
-    private IUsersRepository userRepository;
+    
+    private final IUsersRepository userRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    public UserManagementServiceImpl(IUsersRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
 
     private Set<Roles> assignRole(Set<String> rolenames){
@@ -51,17 +59,6 @@ public class UserManagementServiceImpl implements IUserManagementService {
         return userRoles;
     }
 
-    ////CHECKS
-
-    private Mono<Boolean> checkIfUserExistsByEmail(String email) {
-
-        return userRepository.existsByEmail(email);
-    }
-
-    private Mono<Boolean> checkIfUserExistsByUsername(String username) {
-
-        return userRepository.existsByUsername(username);
-    }
 
     private String generateLastestAcces() {
 
@@ -70,39 +67,68 @@ public class UserManagementServiceImpl implements IUserManagementService {
         return formatter.format(date);
     }
 
+    ////CHECKS
+
+    @Override
+    public Mono<Void> checkEmailExists(String email) {
+
+        return userRepository.existsByEmail(email)
+                .flatMap(emailExists -> {
+                    if (emailExists) {
+                        return Mono.error(new EmailExistsException("Email already exists", email));
+                    } else {
+                        return Mono.empty();
+                    }
+                });
+    }
+
+    @Override
+    public Mono<Void> checkUsernameExists(String username) {
+
+        return userRepository.existsByUsername(username)
+                .flatMap(usernameExists -> {
+                    if (usernameExists) {
+                        return Mono.error(new UsernameAlreadyExistsException("Username already exists", username));
+                    } else {
+                        return Mono.empty();
+                    }
+                });
+    }
+
+
+    //FALTA SWITCHIFEMPTY???
+
+    @Override
+    public Mono<UserInfoOutputDto> createAndSaveUser(UserInputDto userInputDto) {
+
+        Mono<Void> checkEmail = checkEmailExists(userInputDto.getEmail())
+                .onErrorResume(e -> Mono.error(new EmailExistsException("Email already exists", userInputDto.getEmail())));
+
+        Mono<Void> checkUsername = checkUsernameExists(userInputDto.getUsername())
+                .onErrorResume(e -> Mono.error(new UsernameAlreadyExistsException("Username already exists", userInputDto.getUsername())));
+
+        return Mono.when(checkEmail, checkUsername)
+                .then(addUser(userInputDto));
+    }
+
 
     ///// CRUD
+
     @Override
     public Mono<UserInfoOutputDto> addUser(UserInputDto userInputDto) {
 
-    return Mono.when(
-            checkIfUserExistsByEmail(userInputDto.getEmail())
-                .doOnNext(emailExists -> {
-                    if (emailExists) {
-                        throw new EmailExistsException("Email already exists", userInputDto.getEmail());
-                    }
-                }),
-            checkIfUserExistsByUsername(userInputDto.getUsername())
-                .doOnNext(usernameExists -> {
-                    if (usernameExists) {
-                        throw new UsernameAlreadyExistsException("Username already exists", userInputDto.getUsername());
-                    }
-                })
-        )
-        .then(Mono.defer(() -> {
-            User user = Converter.convertFromDtoToUser(userInputDto);
-            user.setUuid(UUID.randomUUID().toString());
-            user.setLatestAccess(generateLastestAcces());
-            user.setPassword(passwordEncoder.encode(userInputDto.getPassword()));
-            user.setLoginDate(LocalDate.now());
-            user.setTotalPurchase(0L);
-            user.setTotalSpent(0);
-            user.setActiveCart(false);
-            user.setActive(true);
-            user.addRoleUser(); //default role
-            return userRepository.save(user);
-        }))
-        .map(Converter::convertToDtoInfo);
+        User user = Converter.convertFromDtoToUser(userInputDto);
+        user.setUuid(UUID.randomUUID().toString());
+        user.setLatestAccess(generateLastestAcces());
+        user.setPassword(passwordEncoder.encode(userInputDto.getPassword()));
+        user.setLoginDate(LocalDate.now());
+        user.setTotalPurchase(0L);
+        user.setTotalSpent(0);
+        user.setActiveCart(false);
+        user.setActive(true);
+        user.addRoleUser(); //default role
+        return userRepository.save(user)
+                .map(Converter::convertToDtoInfo);
     }
 
     ////GETS
@@ -111,16 +137,20 @@ public class UserManagementServiceImpl implements IUserManagementService {
     public Mono<UserBasicOutputDto> getUserByUuid(String userUuidDto) {
 
     return userRepository.findByUuid(userUuidDto)
-            .map(Converter::convertToDtoBasic)
-            .switchIfEmpty(Mono.error(new UserNotFoundException("User not found", userUuidDto)));
+            .switchIfEmpty(Mono.error(new UserNotFoundException("User with Uuid: " + userUuidDto + " not found")))
+            .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting user by Uuid: " + userUuidDto + ", User not found")))
+            .map(Converter::convertToDtoBasic);
+
     }
 
     @Override
     public Mono<UserInfoOutputDto> getUserInfoByUuid(String userUuidDto) {
 
         return userRepository.findByUuid(userUuidDto)
-                .map(Converter::convertToDtoInfo)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User not found", userUuidDto)));
+                .switchIfEmpty(Mono.error(new UserNotFoundException("User with Uuid: " + userUuidDto + " not found")))
+                .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting user by Uuid: " + userUuidDto + ", User not found")))
+                .map(Converter::convertToDtoInfo);
+
 
     }
 
@@ -128,15 +158,20 @@ public class UserManagementServiceImpl implements IUserManagementService {
     public Mono<UserBasicOutputDto> getUserByEmail(UserEmailDto userEmailDto) {
 
         return userRepository.findByEmail(userEmailDto.getEmail())
-                .map(Converter::convertToDtoBasic)
-                .switchIfEmpty(Mono.error(new EmailNotFoundException("Email not found", userEmailDto.getEmail())));
+                .switchIfEmpty(Mono.error(new EmailNotFoundException("Email not found", userEmailDto.getEmail())))
+                .onErrorResume(e -> Mono.error(new EmailNotFoundException("Error getting user by email:, Email not found", userEmailDto.getEmail())))
+                .map(Converter::convertToDtoBasic);
+
     }
 
 
     public Flux<UserInfoOutputDto> getAllUsersInfo() {
 
         return userRepository.findAll()
+                .switchIfEmpty(Mono.error(new UserNotFoundException("No users found")))
+                .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting users, No users found")))
                 .map(Converter::convertToDtoInfo);
+
     }
 
     ////--> FLUX con operador .filter para filtrar por:
@@ -150,6 +185,9 @@ public class UserManagementServiceImpl implements IUserManagementService {
 
     ////COMUNICACION CON MICROSERVICIO MYDATA
 
+    //FALTA MODIFICAR EL ESTADO DE LOS CARRITOS DE USUARIO
+    //FALTA CAMBIAR ORDEN DE LA CADENA, PRIMERO COMPROBAR ERRORES, SI TODO OK , ENTONCES ADELANTE
+
     ////CARTS
     public Mono<UserInfoOutputDto> updateUserHasCart(UserCartDto userCartDto) {
 
@@ -162,7 +200,7 @@ public class UserManagementServiceImpl implements IUserManagementService {
                     return userRepository.save(user);
                 })
                 .map(Converter::convertToDtoInfo)
-        .switchIfEmpty(Mono.error(new UserNotFoundException("User not found", userCartDto.getUserDto().getUuid())));
+        .switchIfEmpty(Mono.error(new UserNotFoundException("User with Uuid: " + userCartDto.getUserDto().getUuid() + " not found")));
     }
 
 }

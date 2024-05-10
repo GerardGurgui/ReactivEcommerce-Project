@@ -9,7 +9,7 @@ import org.springframework.web.reactive.config.EnableWebFlux;
 @SpringBootApplication
 @EnableReactiveMongoRepositories
 //@EnableDiscoveryClient
-@EnableWebFlux
+//@EnableWebFlux
 public class UserManagementApplication {
 
 	public static void main(String[] args) {

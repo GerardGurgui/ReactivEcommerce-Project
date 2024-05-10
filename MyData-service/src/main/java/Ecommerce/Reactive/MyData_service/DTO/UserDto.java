@@ -7,9 +7,7 @@ import lombok.Setter;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,7 +18,6 @@ public class UserDto {
     private String uuid;
     private String username;
     private String email;
-    private Long cartId;
     private List<CartDto> carts;
 
 

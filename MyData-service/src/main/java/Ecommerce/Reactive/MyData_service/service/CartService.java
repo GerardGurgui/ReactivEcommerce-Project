@@ -2,14 +2,15 @@ package Ecommerce.Reactive.MyData_service.service;
 import Ecommerce.Reactive.MyData_service.DTO.CartDto;
 import Ecommerce.Reactive.MyData_service.DTO.UserCartDto;
 import Ecommerce.Reactive.MyData_service.DTO.UserDto;
-import Ecommerce.Reactive.MyData_service.entity.Cart;
 import Ecommerce.Reactive.MyData_service.exceptions.CartNotFoundException;
+import Ecommerce.Reactive.MyData_service.exceptions.ResourceNullException;
 import Ecommerce.Reactive.MyData_service.exceptions.UserNotFoundException;
 import Ecommerce.Reactive.MyData_service.mapping.IConverter;
 import Ecommerce.Reactive.MyData_service.repository.ICartRepository;
 import Ecommerce.Reactive.MyData_service.service.userManagement.UserManagementConnectorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.logging.Logger;
@@ -35,49 +36,15 @@ public class CartService {
     }
 
 
-    //--->CHECKS
-
-    private void checkUserUuid(String userUuid) {
-
-        if (userUuid == null || userUuid.isEmpty()) {
-            LOGGER.info("UserUuid is null or empty");
-            Mono.error(new UserNotFoundException("UserUuid is null or empty", userUuid));
-        }
-    }
-
-    private Mono<Void> checkIdCart(Long idCart){
-
-        if (idCart == null){
-            LOGGER.info("this id cart is null");
-            Mono.error(new CartNotFoundException("This id cart is null"));
-        }
-
-        return Mono.empty();
-    }
-
-    private void checkCartDto(CartDto cartDto) {
-
-        if (cartDto == null) {
-            LOGGER.info("CartDto is null");
-            Mono.error(new CartNotFoundException("CartDto is null"));
-        }
-
-        //falta comprobaciones de propiedades del carrito, nombre, precio, productos etc
-    }
-
-    private void checkCart(Cart cart) {
-
-        if (cart == null){
-            LOGGER.info("Cart is null");
-            Mono.error(new CartNotFoundException("Cart is null"));
-        }
-
-    }
 
     private void checkIfCartNameExists(String name, String userUuid) {
     }
 
     //--->CRUD
+
+    //FALTA VALIDAR QUE NO TENGA NOMBRE CARRITO REPETIDO!!!
+
+    //ARREGLAR TIMESTAMP
 
     public Mono<CartDto> createCartForUser(CartDto cartDto, String userUuid) {
 
@@ -91,16 +58,20 @@ public class CartService {
         y cambiar el estado de usuario a active cart
         devolver el carrito guardado como CartDto*/
 
-        checkUserUuid(userUuid);
-        checkCartDto(cartDto);
+        if (userUuid == null || userUuid.isEmpty()){
+            return Mono.error(new ResourceNullException("UserUuid is null or empty"));
+        }
 
         return userMngConnectorService.getUserByUuidBasic(userUuid)
+                .switchIfEmpty(Mono.error(new UserNotFoundException("User not found Uuid: " + userUuid)))
+                .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting user by Uuid: " + userUuid + ", User not found")))
                 .flatMap(userDto -> userDto.addCart(cartDto))
-                .flatMap(userDto-> updateActiveCartForUserAndSaveCart(userDto, cartDto))
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User not found Uuid: " + userUuid)));
-
+                .flatMap(userDto-> updateActiveCartForUserAndSaveCart(userDto, cartDto));
     }
 
+    //FALTA MODIFICAR EL ESTADO DE LOS CARRITOS DE USUARIO
+    //---> SEGUIR AQUI: MODIFICAR ORDEN DE LA CADENA, PRIMERO COMPROBAR ERRORES, SI TODO OK , ENTONCES ADELANTE
+    //---> MODIFICAR TODOS LOS METODOS EL ORDEN DE SECUENCIA DE OPERACIONES, PRIMER EMPTY O ERROR, DESPUES OPERACIONES
 
     public Mono<CartDto> updateActiveCartForUserAndSaveCart(UserDto userDto, CartDto cartDto){
 
@@ -110,7 +81,6 @@ public class CartService {
                     return cartSetUuid;
                 })
                 .flatMap(cartToSave -> cartRepository.save(cartToSave))
-                .doOnNext(setIdCartToUser -> userDto.setCartId(setIdCartToUser.getId()))
                 .flatMap(savedCart -> {
                     UserCartDto userCartDto = new UserCartDto(userDto, cartDto);
                     return userMngConnectorService.updateUserHasCart(userCartDto)
@@ -120,21 +90,28 @@ public class CartService {
     }
 
 
-
-
-    ////PENDIENTE, SIGUENTE PASO AQUI-----
-    //COMPROBACIONES DE QUE EL CARRITO EXISTE
+    ////--->GET
 
     public Mono<CartDto> getCartById(Long idCart) {
 
-        checkIdCart(idCart);
-
         return cartRepository.findById(idCart)
-                .doOnNext(cart -> checkCart(cart))
-                .flatMap(cartToDto -> converter.cartToDto(cartToDto))
-        .switchIfEmpty(Mono.error(new CartNotFoundException("Cart not found")));
+                .switchIfEmpty(Mono.error(new CartNotFoundException("Cart not found by ID: " + idCart)))
+                .onErrorResume(e -> Mono.error(new CartNotFoundException("Error getting cart by ID: " + idCart + ", Cart not found")))
+                .flatMap(cart -> converter.cartToDto(cart));
+
     }
 
+    //error bad sql grammar
+
+    public Flux<CartDto> getAllCartsByUserUuid(String userUuid) {
+
+//        checkUserUuid(userUuid);
+
+        return cartRepository.getAllCartsByUserUuid(userUuid)
+                .flatMap(cart -> converter.cartToDto(cart))
+                .switchIfEmpty(Mono.error(new CartNotFoundException("Carts not found for userUuid: " + userUuid)));
+
+    }
 
 
 }

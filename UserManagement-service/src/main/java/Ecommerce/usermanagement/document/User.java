@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -39,26 +40,27 @@ public class User {
 
     @Field(name = "username")
     @Indexed(unique = true)
-    @NotNull
+    @NotBlank
     private String username;
 
-    @NotNull
+    @NotBlank
     private String firstname;
 
-    @NotNull
+    @NotBlank
     private String lastname;
 
     @Field(name = "phone")
     @Indexed(unique = true)
     private String phone;
 
-    @NotNull
+
+    @NotBlank
     @Field(name = "email")
     @Indexed(unique = true)
     private String email;
 
     @JsonIgnore
-    @NotNull
+    @NotBlank
     @Field(name = "password")
     @Indexed(unique = true)
     private String password;

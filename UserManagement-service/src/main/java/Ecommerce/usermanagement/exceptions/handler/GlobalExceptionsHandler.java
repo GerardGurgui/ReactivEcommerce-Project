@@ -1,9 +1,6 @@
 package Ecommerce.usermanagement.exceptions.handler;
 
-import Ecommerce.usermanagement.exceptions.EmailExistsException;
-import Ecommerce.usermanagement.exceptions.EmailNotFoundException;
-import Ecommerce.usermanagement.exceptions.UserNotFoundException;
-import Ecommerce.usermanagement.exceptions.UsernameAlreadyExistsException;
+import Ecommerce.usermanagement.exceptions.*;
 import Ecommerce.usermanagement.exceptions.error.ErrorResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,9 +11,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
-import java.time.Instant;
-import java.util.Date;
 
 
 @ControllerAdvice
@@ -29,7 +23,7 @@ public class GlobalExceptionsHandler{
         exchange.getResponse().setStatusCode(HttpStatus.FOUND);
         exchange.getResponse().getHeaders().add("Content-Type", "application/json");
 
-        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), new Date());
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
@@ -49,7 +43,7 @@ public class GlobalExceptionsHandler{
         exchange.getResponse().setStatusCode(HttpStatus.FOUND);
         exchange.getResponse().getHeaders().add("Content-Type", "application/json");
 
-        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), new Date());
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
@@ -69,7 +63,7 @@ public class GlobalExceptionsHandler{
         exchange.getResponse().setStatusCode(HttpStatus.NOT_FOUND);
         exchange.getResponse().getHeaders().add("Content-Type", "application/json");
 
-        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), new Date());
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
@@ -89,7 +83,7 @@ public class GlobalExceptionsHandler{
         exchange.getResponse().setStatusCode(HttpStatus.NOT_FOUND);
         exchange.getResponse().getHeaders().add("Content-Type", "application/json");
 
-        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), new Date());
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
