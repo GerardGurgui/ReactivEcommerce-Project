@@ -11,15 +11,16 @@ The main objective of this project is to provide an efficient ecommerce platform
 ## Technologies
 
 - **Java**: The primary programming language used for backend development.
-- **Maven**: A software project management and comprehension tool.
-- **SQL**: A structured query language used for managing the database.
-- **MongoDB**: A source-available cross-platform document-oriented database program.
 - **Spring WebFlux**: A non-blocking web stack to handle concurrency with a small number of threads and scale with fewer hardware resources.
 - **Spring Data R2DBC**: A part of Spring Data project that makes it easy to implement RDBMS operations using the reactive paradigm.
 - **Spring Security**: A powerful and highly customizable authentication and access-control framework to secure Spring-based applications.
 - **JWT (JSON Web Token)**: A compact, URL-safe means of representing claims to be transferred between two parties. Used for secure transmission of information between parties as a JSON object.
 - **Spring Cloud**: Provides tools for developers to quickly build some of the common patterns in distributed systems.
 - **Eureka**: A REST based service that is primarily used in the AWS cloud for locating services for the purpose of load balancing and failover of middle-tier servers.
+- **Maven**: A software project management and comprehension tool.
+- **SQL**: A structured query language used for managing the database.
+- **MongoDB**: A source-available cross-platform document-oriented database program.
+
 
 ## Testing
 
