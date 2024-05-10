@@ -47,7 +47,7 @@ The project follows a microservices architecture. Each microservice is responsib
 1. Clone the repository to your local machine.
 2. Navigate to the project directory.
 3. Run `mvn clean install` to build the project.
-4. Run `java -jar target/<project-name>.jar` to start the application.
+4. Run `java -jar target/<ReactivEcommerce-Project>.jar` to start the application.
 
 ## Testing
 
