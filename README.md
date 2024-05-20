@@ -53,7 +53,3 @@ The project follows a microservices architecture. Each microservice is responsib
 ## Testing
 
 To run the tests, use the `mvn test` command.
-
-## Contributing
-
-If you wish to contribute to the project, please fork the repository, make your changes, and submit a pull request.
