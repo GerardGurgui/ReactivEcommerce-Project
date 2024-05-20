@@ -21,6 +21,6 @@ public class CartDto {
 
     private int totalProducts;
     private double totalPrice;
-
+    private CartStatus status;
 
 }

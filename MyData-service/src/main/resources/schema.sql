@@ -3,7 +3,8 @@ CREATE TABLE IF NOT EXISTS carts (
   userUuid varchar(255) DEFAULT NULL,
   name varchar(255) DEFAULT NULL,
   totalProducts int DEFAULT NULL,
-  totalPrice double precision DEFAULT NULL
+  totalPrice double precision DEFAULT NULL,
+  status varchar(255) DEFAULT NULL
 );
 
 --CREATE TABLE IF NOT EXISTS cart_products (

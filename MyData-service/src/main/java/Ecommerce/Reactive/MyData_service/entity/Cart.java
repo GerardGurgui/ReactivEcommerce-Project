@@ -1,5 +1,6 @@
 package Ecommerce.Reactive.MyData_service.entity;
 
+import Ecommerce.Reactive.MyData_service.DTO.CartStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,6 +11,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.io.Serializable;
+import java.util.Iterator;
+
 
 @Getter @Setter
 @AllArgsConstructor
@@ -19,7 +23,6 @@ public class Cart {
 
     //falta mejorar e implementar bien atributos, metodos y calculos
     // eliminar productos, calcular total, ordenar productos, etc
-    //faltan validations! o en dtos??
 
     @Id
     private Long id;
@@ -36,7 +39,8 @@ public class Cart {
     @Column("total_price")
     private double totalPrice;
 
-    private String status;
+    @Column("status")
+    private CartStatus status;
 
     //que mas atributos deberia tener un carrito??
 

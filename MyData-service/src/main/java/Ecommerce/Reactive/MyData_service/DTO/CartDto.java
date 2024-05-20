@@ -1,6 +1,5 @@
 package Ecommerce.Reactive.MyData_service.DTO;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -25,6 +24,7 @@ public class CartDto {
 
     private int totalProducts;
     private double totalPrice;
+    private CartStatus status;
 
 
 }

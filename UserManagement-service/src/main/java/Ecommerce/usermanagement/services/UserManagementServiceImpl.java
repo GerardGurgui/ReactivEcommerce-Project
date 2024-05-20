@@ -2,6 +2,7 @@ package Ecommerce.usermanagement.services;
 
 import Ecommerce.usermanagement.document.Roles;
 import Ecommerce.usermanagement.document.User;
+import Ecommerce.usermanagement.dto.cart.CartStatus;
 import Ecommerce.usermanagement.dto.cart.UserCartDto;
 import Ecommerce.usermanagement.dto.input.UserEmailDto;
 import Ecommerce.usermanagement.dto.input.UserInputDto;
@@ -95,9 +96,6 @@ public class UserManagementServiceImpl implements IUserManagementService {
                 });
     }
 
-
-    //FALTA SWITCHIFEMPTY???
-
     @Override
     public Mono<UserInfoOutputDto> createAndSaveUser(UserInputDto userInputDto) {
 
@@ -127,11 +125,11 @@ public class UserManagementServiceImpl implements IUserManagementService {
         user.setActiveCart(false);
         user.setActive(true);
         user.addRoleUser(); //default role
-        return userRepository.save(user)
-                .map(Converter::convertToDtoInfo);
+        return userRepository.save(user).map(Converter::convertToDtoInfo);
+
     }
 
-    ////GETS
+    ////GET
 
     @Override
     public Mono<UserBasicOutputDto> getUserByUuid(String userUuidDto) {
@@ -193,14 +191,18 @@ public class UserManagementServiceImpl implements IUserManagementService {
 
         //faltan comprobaciones y mejoras, de seguridad eso seguro
 
-        return userRepository.findByUuid(userCartDto.getUserDto().getUuid())
+        String userDtoUuid = userCartDto.getUserDto().getUuid();
+
+        return userRepository.findByUuid(userDtoUuid)
+                .switchIfEmpty(Mono.error(new UserNotFoundException("User with Uuid: " + userDtoUuid + " not found")))
                 .flatMap(user -> {
                     user.setActiveCart(true);
                     user.addCart(userCartDto.getCartDto());
-                    return userRepository.save(user);
-                })
-                .map(Converter::convertToDtoInfo)
-        .switchIfEmpty(Mono.error(new UserNotFoundException("User with Uuid: " + userCartDto.getUserDto().getUuid() + " not found")));
+                    return userRepository.save(user)
+                            .map(Converter::convertToDtoInfo);
+                });
+
+
     }
 
 }

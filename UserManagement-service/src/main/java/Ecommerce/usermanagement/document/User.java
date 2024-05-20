@@ -83,6 +83,7 @@ public class User {
     @Field(name = "latest_access")
     private String latestAccess;
 
+    //lista roles como dto tambien? o solo como enum
     @Field(name = "roles")
     @JsonManagedReference // manejar serializacion de los usuarios
     private Set<Roles> roles;
@@ -90,7 +91,8 @@ public class User {
     @Field(name = "carts")
     private List<CartDto> carts;
 
-    //falta relaciones, carritos etc
+    //AÑADIR RELACION CON PEDIDOS (Order) FALTA CREAR MICROSERVICIO DE PEDIDOS
+
     //posible ampliacion, ultima conexion etc
 
     //operaciones y funciones, añadir producto al carro, eliminar producto del carro, comprar, etc
