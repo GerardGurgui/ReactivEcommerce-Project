@@ -40,6 +40,8 @@ public class UserMongoAdapter implements UserGateway {
     //ENVIAR TOKEN CON KAFKA?
     //PERO ANTEES TEEEST
 
+    //----> FALTARA TAMBIEN IMPLEMENTAR METODOS DE USERDETAILS
+
     @Override
     public Mono<TokenDto> login(UserLoginDto userLoginDto) {
 

@@ -49,6 +49,8 @@ public class CartService {
     realizar modificaciones pertinentes sobre el carrito
     devolver el carrito guardado como CartDto*/
 
+    //MODIFICAR, SIN ENVIAR UUID POR PARAMETRO, USAR EL UUID DEL USUARIO QUE SE OBTIENE DEL MICROSERVICIO CON EL TOKEN
+
     public Mono<CartDto> createCartForUser(CartDto cartDto, String userUuid) {
 
         if (userUuid == null || userUuid.isEmpty()){
