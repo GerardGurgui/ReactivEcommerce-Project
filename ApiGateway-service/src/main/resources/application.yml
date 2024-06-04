@@ -1,4 +1,4 @@
-# Nombre de la aplicaci�n
+# Nombre de la aplicacion
 spring:
   application:
     name: ApiGateway-service
@@ -13,12 +13,16 @@ spring:
           uri: lb://${MyData.service.name}
           predicates:
             - Path=${MyData.service.route}
+        - id: ${UserAuthentication.service.name}  # USERAUTHENTICATION 8084
+          uri: lb://${UserAuthentication.service.name}
+          predicates:
+            - Path=${UserAuthentication.service.route}
 
 # Puerto del servidor
 server:
   port: 8080
 
-# Configuraci�n del cliente Eureka
+# Configuracion del cliente Eureka
 eureka:
   client:
     serviceUrl:
@@ -37,7 +41,12 @@ MyData:
     name: MyData-service
     route: /api/MyData/**
 
-# Configuraci�n de los logs
+UserAuthentication:
+  service:
+    name: UserAuthentication-service
+    route: /api/userauthentication/**
+
+# Configuracion de los logs
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG

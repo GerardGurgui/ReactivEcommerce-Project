@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 @AllArgsConstructor
@@ -18,7 +17,7 @@ import java.util.Set;
 public class UserInfoOutputDto {
 
     private String username;
-    private String firstname;
+    private String name;
     private String lastname;
     private String phone;
     private String email;

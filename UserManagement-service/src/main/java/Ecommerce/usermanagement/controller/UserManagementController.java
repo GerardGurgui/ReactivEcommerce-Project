@@ -5,6 +5,7 @@ import Ecommerce.usermanagement.dto.input.UserEmailDto;
 import Ecommerce.usermanagement.dto.input.UserInputDto;
 import Ecommerce.usermanagement.dto.output.UserBasicOutputDto;
 import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;
+import Ecommerce.usermanagement.dto.output.UserLoginDto;
 import Ecommerce.usermanagement.services.UserManagementServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +15,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import javax.validation.*;
 
 
 @RestController
@@ -32,7 +31,7 @@ public class UserManagementController {
     }
 
 
-    @PostMapping("/createAndSaveUser")
+    @PostMapping("/addUser")
     public ResponseEntity<Mono<UserInfoOutputDto>> addUser(@Valid @RequestBody UserInputDto userInputDto) {
 
         return new ResponseEntity<>(userManagementService.createAndSaveUser(userInputDto), HttpStatus.CREATED);
@@ -58,6 +57,13 @@ public class UserManagementController {
         return new ResponseEntity<>(userManagementService.getUserByEmail(email), HttpStatus.FOUND);
     }
 
+    @GetMapping("/getUserByUserName/{userName}")
+    public ResponseEntity<Mono<UserBasicOutputDto>> getUserBasicByUsername(@PathVariable String userName) {
+
+        return new ResponseEntity<>(userManagementService.getUserByUserName(userName), HttpStatus.FOUND);
+    }
+
+
     @GetMapping("/getAllUsersInfo")
     public ResponseEntity<Flux<UserInfoOutputDto>> getAllUsersInfo() {
 
@@ -72,6 +78,15 @@ public class UserManagementController {
     public ResponseEntity<Mono<UserInfoOutputDto>> updateUserHasCart(@RequestBody UserCartDto userDto){
 
         return new ResponseEntity<>(userManagementService.updateUserHasCart(userDto), HttpStatus.OK);
+    }
+
+    ////CONNECTION WITH AUTHENTICATION-SERVICE
+    //Login
+
+    @GetMapping("/getUserByUsernameOrEmail")
+    public ResponseEntity<Mono<UserLoginDto>> getUserInfoByUserNameOrEmail(@RequestParam(required = false) String username,
+                                                                           @RequestParam(required = false) String email) {
+        return new ResponseEntity<>(userManagementService.getUserByUsernameOrEmail(username,email), HttpStatus.FOUND);
     }
 
 

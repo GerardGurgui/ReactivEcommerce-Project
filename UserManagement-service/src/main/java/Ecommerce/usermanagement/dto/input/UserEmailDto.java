@@ -13,7 +13,6 @@ import javax.validation.constraints.Pattern;
 @Setter
 public class UserEmailDto {
 
-    @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", message = "email must be a valid email")
     private String email;
 
 }

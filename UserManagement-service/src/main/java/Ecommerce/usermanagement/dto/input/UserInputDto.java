@@ -19,7 +19,7 @@ public class UserInputDto {
     private String username;
 
     @NotBlank(message = "The first name is required")
-    private String firstname;
+    private String name;
 
     @NotBlank(message = "The last name is required")
     private String lastname;

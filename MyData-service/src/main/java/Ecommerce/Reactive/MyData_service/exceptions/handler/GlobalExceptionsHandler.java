@@ -5,7 +5,7 @@ import Ecommerce.Reactive.MyData_service.exceptions.CartNameAlreadyExistsExcepti
 import Ecommerce.Reactive.MyData_service.exceptions.CartNotFoundException;
 import Ecommerce.Reactive.MyData_service.exceptions.ResourceNullException;
 import Ecommerce.usermanagement.exceptions.UserNotFoundException;
-import Ecommerce.usermanagement.exceptions.error.ErrorResponse;
+import Ecommerce.usermanagement.exceptions.errordetails.ErrorResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;

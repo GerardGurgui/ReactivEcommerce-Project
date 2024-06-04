@@ -2,29 +2,21 @@ package Ecommerce.usermanagement.services;
 
 import Ecommerce.usermanagement.document.Roles;
 import Ecommerce.usermanagement.document.User;
-import Ecommerce.usermanagement.dto.cart.CartStatus;
 import Ecommerce.usermanagement.dto.cart.UserCartDto;
 import Ecommerce.usermanagement.dto.input.UserEmailDto;
 import Ecommerce.usermanagement.dto.input.UserInputDto;
 import Ecommerce.usermanagement.dto.output.UserBasicOutputDto;
 import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;
+import Ecommerce.usermanagement.dto.output.UserLoginDto;
 import Ecommerce.usermanagement.exceptions.*;
 import Ecommerce.usermanagement.mapping.Converter;
 import Ecommerce.usermanagement.repository.IUsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import javax.validation.Valid;
-import javax.validation.Validator;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.*;
@@ -110,6 +102,7 @@ public class UserManagementServiceImpl implements IUserManagementService {
     }
 
 
+
     ///// CRUD
 
     @Override
@@ -152,6 +145,17 @@ public class UserManagementServiceImpl implements IUserManagementService {
 
     }
 
+    //without password
+    @Override
+    public Mono<UserBasicOutputDto> getUserByUserName(String userName) {
+
+        return userRepository.findByUsername(userName)
+                .switchIfEmpty(Mono.error(new UserNotFoundException("User with username: " + userName + " not found")))
+                .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting user by username: " + userName + ", User not found")))
+                .map(Converter::convertToDtoBasic);
+    }
+
+    //without password
     @Override
     public Mono<UserBasicOutputDto> getUserByEmail(UserEmailDto userEmailDto) {
 
@@ -161,6 +165,26 @@ public class UserManagementServiceImpl implements IUserManagementService {
                 .map(Converter::convertToDtoBasic);
 
     }
+
+    //with password (Login)
+    public Mono<UserLoginDto> getUserLoginByUserName(String userName) {
+
+        return userRepository.findByUsername(userName)
+                .switchIfEmpty(Mono.error(new UserNotFoundException("User with username: " + userName + " not found")))
+                .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting user by username: " + userName + ", User not found")))
+                .map(Converter::convertToDtoLogin);
+    }
+
+    //with password (Login)
+    public Mono<UserLoginDto> getUserLoginByEmail(UserEmailDto userEmailDto) {
+
+        return userRepository.findByEmail(userEmailDto.getEmail())
+                .switchIfEmpty(Mono.error(new EmailNotFoundException("Email not found", userEmailDto.getEmail())))
+                .onErrorResume(e -> Mono.error(new EmailNotFoundException("Error getting user by email:, Email not found", userEmailDto.getEmail())))
+                .map(Converter::convertToDtoLogin);
+
+    }
+
 
 
     public Flux<UserInfoOutputDto> getAllUsersInfo() {
@@ -181,7 +205,43 @@ public class UserManagementServiceImpl implements IUserManagementService {
     // 6. user.getRoles().contains(Roles.ADMIN) etc
 
 
-    ////COMUNICACION CON MICROSERVICIO MYDATA
+    ///// ----> COMUNICACION CON MICROSERVICIO USERAUTHENTICATION - LOGIN
+
+    //QUE IMPLICA EL LOGIN?
+    //Moodificar LastestAccess
+    // que mas ?
+
+    public Mono<UserLoginDto> getUserByUsernameOrEmail(String username, String email) {
+
+        if (username == null || email == null) {
+            return Mono.error(new UserNotFoundException("Username or email is null"));
+        }
+
+        if (username.isEmpty() && email.isEmpty()) {
+            return Mono.error(new UserNotFoundException("Username and email are empty"));
+        }
+
+        if (username.isEmpty()) {
+            return getUserLoginByEmail(new UserEmailDto(email));
+        }
+
+        if (email.isEmpty()) {
+            return getUserLoginByUserName(username);
+        }
+
+        return getUserByUserNameAndEmail(username, email);
+    }
+
+    private Mono<UserLoginDto> getUserByUserNameAndEmail(String username, String email) {
+
+        return userRepository.findByUsernameAndEmail(username, email)
+                .switchIfEmpty(Mono.error(new UserNotFoundException("User with username: " + username + " and email: " + email + " not found")))
+                .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting user by username and email:, User not found")))
+                .map(Converter::convertToDtoLogin);
+    }
+
+
+    /////-----> COMUNICACION CON MICROSERVICIO MYDATA
 
     //FALTA MODIFICAR EL ESTADO DE LOS CARRITOS DE USUARIO
     //FALTA CAMBIAR ORDEN DE LA CADENA, PRIMERO COMPROBAR ERRORES, SI TODO OK , ENTONCES ADELANTE

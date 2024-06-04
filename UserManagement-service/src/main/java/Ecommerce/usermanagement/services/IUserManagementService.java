@@ -1,11 +1,10 @@
 package Ecommerce.usermanagement.services;
 
-import Ecommerce.usermanagement.document.User;
 import Ecommerce.usermanagement.dto.input.UserEmailDto;
 import Ecommerce.usermanagement.dto.input.UserInputDto;
-import Ecommerce.usermanagement.dto.input.UserUuidDto;
 import Ecommerce.usermanagement.dto.output.UserBasicOutputDto;
 import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;
+import Ecommerce.usermanagement.dto.output.UserLoginDto;
 import reactor.core.publisher.Mono;
 
 public interface IUserManagementService {
@@ -23,4 +22,8 @@ public interface IUserManagementService {
     Mono<Void> checkUsernameExists(String username);
 
     Mono<UserInfoOutputDto> createAndSaveUser(UserInputDto userInputDto);
+
+    Mono<UserBasicOutputDto> getUserByUserName(String userName);
+
+    Mono<UserLoginDto> getUserByUsernameOrEmail(String username, String email);
 }

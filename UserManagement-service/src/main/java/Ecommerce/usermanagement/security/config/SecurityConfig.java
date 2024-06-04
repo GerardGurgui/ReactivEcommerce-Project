@@ -14,23 +14,19 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
 
-
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
 
+    @Bean
+    public SecurityWebFilterChain devFilterChain(ServerHttpSecurity http) {
 
-        //deprecated
-        @Bean
-        public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-
-            return http
-                    .csrf().disable()
-                    .authorizeExchange()
-                    .pathMatchers("/api/usermanagement/**").permitAll()
-                    .anyExchange().permitAll()
-                    .and().build();
-        }
-
+        return http
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .authorizeExchange(exchanges -> exchanges
+                        .anyExchange().permitAll()
+                )
+                .build();
+    }
 }

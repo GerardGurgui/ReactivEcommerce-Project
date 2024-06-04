@@ -65,7 +65,7 @@ public class UserManagementConnectorService {
                 .onStatus(HttpStatusCode::is5xxServerError,
                         clientResponse ->
                                 Mono.error(new ServerErrorException("Error during GET request to getUserByUuidBasic with UUID: " +uuid,
-                                        new RuntimeException("Error during GET request to getUserByUuidBasic with UUID: " + uuid))))
+                                           new RuntimeException("Error during GET request to getUserByUuidBasic with UUID: " + uuid))))
 
                 .bodyToMono(UserDto.class)
                 .onErrorMap(UserNotFoundException.class, ex -> {

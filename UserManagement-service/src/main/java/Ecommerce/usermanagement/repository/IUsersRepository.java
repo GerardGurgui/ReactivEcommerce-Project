@@ -2,7 +2,6 @@ package Ecommerce.usermanagement.repository;
 
 import Ecommerce.usermanagement.document.User;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
-import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
@@ -15,6 +14,8 @@ public interface IUsersRepository extends ReactiveMongoRepository<User, String> 
    Mono<User> findByEmail(String email);
 
    Mono<User> findByUsername(String username);
+
+   Mono<User> findByUsernameAndEmail(String username, String email);
 
    Mono<Boolean> existsByEmail(String email);
 

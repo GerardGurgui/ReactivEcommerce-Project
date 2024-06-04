@@ -12,15 +12,13 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 @Setter
@@ -30,6 +28,8 @@ import java.util.Set;
 public class User {
 
     //COMPROBAR CONSTRASEÑA? INTRODUCIR 2 VECES?
+
+    //implementar UserDetails??
 
     @Id
     private ObjectId id;
@@ -44,7 +44,7 @@ public class User {
     private String username;
 
     @NotBlank
-    private String firstname;
+    private String name;
 
     @NotBlank
     private String lastname;
@@ -52,7 +52,6 @@ public class User {
     @Field(name = "phone")
     @Indexed(unique = true)
     private String phone;
-
 
     @NotBlank
     @Field(name = "email")
@@ -120,4 +119,5 @@ public class User {
                 .anyMatch(role -> role.equals(Roles.ADMIN));
 
     }
+
 }

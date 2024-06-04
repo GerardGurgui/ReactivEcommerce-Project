@@ -5,6 +5,7 @@ import Ecommerce.usermanagement.dto.cart.CartDto;
 import Ecommerce.usermanagement.dto.input.UserInputDto;
 import Ecommerce.usermanagement.dto.output.UserBasicOutputDto;
 import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;
+import Ecommerce.usermanagement.dto.output.UserLoginDto;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +36,15 @@ public class Converter {
     public static UserInfoOutputDto convertToDtoInfo(User user) {
 
         UserInfoOutputDto userDto = new UserInfoOutputDto();
+
+        BeanUtils.copyProperties(user, userDto);
+
+        return userDto;
+    }
+
+    public static UserLoginDto convertToDtoLogin(User user) {
+
+        UserLoginDto userDto = new UserLoginDto();
 
         BeanUtils.copyProperties(user, userDto);
 

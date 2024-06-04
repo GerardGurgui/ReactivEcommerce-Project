@@ -1,7 +1,7 @@
 package Ecommerce.usermanagement.exceptions.handler;
 
 import Ecommerce.usermanagement.exceptions.*;
-import Ecommerce.usermanagement.exceptions.error.ErrorResponse;
+import Ecommerce.usermanagement.exceptions.errordetails.ErrorResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
