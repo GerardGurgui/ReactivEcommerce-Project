@@ -46,6 +46,10 @@ UserAuthentication:
     name: UserAuthentication-service
     route: /api/userauthentication/**
 
+#JWT SECRET
+jwt:
+  secret: SgVkYp3s6v9y_B-E_H-MbQeThWmZq4t7w5dfTmArdUg
+
 # Configuracion de los logs
 logging:
   level:
