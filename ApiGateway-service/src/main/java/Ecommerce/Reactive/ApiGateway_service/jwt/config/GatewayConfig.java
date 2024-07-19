@@ -13,7 +13,7 @@ public class GatewayConfig {
         return builder.routes()
                 .route("UserAuthentication-service", r -> r.path("/auth/**").uri("lb://UserAuthentication-service"))
                 .route("UserManagement-service", r -> r.path("/api/usermanagement/**").uri("lb://UserManagement-service"))
-                .route("MyData-service", r -> r.path("/api/mydata/**").uri("lb://MyData-service"))
+                .route("MyData-service", r -> r.path("/api/MyData/**").uri("lb://MyData-service"))
                 .build();
     }
 }

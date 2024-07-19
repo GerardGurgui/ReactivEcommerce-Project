@@ -12,10 +12,14 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.logging.Logger;
+
 @RestController
 @RequestMapping("/api/MyData/cart")
 @Validated
 public class CartController {
+
+    private final static Logger LOGGER = Logger.getLogger(CartController.class.getName());
 
     private final CartService cartService;
 
@@ -25,10 +29,12 @@ public class CartController {
     }
 
 
-    @PostMapping("/createCart/{userUuid}")
-    public ResponseEntity<Mono<CartDto>> createCart(@Valid @RequestBody CartDto cartDto, @PathVariable String userUuid) {
+    @PostMapping("/createCart")
+    public ResponseEntity<Mono<CartDto>> createCart(@Valid @RequestBody CartDto cartDto) {
 
-        return new ResponseEntity<>(cartService.createCartForUser(cartDto, userUuid), HttpStatus.CREATED);
+        LOGGER.info("----> Creating cart for user");
+
+        return new ResponseEntity<>(cartService.createCartForUser(cartDto), HttpStatus.CREATED);
     }
 
 

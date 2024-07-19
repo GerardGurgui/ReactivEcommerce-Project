@@ -9,8 +9,11 @@ import Ecommerce.Reactive.MyData_service.exceptions.ResourceNullException;
 import Ecommerce.Reactive.MyData_service.exceptions.UserNotFoundException;
 import Ecommerce.Reactive.MyData_service.mapping.IConverter;
 import Ecommerce.Reactive.MyData_service.repository.ICartRepository;
+import Ecommerce.Reactive.MyData_service.service.jwt.JwtTokenService;
 import Ecommerce.Reactive.MyData_service.service.userManagement.UserManagementConnectorService;
+import lombok.extern.flogger.Flogger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -20,21 +23,21 @@ import java.util.logging.Logger;
 @Service
 public class CartService {
 
-
     private final static Logger LOGGER = Logger.getLogger(CartService.class.getName());
-
     private final ICartRepository cartRepository;
-
     private final UserManagementConnectorService userMngConnectorService;
+    private final JwtTokenService jwtTokenService;
 
     @Autowired
     private IConverter converter;
 
     @Autowired
     public CartService(ICartRepository cartRepository,
-                       UserManagementConnectorService userMngConnectorService) {
+                       UserManagementConnectorService userMngConnectorService,
+                       JwtTokenService jwtTokenService) {
         this.cartRepository = cartRepository;
         this.userMngConnectorService = userMngConnectorService;
+        this.jwtTokenService = jwtTokenService;
     }
 
     //--->CRUD
@@ -51,25 +54,59 @@ public class CartService {
 
     //MODIFICAR, SIN ENVIAR UUID POR PARAMETRO, USAR EL UUID DEL USUARIO QUE SE OBTIENE DEL MICROSERVICIO CON EL TOKEN
 
-    public Mono<CartDto> createCartForUser(CartDto cartDto, String userUuid) {
+//    @PreAuthorize("isAuthenticated()")
+    public Mono<CartDto> createCartForUser(CartDto cartDto) {
 
-        if (userUuid == null || userUuid.isEmpty()){
-            return Mono.error(new ResourceNullException("UserUuid is null or empty"));
-        }
+        LOGGER.info("----> Creating cart for user");
 
-        return userMngConnectorService.getUserByUuidBasic(userUuid)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User not found, Uuid: " + userUuid)))
-                .flatMap(userDto -> {
-                    if(cartRepository.existsCartByName(cartDto.getName())){
-                        return Mono.error(new CartNameAlreadyExistsException("Cart name already exists"));
-                    }
-                    return Mono.just(userDto);
-                })
-                .onErrorResume(e -> Mono.error(new CartNameAlreadyExistsException("Cart name: " + cartDto.getName() + ", already exists")))
+        return jwtTokenService.extractUserUuidFromToken()
+                .switchIfEmpty(Mono.error(new ResourceNullException("UserUuid is null")))
+                .flatMap(this::verifyUserExists)
+                .flatMap(userDto -> verifyCartNameDoesNotExist(cartDto.getName())
+                        .then(Mono.just(userDto)))
                 .flatMap(userDto -> setCartProperties(userDto, cartDto))
                 .flatMap(userDto -> userDto.addCartDto(cartDto))
-                .flatMap(userDto-> updateActiveCartForUserAndSaveCart(userDto, cartDto));
+                .flatMap(userDto -> updateActiveCartForUserAndSaveCart(userDto, cartDto))
+                .onErrorResume(this::handleError)
+                .doOnNext(cartDto1 -> LOGGER.info("----> Cart created: " + cartDto1.getName()));
+
     }
+
+    private Mono<UserDto> verifyUserExists(String userUuid) {
+
+        return userMngConnectorService.getUserByUuidBasic(userUuid)
+                .switchIfEmpty(Mono.error(new UserNotFoundException("User not found, Uuid: " + userUuid)));
+    }
+
+    private Mono<Void> verifyCartNameDoesNotExist(String cartName) {
+
+        if (cartRepository.existsCartByName(cartName)) {
+            return Mono.error(new CartNameAlreadyExistsException("Cart name already exists"));
+        }
+        return Mono.empty();
+    }
+
+    private Mono<CartDto> handleError(Throwable error) {
+
+        if (error instanceof ResourceNullException) {
+
+            LOGGER.warning("----> Failed to create cart: " + error.getMessage());
+            return Mono.error(new ResourceNullException("Failed to create cart: " + error.getMessage()));
+
+        } else if (error instanceof UserNotFoundException) {
+
+            LOGGER.warning("----> Failed to create cart: " + error.getMessage());
+            return Mono.error(new UserNotFoundException("Failed to create cart: " + error.getMessage()));
+
+        } else if (error instanceof CartNameAlreadyExistsException) {
+
+            LOGGER.warning("----> Failed to create cart: " + error.getMessage());
+            return Mono.error(new CartNameAlreadyExistsException("Failed to create cart: " + error.getMessage()));
+        }
+        LOGGER.warning("----> Failed to create cart: " + error.getMessage());
+        return Mono.error(new RuntimeException("Failed to create cart: " + error.getMessage()));
+    }
+
 
     private Mono<UserDto> setCartProperties(UserDto userDto, CartDto cartDto) {
 

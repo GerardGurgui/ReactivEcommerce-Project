@@ -1,5 +1,6 @@
 package Ecommerce.Reactive.ApiGateway_service.jwt;
 
+import io.jsonwebtoken.io.Decoders;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import io.jsonwebtoken.security.Keys;
 import reactor.core.publisher.Mono;
 
 import javax.crypto.SecretKey;
+import java.util.Base64;
 import java.util.logging.Logger;
 
 
@@ -34,7 +36,8 @@ public class JwtTokenFilter implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        // Excluir peticiones login
+
+        // Excluir peticiones login y/o registro de usuario
         if (exchange.getRequest().getURI().getPath().contains("/auth/login")
                 || exchange.getRequest().getURI().getPath().contains("api/usermanagement/addUser")) {
             logger.info("-----> Excluyendo peticiones login y addUser");
@@ -43,7 +46,7 @@ public class JwtTokenFilter implements WebFilter {
 
         // Extraer el token de la cabecera de la petición
         String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        logger.info("-----> TODA SOLICITUD EXCEPTO LOGIN PASA POR AQUI");
+        logger.info("-----> TODA SOLICITUD EXCEPTO LOGIN y addUser PASA POR AQUI");
 
         // Validar que el token empiece con Bearer y almacenarlo en el contexto de seguridad de la aplicación
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -66,6 +69,7 @@ public class JwtTokenFilter implements WebFilter {
                             .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(securityContext)));
                 }
             } catch (Exception e) {
+                logger.info("-----> Token inválido" + e.getMessage());
                 exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                 return exchange.getResponse().setComplete();
             }
@@ -77,9 +81,15 @@ public class JwtTokenFilter implements WebFilter {
     }
 
     private SecretKey getKey(String secret) {
-        byte[] secretBytes = java.util.Base64.getDecoder().decode(secret);
-        return Keys.hmacShaKeyFor(secretBytes);
+        try {
+            byte[] secretBytes = Decoders.BASE64URL.decode(secret);
+            return Keys.hmacShaKeyFor(secretBytes);
+        } catch (IllegalArgumentException e) {
+            logger.severe("-----> La clave secreta no está en el formato correcto: " + e.getMessage());
+            throw e;
+        }
     }
+
 
 
 }

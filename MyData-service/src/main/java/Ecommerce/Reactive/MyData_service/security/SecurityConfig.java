@@ -23,13 +23,14 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityWebFilterChain devFilterChain(ServerHttpSecurity http) {
-
+    public SecurityWebFilterChain filterChain(ServerHttpSecurity http) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .authorizeExchange(exchanges -> exchanges
-                        .anyExchange().permitAll()
-                )
+                .cors(ServerHttpSecurity.CorsSpec::disable)
+                .authorizeExchange(exchangeSpec -> exchangeSpec
+                        .pathMatchers("/auth/**", "/api/usermanagement/addUser").permitAll()
+                        .pathMatchers("/api/MyData/**").permitAll()
+                        .anyExchange().authenticated())
                 .build();
     }
 }

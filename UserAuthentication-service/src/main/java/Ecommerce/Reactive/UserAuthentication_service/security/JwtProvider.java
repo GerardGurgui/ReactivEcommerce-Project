@@ -28,10 +28,10 @@ public class JwtProvider {
     public String generateToken(UserDetails userDetails) {
 
         return Jwts.builder()
-                .subject(userDetails.getUsername())
+                .setSubject(userDetails.getUsername())
                 .claim("roles", userDetails.getAuthorities())
-                .issuedAt(new Date())
-                .expiration(new Date(new Date().getTime() + securityConfigDataSource.getExpiresIn()))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + securityConfigDataSource.getExpiresIn()))
                 .signWith(getKey(securityConfigDataSource.getSecret()))
                 .compact();
     }
@@ -39,21 +39,21 @@ public class JwtProvider {
     // Extraer y devolver las reclamaciones (claims) del token JWT
     public Claims getClaims(String token) {
 
-        return Jwts.parser()
-                .verifyWith(getKey(securityConfigDataSource.getSecret()))
+        return Jwts.parserBuilder()
+                .setSigningKey(getKey(securityConfigDataSource.getSecret()))
                 .build()
-                .parseSignedClaims(token)
-                .getPayload();
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     //
     public String getSubject(String token) {
 
-        return Jwts.parser()
-                .verifyWith(getKey(securityConfigDataSource.getSecret()))
+        return Jwts.parserBuilder()
+                .setSigningKey(getKey(securityConfigDataSource.getSecret()))
                 .build()
-                .parseSignedClaims(token)
-                .getPayload()
+                .parseClaimsJws(token)
+                .getBody()
                 .getSubject();
     }
 
@@ -61,12 +61,10 @@ public class JwtProvider {
     public boolean validate(String token){
 
         try {
-            Jwts.parser()
-                    .verifyWith(getKey(securityConfigDataSource.getSecret()))
+            Jwts.parserBuilder()
+                    .setSigningKey(getKey(securityConfigDataSource.getSecret()))
                     .build()
-                    .parseSignedClaims(token)
-                    .getPayload()
-                    .getSubject();
+                    .parseClaimsJws(token);
             return true;
 
         } catch (ExpiredJwtException e) {
@@ -84,7 +82,12 @@ public class JwtProvider {
     }
 
     private SecretKey getKey(String secret) {
-        byte[] secretBytes = Decoders.BASE64URL.decode(secret);
-        return Keys.hmacShaKeyFor(secretBytes);
+        try {
+            byte[] secretBytes = Decoders.BASE64URL.decode(secret);
+            return Keys.hmacShaKeyFor(secretBytes);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        }
     }
+
 }

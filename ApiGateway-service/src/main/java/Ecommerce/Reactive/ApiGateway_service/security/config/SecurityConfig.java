@@ -22,11 +22,13 @@ public class SecurityConfig {
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .cors(ServerHttpSecurity.CorsSpec::disable)
                 .addFilterBefore(jwtTokenFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/public/**").permitAll()
                         .pathMatchers("/auth/login").permitAll()
                         .pathMatchers("/api/usermanagement/addUser").permitAll()
+                        .pathMatchers("/api/MyData/**").permitAll()
                         .anyExchange().authenticated()
                 );
 
