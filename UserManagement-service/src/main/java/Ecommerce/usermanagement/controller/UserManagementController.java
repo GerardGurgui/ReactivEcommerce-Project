@@ -84,9 +84,8 @@ public class UserManagementController {
     //Login
 
     @GetMapping("/getUserByUsernameOrEmail")
-    public ResponseEntity<Mono<UserLoginDto>> getUserInfoByUserNameOrEmail(@RequestParam(required = false) String username,
-                                                                           @RequestParam(required = false) String email) {
-        return new ResponseEntity<>(userManagementService.getUserByUsernameOrEmail(username,email), HttpStatus.FOUND);
+    public ResponseEntity<Mono<UserLoginDto>> getUserInfoByUserNameOrEmail(@RequestParam String input) {
+        return new ResponseEntity<>(userManagementService.getUserByUsernameOrEmail(input), HttpStatus.FOUND);
     }
 
 

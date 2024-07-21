@@ -10,8 +10,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
+@AllArgsConstructor@NoArgsConstructor
 public class UserDetailsImpl implements UserDetails {
 
     private String username;

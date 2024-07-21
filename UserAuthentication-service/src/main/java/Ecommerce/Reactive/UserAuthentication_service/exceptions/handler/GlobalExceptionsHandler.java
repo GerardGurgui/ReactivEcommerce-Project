@@ -1,6 +1,7 @@
 package Ecommerce.Reactive.UserAuthentication_service.exceptions.handler;
 
 import Ecommerce.Reactive.UserAuthentication_service.exceptions.BadCredentialsException;
+import Ecommerce.Reactive.UserAuthentication_service.exceptions.EmptyCredentialsException;
 import Ecommerce.Reactive.UserAuthentication_service.exceptions.UserNotFoundException;
 import Ecommerce.Reactive.UserAuthentication_service.exceptions.errorDetails.ErrorResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -63,6 +64,29 @@ public class GlobalExceptionsHandler {
         }
     }
 
+    @ExceptionHandler(EmptyCredentialsException.class)
+    public Mono<Void> handleEmptyCredentialsException(ServerWebExchange exchange, EmptyCredentialsException exception) {
+
+        exchange.getResponse().setStatusCode(HttpStatus.BAD_REQUEST);
+        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
+
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+        try {
+            return exchange.getResponse().writeWith(
+                    Mono.just(
+                            exchange.getResponse()
+                                    .bufferFactory()
+                                    .wrap(objectMapper.writeValueAsBytes(errorResponse))
+                    )
+            );
+        } catch (JsonProcessingException e) {
+            return Mono.error(e);
+        }
+    }
 
 
 }
