@@ -25,5 +25,5 @@ public interface IUserManagementService {
 
     Mono<UserBasicOutputDto> getUserByUserName(String userName);
 
-    Mono<UserLoginDto> getUserByUsernameOrEmail(String input);
+    Mono<UserLoginDto> getUserByUsernameOrEmail(String username, String email);
 }

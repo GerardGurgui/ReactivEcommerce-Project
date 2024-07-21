@@ -211,12 +211,19 @@ public class UserManagementServiceImpl implements IUserManagementService {
     //Moodificar LastestAccess
     // que mas ?
 
-    public Mono<UserLoginDto> getUserByUsernameOrEmail(String input) {
+    public Mono<UserLoginDto> getUserByUsernameOrEmail(String username, String email) {
 
-        if (input.contains("@")) {
-            return getUserLoginByEmail(new UserEmailDto(input));
+        if (username != null && !username.isEmpty() && email != null && !email.isEmpty()) {
+            return getUserByUserNameAndEmail(username, email);
+
+        } else if (username != null && !username.isEmpty()) {
+            return getUserLoginByUserName(username);
+
+        } else if (email != null && !email.isEmpty()) {
+            return getUserLoginByEmail(new UserEmailDto(email));
+
         } else {
-            return getUserLoginByUserName(input);
+            return Mono.error(new UserNotFoundException("Username or Email must be provided"));
         }
     }
 

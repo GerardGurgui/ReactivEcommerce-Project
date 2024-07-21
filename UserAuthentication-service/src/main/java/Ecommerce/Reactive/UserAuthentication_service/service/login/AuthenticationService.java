@@ -36,35 +36,44 @@ public class AuthenticationService {
 
     public Mono<TokenDto> authenticate(UserLoginDto userLoginDto) {
 
-        return checkIfIsUsernameOrEmail(userLoginDto)
-                .flatMap(usernameOrEmail -> fetchUser(usernameOrEmail))
+          return checkIfIsUsernameOrEmail(userLoginDto)
+                .flatMap(usernameOrEmail -> userMngConnector.getUserByUsernameOrEmail(userLoginDto.getUsername(), userLoginDto.getEmail())
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User not found")))
                 .filter(user -> passwordEncoder.matches(userLoginDto.getPassword(), user.getPassword()))
                 .switchIfEmpty(Mono.error(new BadCredentialsException("Password does not match")))
                 .flatMap(user -> generateToken(userLoginDto))
-                .onErrorResume(ex -> handleLoginErrors(ex));
+                .onErrorResume(ex -> handleLoginErrors(ex)));
     }
+
 
     private Mono<String> checkIfIsUsernameOrEmail(UserLoginDto userLoginDto) {
 
         String username = userLoginDto.getUsername();
         String email = userLoginDto.getEmail();
 
+        // Check if both fields are empty
         if ((username == null || username.isEmpty()) && (email == null || email.isEmpty())) {
             return Mono.error(new EmptyCredentialsException("Username or Email cannot be null or empty"));
         }
 
+        // If email is not empty and contains '@', return the email
         if (email != null && !email.isEmpty() && email.contains("@")) {
             return Mono.just(email);
         }
 
+        // If username is not empty, return the username
         if (username != null && !username.isEmpty()) {
             return Mono.just(username);
         }
 
+        // If email is not empty but does not contain '@' and username is empty
+        if (email != null && !email.isEmpty()) {
+            return Mono.just(email);
+        }
+
+        // In any other case, throw an exception for invalid credentials
         return Mono.error(new EmptyCredentialsException("Invalid credentials"));
     }
-
 
 
     public Mono<TokenDto> generateToken(UserLoginDto userLoginDto) {
@@ -72,13 +81,6 @@ public class AuthenticationService {
         UserDetailsImpl userDetails = new UserDetailsImpl(userLoginDto.getUsername(), userLoginDto.getEmail());
         String token = jwtProvider.generateToken(userDetails);
         return Mono.just(new TokenDto(token));
-    }
-
-    public Mono<UserLoginDto> fetchUser(String usernameorEmail) {
-
-        return userMngConnector.getUserByUsernameOrEmail(usernameorEmail)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User not found")))
-                .doOnNext(user -> logger.info("---> User fetched: " + user));
     }
 
 
