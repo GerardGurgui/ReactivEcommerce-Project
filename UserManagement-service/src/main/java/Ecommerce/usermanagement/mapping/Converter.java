@@ -10,6 +10,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 @Component
@@ -39,6 +40,15 @@ public class Converter {
 
         BeanUtils.copyProperties(user, userDto);
 
+        //roles
+        if(user.getRoles() != null){
+            userDto.setRoles(new HashSet<>(user.getRoles()));
+        }
+
+        //carritos
+
+
+
         return userDto;
     }
 
@@ -47,6 +57,13 @@ public class Converter {
         UserLoginDto userDto = new UserLoginDto();
 
         BeanUtils.copyProperties(user, userDto);
+
+        //roles
+        if(user.getRoles() != null){
+            userDto.setRoles(new HashSet<>(user.getRoles()));
+        }
+
+        //carritos
 
         return userDto;
     }

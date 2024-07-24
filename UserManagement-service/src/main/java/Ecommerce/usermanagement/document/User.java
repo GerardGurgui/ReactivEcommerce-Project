@@ -13,12 +13,13 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 
 import javax.validation.constraints.NotBlank;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -28,8 +29,6 @@ import java.util.*;
 public class User {
 
     //COMPROBAR CONSTRASEÑA? INTRODUCIR 2 VECES?
-
-    //implementar UserDetails??
 
     @Id
     private ObjectId id;
@@ -70,9 +69,6 @@ public class User {
     @Field(name = "total_spent")
     private int totalSpent;
 
-    @Field(name = "is_active")
-    private boolean isActive;
-
     @Field(name = "active_cart")
     private boolean activeCart;
 
@@ -82,13 +78,25 @@ public class User {
     @Field(name = "latest_access")
     private String latestAccess;
 
-    //lista roles como dto tambien? o solo como enum
     @Field(name = "roles")
     @JsonManagedReference // manejar serializacion de los usuarios
     private Set<Roles> roles;
 
     @Field(name = "carts")
     private List<CartDto> carts;
+
+    //Properties from userDetails
+    @Field(name = "is_account_non_expired")
+    private boolean isAccountNonExpired;
+
+    @Field(name = "is_account_non_locked")
+    private boolean isAccountNonLocked;
+
+    @Field(name = "is_credentials_non_expired")
+    private boolean isCredentialsNonExpired;
+
+    @Field(name = "is_enabled")
+    private boolean isEnabled;
 
     //AÑADIR RELACION CON PEDIDOS (Order) FALTA CREAR MICROSERVICIO DE PEDIDOS
 
@@ -110,14 +118,16 @@ public class User {
         if (roles == null) {
             roles = new HashSet<>();
         }
-        roles.add(Roles.USER);
+        roles.add(Roles.ROLE_USER);
     }
 
-    public boolean isAdmin() {
+    public Collection<? extends GrantedAuthority> getAuthorities() {
 
         return roles.stream()
-                .anyMatch(role -> role.equals(Roles.ADMIN));
-
+                .map(role -> new SimpleGrantedAuthority(role.name()))
+                .collect(Collectors.toList());
     }
+
+
 
 }

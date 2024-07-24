@@ -1,7 +1,6 @@
 package Ecommerce.usermanagement.controller;
 
 import Ecommerce.usermanagement.dto.cart.UserCartDto;
-import Ecommerce.usermanagement.dto.input.UserEmailDto;
 import Ecommerce.usermanagement.dto.input.UserInputDto;
 import Ecommerce.usermanagement.dto.output.UserBasicOutputDto;
 import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;
@@ -52,15 +51,15 @@ public class UserManagementController {
     }
 
     @GetMapping("/getUserByEmail/{email}")
-    public ResponseEntity<Mono<UserBasicOutputDto>> getUserInfoByEmail(@PathVariable UserEmailDto email) {
+    public ResponseEntity<Mono<UserBasicOutputDto>> getUserByEmail(@PathVariable String email) {
 
         return new ResponseEntity<>(userManagementService.getUserByEmail(email), HttpStatus.FOUND);
     }
 
-    @GetMapping("/getUserByUserName/{userName}")
-    public ResponseEntity<Mono<UserBasicOutputDto>> getUserBasicByUsername(@PathVariable String userName) {
+    @GetMapping("/getUserByUserName/{username}")
+    public ResponseEntity<Mono<UserBasicOutputDto>> getUserBasicByUsername(@PathVariable String username) {
 
-        return new ResponseEntity<>(userManagementService.getUserByUserName(userName), HttpStatus.FOUND);
+        return new ResponseEntity<>(userManagementService.getUserByUserName(username), HttpStatus.FOUND);
     }
 
 
@@ -83,10 +82,14 @@ public class UserManagementController {
     ////CONNECTION WITH AUTHENTICATION-SERVICE
     //Login
 
-    @GetMapping("/getUserByUsernameOrEmail")
-    public ResponseEntity<Mono<UserLoginDto>> getUserInfoByUserNameOrEmail(@RequestParam(required = false) String username,
-                                                                           @RequestParam(required = false) String email) {
-        return new ResponseEntity<>(userManagementService.getUserByUsernameOrEmail(username, email), HttpStatus.FOUND);
+    @GetMapping("/getUserLoginByUsername")
+    public ResponseEntity<Mono<UserLoginDto>> getUserLoginByUsername(@RequestParam String username) {
+        return new ResponseEntity<>(userManagementService.getUserLoginByUserName(username), HttpStatus.FOUND);
+    }
+
+    @GetMapping("/getUserLoginByEmail")
+    public ResponseEntity<Mono<UserLoginDto>> getUserLoginByEmail(@RequestParam String email) {
+        return new ResponseEntity<>(userManagementService.getUserLoginByEmail(email), HttpStatus.FOUND);
     }
 
 

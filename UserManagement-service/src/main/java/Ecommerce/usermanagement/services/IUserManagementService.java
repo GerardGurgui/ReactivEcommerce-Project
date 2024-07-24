@@ -15,7 +15,7 @@ public interface IUserManagementService {
 
     Mono<UserInfoOutputDto> getUserInfoByUuid(String userUuidDto);
 
-    Mono<UserBasicOutputDto> getUserByEmail(UserEmailDto userEmailDto);
+    Mono<UserBasicOutputDto> getUserByEmail(String email);
 
     Mono<Void> checkEmailExists(String email);
 
@@ -25,5 +25,4 @@ public interface IUserManagementService {
 
     Mono<UserBasicOutputDto> getUserByUserName(String userName);
 
-    Mono<UserLoginDto> getUserByUsernameOrEmail(String username, String email);
 }

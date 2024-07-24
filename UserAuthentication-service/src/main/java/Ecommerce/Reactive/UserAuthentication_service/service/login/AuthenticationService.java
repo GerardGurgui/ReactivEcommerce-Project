@@ -5,6 +5,7 @@ import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.UserLoginD
 import Ecommerce.Reactive.UserAuthentication_service.infrastructure.mongodb.adapter.UserMongoAdapter;
 import Ecommerce.Reactive.UserAuthentication_service.security.JwtProvider;
 import Ecommerce.Reactive.UserAuthentication_service.security.userdetails.UserDetailsImpl;
+import Ecommerce.Reactive.UserAuthentication_service.security.userdetails.service.CustomUserDetailsService;
 import Ecommerce.Reactive.UserAuthentication_service.service.usermanagement.UserManagementConnectorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import Ecommerce.Reactive.UserAuthentication_service.exceptions.BadCredentialsException;
@@ -23,26 +24,28 @@ public class AuthenticationService {
 
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
-    private final UserManagementConnectorService userMngConnector;
+    private final CustomUserDetailsService customUserDetailsService;
 
     @Autowired
     public AuthenticationService(JwtProvider jwtProvider,
                                  PasswordEncoder passwordEncoder,
-                                 UserManagementConnectorService userMngConnector) {
+                                 CustomUserDetailsService customUserDetailsService) {
         this.jwtProvider = jwtProvider;
         this.passwordEncoder = passwordEncoder;
-        this.userMngConnector = userMngConnector;
+        this.customUserDetailsService = customUserDetailsService;
     }
 
     public Mono<TokenDto> authenticate(UserLoginDto userLoginDto) {
 
           return checkIfIsUsernameOrEmail(userLoginDto)
-                .flatMap(usernameOrEmail -> userMngConnector.getUserByUsernameOrEmail(userLoginDto.getUsername(), userLoginDto.getEmail())
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User not found")))
+                .flatMap(usernameOrEmail -> customUserDetailsService.findByUsername(usernameOrEmail))
+                    .switchIfEmpty(Mono.error(new UserNotFoundException("User not found")))
+                    .doOnNext(userDetails -> logger.info("---> UserDetails: " + userDetails))
                 .filter(user -> passwordEncoder.matches(userLoginDto.getPassword(), user.getPassword()))
-                .switchIfEmpty(Mono.error(new BadCredentialsException("Password does not match")))
-                .flatMap(user -> generateToken(userLoginDto))
-                .onErrorResume(ex -> handleLoginErrors(ex)));
+                    .switchIfEmpty(Mono.error(new BadCredentialsException("Password does not match")))
+                .flatMap(userDetails -> generateToken((UserDetailsImpl) userDetails))
+                    .doOnNext(tokenDto -> logger.info("---> User authenticated successfully"))
+                .onErrorResume(ex -> handleLoginErrors(ex));
     }
 
 
@@ -57,7 +60,7 @@ public class AuthenticationService {
         }
 
         // If email is not empty and contains '@', return the email
-        if (email != null && !email.isEmpty() && email.contains("@")) {
+        if (email != null && email.contains("@")) {
             return Mono.just(email);
         }
 
@@ -76,9 +79,8 @@ public class AuthenticationService {
     }
 
 
-    public Mono<TokenDto> generateToken(UserLoginDto userLoginDto) {
+    public Mono<TokenDto> generateToken(UserDetailsImpl userDetails) {
 
-        UserDetailsImpl userDetails = new UserDetailsImpl(userLoginDto.getUsername(), userLoginDto.getEmail());
         String token = jwtProvider.generateToken(userDetails);
         return Mono.just(new TokenDto(token));
     }

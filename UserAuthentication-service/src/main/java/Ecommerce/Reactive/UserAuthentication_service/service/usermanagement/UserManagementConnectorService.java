@@ -24,37 +24,55 @@ public class UserManagementConnectorService {
         this.webClient = webClientBuilder.baseUrl(USERMANAGEMENT_URL).build();
     }
 
-    /**
-     * Retrieves a user by username or email, and validates the provided username and email.
-     * @param username The username to check.
-     * @param email The email to check.
-     * @return Mono<UserLoginDto> A Mono emitting the user if found and validated.
-     */
-    public Mono<UserLoginDto> getUserByUsernameOrEmail(String username, String email) {
 
-        LOGGER.info("Request to UserManagementConnectorService: getUserByUsernameOrEmail with username: "
-                + username + " and email: " + email);
+    public Mono<UserLoginDto> getUserByEmail(String email){
+
+        LOGGER.info("Request to UserManagementConnectorService: getUserByEmail with email: " + email);
 
         return webClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/getUserByUsernameOrEmail")
-                        .queryParam("username", username)
+                .uri(uriBuilder -> uriBuilder.path("/getUserLoginByEmail")
                         .queryParam("email", email)
                         .build())
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError,
-                        clientResponse -> Mono.error(new UserNotFoundException("Error during GET request to getUserByUsernameOrEmail: User not found for username: "
-                                + username + " and email: " + email)))
+                        clientResponse -> Mono.error(new UserNotFoundException("Error during GET request to getUserByEmail: User not found for email: " + email)))
                 .onStatus(HttpStatusCode::is5xxServerError,
-                        clientResponse -> Mono.error(new ServerErrorException("Error during GET request to getUserByUsernameOrEmail: Server error",
+                        clientResponse -> Mono.error(new ServerErrorException("Error during GET request to getUserByEmail: Server error",
                                 new RuntimeException("Server error"))))
                 .bodyToMono(UserLoginDto.class)
-                .doOnNext(user -> LOGGER.info("Response From: getUserByUsernameOrEmail: User obtained: " + user))
+                .doOnNext(user -> LOGGER.info("Response From: getUserByEmail: User obtained: " + user))
                 .onErrorMap(UserNotFoundException.class, ex -> {
-                    LOGGER.info("Response From: getUserByUsernameOrEmail: User not found");
+                    LOGGER.info("Response From: getUserByEmail: User not found");
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found", ex);
                 })
                 .onErrorMap(ServerErrorException.class, ex -> {
-                    LOGGER.info("Response From: getUserByUsernameOrEmail: Server error");
+                    LOGGER.info("Response From: getUserByEmail: Server error");
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", ex);
+                });
+    }
+
+    public Mono<UserLoginDto> getUserByUsername(String username){
+
+        LOGGER.info("Request to UserManagementConnectorService: getUserByUsername with username: " + username);
+
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/getUserLoginByUsername")
+                        .queryParam("username", username) //username o userName?
+                        .build())
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError,
+                        clientResponse -> Mono.error(new UserNotFoundException("Error during GET request to getUserByUsername: User not found for username: " + username)))
+                .onStatus(HttpStatusCode::is5xxServerError,
+                        clientResponse -> Mono.error(new ServerErrorException("Error during GET request to getUserByUsername: Server error",
+                                new RuntimeException("Server error"))))
+                .bodyToMono(UserLoginDto.class)
+                .doOnNext(user -> LOGGER.info("Response From: getUserByUsername: User obtained: " + user))
+                .onErrorMap(UserNotFoundException.class, ex -> {
+                    LOGGER.info("Response From: getUserByUsername: User not found");
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found", ex);
+                })
+                .onErrorMap(ServerErrorException.class, ex -> {
+                    LOGGER.info("Response From: getUserByUsername: Server error");
                     throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", ex);
                 });
     }

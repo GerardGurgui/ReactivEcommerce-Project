@@ -1,6 +1,7 @@
 package Ecommerce.usermanagement.dto.output;
 
 
+import Ecommerce.usermanagement.document.Roles;
 import Ecommerce.usermanagement.dto.cart.CartDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,7 +28,7 @@ public class UserInfoOutputDto {
     private boolean activeCart;
     private LocalDate loginDate;
     private String latestAcces;
-    private Set<String> roles;
+    private Set<Roles> roles;
     private List<CartDto> carts;
 
 }

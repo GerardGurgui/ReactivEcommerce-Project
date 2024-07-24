@@ -43,10 +43,10 @@ public class UserManagementServiceImpl implements IUserManagementService {
         for (String rolename : rolenames) {
 
             if (rolename.equalsIgnoreCase("ADMIN")) {
-                userRoles.add(Roles.ADMIN);
+                userRoles.add(Roles.ROLE_ADMIN);
 
             } else if (rolename.equalsIgnoreCase("USER")) {
-                userRoles.add(Roles.USER);
+                userRoles.add(Roles.ROLE_USER);
             }
         }
         return userRoles;
@@ -116,10 +116,14 @@ public class UserManagementServiceImpl implements IUserManagementService {
         user.setTotalPurchase(0L);
         user.setTotalSpent(0);
         user.setActiveCart(false);
-        user.setActive(true);
         user.addRoleUser(); //default role
+        user.getAuthorities();
+        //userDetails properties
+        user.setAccountNonExpired(true);
+        user.setAccountNonLocked(true);
+        user.setCredentialsNonExpired(true);
+        user.setEnabled(true);
         return userRepository.save(user).map(Converter::convertToDtoInfo);
-
     }
 
     ////GET
@@ -131,7 +135,6 @@ public class UserManagementServiceImpl implements IUserManagementService {
             .switchIfEmpty(Mono.error(new UserNotFoundException("User with Uuid: " + userUuidDto + " not found")))
             .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting user by Uuid: " + userUuidDto + ", User not found")))
             .map(Converter::convertToDtoBasic);
-
     }
 
     @Override
@@ -141,8 +144,6 @@ public class UserManagementServiceImpl implements IUserManagementService {
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User with Uuid: " + userUuidDto + " not found")))
                 .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting user by Uuid: " + userUuidDto + ", User not found")))
                 .map(Converter::convertToDtoInfo);
-
-
     }
 
     //without password
@@ -157,35 +158,13 @@ public class UserManagementServiceImpl implements IUserManagementService {
 
     //without password
     @Override
-    public Mono<UserBasicOutputDto> getUserByEmail(UserEmailDto userEmailDto) {
+    public Mono<UserBasicOutputDto> getUserByEmail(String email) {
 
-        return userRepository.findByEmail(userEmailDto.getEmail())
-                .switchIfEmpty(Mono.error(new EmailNotFoundException("Email not found", userEmailDto.getEmail())))
-                .onErrorResume(e -> Mono.error(new EmailNotFoundException("Error getting user by email:, Email not found", userEmailDto.getEmail())))
+        return userRepository.findByEmail(email)
+                .switchIfEmpty(Mono.error(new EmailNotFoundException("Email not found",email)))
+                .onErrorResume(e -> Mono.error(new EmailNotFoundException("Error getting user by email:, Email not found", email)))
                 .map(Converter::convertToDtoBasic);
-
     }
-
-    //with password (Login)
-    public Mono<UserLoginDto> getUserLoginByUserName(String userName) {
-
-        return userRepository.findByUsername(userName)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User with username: " + userName + " not found")))
-                .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting user by username: " + userName + ", User not found")))
-                .map(Converter::convertToDtoLogin);
-    }
-
-    //with password (Login)
-    public Mono<UserLoginDto> getUserLoginByEmail(UserEmailDto userEmailDto) {
-
-        return userRepository.findByEmail(userEmailDto.getEmail())
-                .switchIfEmpty(Mono.error(new EmailNotFoundException("Email not found", userEmailDto.getEmail())))
-                .onErrorResume(e -> Mono.error(new EmailNotFoundException("Error getting user by email:, Email not found", userEmailDto.getEmail())))
-                .map(Converter::convertToDtoLogin);
-
-    }
-
-
 
     public Flux<UserInfoOutputDto> getAllUsersInfo() {
 
@@ -193,7 +172,6 @@ public class UserManagementServiceImpl implements IUserManagementService {
                 .switchIfEmpty(Mono.error(new UserNotFoundException("No users found")))
                 .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting users, No users found")))
                 .map(Converter::convertToDtoInfo);
-
     }
 
     ////--> FLUX con operador .filter para filtrar por:
@@ -211,28 +189,23 @@ public class UserManagementServiceImpl implements IUserManagementService {
     //Moodificar LastestAccess
     // que mas ?
 
-    public Mono<UserLoginDto> getUserByUsernameOrEmail(String username, String email) {
+    //with password (Login)
+    public Mono<UserLoginDto> getUserLoginByUserName(String username) {
 
-        if (username != null && !username.isEmpty() && email != null && !email.isEmpty()) {
-            return getUserByUserNameAndEmail(username, email);
-
-        } else if (username != null && !username.isEmpty()) {
-            return getUserLoginByUserName(username);
-
-        } else if (email != null && !email.isEmpty()) {
-            return getUserLoginByEmail(new UserEmailDto(email));
-
-        } else {
-            return Mono.error(new UserNotFoundException("Username or Email must be provided"));
-        }
+        return userRepository.findByUsername(username)
+                .switchIfEmpty(Mono.error(new UserNotFoundException("User with username: " + username + " not found")))
+                .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting user by username: " + username + ", User not found")))
+                .map(Converter::convertToDtoLogin);
     }
 
-    private Mono<UserLoginDto> getUserByUserNameAndEmail(String username, String email) {
+    //with password (Login)
+    public Mono<UserLoginDto> getUserLoginByEmail(String email) {
 
-        return userRepository.findByUsernameAndEmail(username, email)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User with username: " + username + " and email: " + email + " not found")))
-                .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting user by username and email:, User not found")))
+        return userRepository.findByEmail(email)
+                .switchIfEmpty(Mono.error(new EmailNotFoundException("Email not found", email)))
+                .onErrorResume(e -> Mono.error(new EmailNotFoundException("Error getting user by email:, Email not found", email)))
                 .map(Converter::convertToDtoLogin);
+
     }
 
 
