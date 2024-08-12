@@ -1,4 +1,4 @@
-# Nombre de la aplicacion
+# Nombre de la aplicacion FALTA AÑADIR FILTEEER DESPUES DE PREDICATE!!!
 spring:
   application:
     name: ApiGateway-service
@@ -17,6 +17,12 @@ spring:
           uri: lb://${UserAuthentication.service.name}
           predicates:
             - Path=${UserAuthentication.service.route}
+    discovery:
+      client:
+        simple:
+          instances:
+            UserAuthentication-service:
+              - uri: http://localhost:8084
 
 # Puerto del servidor
 server:
@@ -35,20 +41,27 @@ UserManagement:
   service:
     name: UserManagement-service
     route: /api/usermanagement/**
-
 MyData:
   service:
     name: MyData-service
     route: /api/MyData/**
-
 UserAuthentication:
   service:
     name: UserAuthentication-service
     route: /api/userauthentication/**
 
-#JWT SECRET
-jwt:
-  secret: SgVkYp3s6v9y_B-E_H-MbQeThWmZq4t7w5dfTmArdUg
+#JWT SECRET AND SECURITY CONFIGURATION
+security:
+  datasource:
+    signUpUrl: /api/user-authentication/login
+    secret: SgVkYp3s6v9y_B-E_H-MbQeThWmZq4t7w5dfTmArdUg
+    tokenPrefix: Bearer
+    expiresIn: 1200000
+    authoritiesClaim: authorities
+    error: Auth Error, Token Unavailable
+    userManagementUrl: http://localhost:8085/api/usermanagement/addUser
+    testuser:
+      email:
 
 # Configuracion de los logs
 logging:

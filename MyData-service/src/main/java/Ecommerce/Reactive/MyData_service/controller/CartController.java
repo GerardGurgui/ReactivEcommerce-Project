@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -28,13 +29,14 @@ public class CartController {
         this.cartService = cartService;
     }
 
-
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/createCart")
-    public ResponseEntity<Mono<CartDto>> createCart(@Valid @RequestBody CartDto cartDto) {
+    public Mono<ResponseEntity<CartDto>> createCart(@Valid @RequestBody CartDto cartDto) {
 
         LOGGER.info("----> Creating cart for user");
 
-        return new ResponseEntity<>(cartService.createCartForUser(cartDto), HttpStatus.CREATED);
+        return cartService.createCartForUser(cartDto)
+                .map(cart -> new ResponseEntity<>(cart, HttpStatus.CREATED));
     }
 
 

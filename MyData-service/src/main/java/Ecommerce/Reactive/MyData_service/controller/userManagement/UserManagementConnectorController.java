@@ -17,7 +17,7 @@ public class UserManagementConnectorController {
         this.userManagementConnectorService = userManagementConnectorService;
     }
 
-    @GetMapping("/getUserBasic/{uuid}")
+    @GetMapping("/get/userBasic/{uuid}")
     public Mono<UserDto> getUserByUuidBasic(@PathVariable String uuid) {
         return userManagementConnectorService.getUserByUuidBasic(uuid);
     }

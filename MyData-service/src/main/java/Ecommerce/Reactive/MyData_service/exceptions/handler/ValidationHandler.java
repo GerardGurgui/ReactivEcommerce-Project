@@ -14,6 +14,7 @@ public class ValidationHandler {
 
     @ExceptionHandler(WebExchangeBindException.class)
     public ResponseEntity<List<String>> handleException(WebExchangeBindException e) {
+
         var errors = e.getBindingResult()
                 .getAllErrors()
                 .stream()

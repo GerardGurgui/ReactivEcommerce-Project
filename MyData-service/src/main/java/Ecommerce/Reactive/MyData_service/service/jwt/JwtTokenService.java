@@ -12,6 +12,8 @@ import java.util.logging.Logger;
 @Service
 public class JwtTokenService {
 
+    //REVISAR BE AQUET METODO, AUNQUE DE MOMENTO NI LLEGA AQUI PARECE
+
     private static final Logger LOGGER =  Logger.getLogger(JwtTokenService.class.getName());
 
     private static final String SUBJECT_CLAIM = "sub";

@@ -1,63 +1,61 @@
 package Ecommerce.Reactive.ApiGateway_service.security.config;
 
-import Ecommerce.Reactive.ApiGateway_service.jwt.JwtTokenFilter;
+import io.jsonwebtoken.io.Decoders;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtReactiveAuthenticationManager;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+
+import javax.crypto.spec.SecretKeySpec;
 
 @Configuration
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private JwtTokenFilter jwtTokenFilter;
+    @Value("${security.datasource.secret}")
+    private String secretKey;
+
+    @Bean
+    public JwtReactiveAuthenticationManager jwtReactiveAuthenticationManager(ReactiveJwtDecoder reactiveJwtDecoder) {
+        return new JwtReactiveAuthenticationManager(reactiveJwtDecoder);
+    }
+
+    @Bean
+    public ReactiveJwtDecoder reactiveJwtDecoder() {
+        byte[] secretBytes = Decoders.BASE64URL.decode(secretKey);
+        SecretKeySpec secretKeySpec = new SecretKeySpec(secretBytes, "HmacSHA256");
+        return NimbusReactiveJwtDecoder.withSecretKey(secretKeySpec).build();
+    }
+
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-        http
+        return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .cors(ServerHttpSecurity.CorsSpec::disable)
-                .addFilterBefore(jwtTokenFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/public/**").permitAll()
                         .pathMatchers("/auth/login").permitAll()
+                        .pathMatchers("/auth/validateToken").permitAll()
                         .pathMatchers("/api/usermanagement/addUser").permitAll()
+                        .pathMatchers("/api/usermanagement/get/**").permitAll()
                         .pathMatchers("/api/MyData/**").permitAll()
                         .anyExchange().authenticated()
-                );
-
-        //REVISAR TODAS LAS CONFIGURACIONES DE SEGURIDAD
-
-//                .headers(headers -> headers
-//                        .contentSecurityPolicy("default-src 'self'")
-//                        .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
-//                        .permissionsPolicy(permissions -> permissions.policy("geolocation=(self), camera=()"))
-//                        .strictTransportSecurity()
-//                        .httpStrictTransportSecurity()
-//                        .includeSubDomains(true)
-//                        .maxAgeInSeconds(31536000)
-//                        .and()
-//                        .frameOptions(ServerHttpSecurity.HeaderSpec.FrameOptionsSpec::deny)
-//                        .xssProtection(xss -> xss.block(true))
-//                        .cacheControl(ServerHttpSecurity.HeaderSpec.CacheControlSpec::disable)
-//                        .contentTypeOptions(ServerHttpSecurity.HeaderSpec.ContentTypeOptionsSpec::disable)
-//                )
-//                .cors(cors -> cors.configurationSource(request -> {
-//                    var corsConfiguration = new CorsConfiguration();
-//                    corsConfiguration.setAllowedOrigins(List.of("https://trusteddomain.com"));
-//                    corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
-//                    corsConfiguration.setAllowedHeaders(List.of(HttpHeaders.AUTHORIZATION, HttpHeaders.CONTENT_TYPE));
-//                    return corsConfiguration;
-//                }));
-
-        return http.build();
+                )
+                .build();
     }
+
+
+
 }
 
 

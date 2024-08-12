@@ -1,0 +1,22 @@
+package Ecommerce.Reactive.ApiGateway_service.exceptions;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class ErrorResponse {
+
+    private String errorDetails;
+    private String timestamp;
+
+    public ErrorResponse(String errorDetails, String timestamp) {
+        this.errorDetails = errorDetails;
+        this.timestamp = timestamp;
+    }
+
+    public ErrorResponse(String errorDetails) {
+        this.errorDetails = errorDetails;
+    }
+
+}

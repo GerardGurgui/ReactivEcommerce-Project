@@ -1,50 +1,38 @@
-package Ecommerce.Reactive.UserAuthentication_service.security;
+package Ecommerce.Reactive.ApiGateway_service.jwt;
 
-import Ecommerce.Reactive.UserAuthentication_service.config.SecurityConfigDataSource;
+import Ecommerce.Reactive.ApiGateway_service.security.config.SecurityConfigDataSource;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.logging.Logger;
 
-//clase encargada de generar los tokens JWT del usuario y de validarlos
-
 @Component
-public class JwtProvider {
+public class JwtUtil {
 
-    private static final Logger LOGGER =  Logger.getLogger(JwtProvider.class.getName());
+    private static final Logger LOGGER =  Logger.getLogger(JwtUtil.class.getName());
+
+    private final SecurityConfigDataSource securityConfigDataSource;
 
     @Autowired
-    private SecurityConfigDataSource securityConfigDataSource;
-
-    // Generar un token JWT con el nombre de usuario y los roles del usuario
-    public String generateToken(UserDetails userDetails, String userUuid) {
-
-          return Jwts.builder()
-                .setSubject(userUuid)
-                .claim("roles", userDetails.getAuthorities())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + securityConfigDataSource.getExpiresIn()))
-                .signWith(getKey(securityConfigDataSource.getSecret()))
-                .compact();
+    public JwtUtil(SecurityConfigDataSource securityConfigDataSource) {
+        this.securityConfigDataSource = securityConfigDataSource;
     }
 
     // Validar un token JWT y devolver verdadero si el token es válido
-    public boolean validate(String token){
+    public Claims validate(String token){
 
         try {
-            Jwts.parserBuilder()
+            return Jwts.parserBuilder()
                     .setSigningKey(getKey(securityConfigDataSource.getSecret()))
                     .build()
-                    .parseClaimsJws(token);
-            LOGGER.info("---> token is valid from Auth service");
-            return true;
+                    .parseClaimsJws(token)
+                    .getBody();
 
         } catch (ExpiredJwtException e) {
             LOGGER.severe("token expired");
@@ -57,7 +45,12 @@ public class JwtProvider {
         } catch (IllegalArgumentException e) {
             LOGGER.severe("illegal args");
         }
-        return false;
+        return null;
+    }
+
+    //REVISAR
+    public boolean isTokenExpired(Claims claims) {
+        return claims.getExpiration().before(new Date());
     }
 
     private SecretKey getKey(String secret) {

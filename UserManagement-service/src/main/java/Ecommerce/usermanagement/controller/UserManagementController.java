@@ -22,6 +22,8 @@ import reactor.core.publisher.Mono;
 public class UserManagementController {
 
 
+    //REVISAR MONO CON RESPONSE ENTITY AL REVEEES!
+
     private final UserManagementServiceImpl userManagementService;
 
     @Autowired
@@ -38,32 +40,34 @@ public class UserManagementController {
 
     ////GETS
 
-    @GetMapping("/getUserBasic/{uuid}")
-    public ResponseEntity<Mono<UserBasicOutputDto>> getUserByUuidBasic(@PathVariable String uuid) {
+    @GetMapping("/get/userBasic/{uuid}")
+    public Mono<ResponseEntity<UserBasicOutputDto>> getUserByUuidBasic(@PathVariable String uuid) {
 
-        return new ResponseEntity<>(userManagementService.getUserByUuid(uuid), HttpStatus.FOUND);
+        return userManagementService.getUserByUuid(uuid)
+                .map(userBasicOutputDto -> new ResponseEntity<>(userBasicOutputDto, HttpStatus.FOUND));
     }
 
-    @GetMapping("/getUserInfo/{uuid}")
+    @GetMapping("/get/userInfo/{uuid}")
     public ResponseEntity<Mono<UserInfoOutputDto>> getUserInfoByUuid(@PathVariable String uuid) {
 
         return new ResponseEntity<>(userManagementService.getUserInfoByUuid(uuid), HttpStatus.FOUND);
     }
 
-    @GetMapping("/getUserByEmail/{email}")
+    @GetMapping("/get/userByEmail/{email}")
     public ResponseEntity<Mono<UserBasicOutputDto>> getUserByEmail(@PathVariable String email) {
 
         return new ResponseEntity<>(userManagementService.getUserByEmail(email), HttpStatus.FOUND);
     }
 
-    @GetMapping("/getUserByUserName/{username}")
-    public ResponseEntity<Mono<UserBasicOutputDto>> getUserBasicByUsername(@PathVariable String username) {
+    @GetMapping("/get/userByUserName/{username}")
+    public Mono<ResponseEntity<UserBasicOutputDto>> getUserBasicByUsername(@PathVariable String username) {
 
-        return new ResponseEntity<>(userManagementService.getUserByUserName(username), HttpStatus.FOUND);
+        return userManagementService.getUserByUserName(username)
+                .map(userBasicOutputDto -> new ResponseEntity<>(userBasicOutputDto, HttpStatus.FOUND));
     }
 
 
-    @GetMapping("/getAllUsersInfo")
+    @GetMapping("/get/allUsersInfo")
     public ResponseEntity<Flux<UserInfoOutputDto>> getAllUsersInfo() {
 
         return new ResponseEntity<>(userManagementService.getAllUsersInfo(), HttpStatus.FOUND);

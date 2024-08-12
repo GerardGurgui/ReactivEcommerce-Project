@@ -4,7 +4,7 @@ import Ecommerce.Reactive.UserAuthentication_service.controller.LoginController;
 import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.UserLoginDto;
 import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.TokenDto;
 import Ecommerce.Reactive.UserAuthentication_service.domain.model.userGateway.UserGateway;
-import Ecommerce.Reactive.UserAuthentication_service.service.login.AuthenticationService;
+import Ecommerce.Reactive.UserAuthentication_service.service.jwt.JwtTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -15,10 +15,10 @@ import java.util.logging.Logger;
 public class UserMongoAdapter implements UserGateway {
 
     private final Logger logger = Logger.getLogger(LoginController.class.getName());
-    private final AuthenticationService authService;
+    private final JwtTokenService authService;
 
     @Autowired
-    public UserMongoAdapter(AuthenticationService authService) {
+    public UserMongoAdapter(JwtTokenService authService) {
         this.authService = authService;
     }
 

@@ -26,18 +26,22 @@ public class UserManagementConnectorService {
 
     private final WebClient webClient;
 //    private final String USERMANAGEMENT_URL_LB;
-    private final String USERMANAGEMENT_URL = "http://localhost:8085/api/usermanagement";
+
+    //FALTA CENTRALIZAR URLS EN UN ARCHIVO DE PROPIEDADES
+    private final String USERMANAGEMENT_URL;
 
 
 //    CONSTRUCTOR CON EUREKA Y LOAD BALANCER
-//    public UserManagementConnectorService(WebClient.Builder webClientBuilder,
-//                                          @Value("${UserManagement.service.url}") String url) {
-//        this.USERMANAGEMENT_URL_LB = url;
-//        this.webClient = webClientBuilder.baseUrl(USERMANAGEMENT_URL_LB).build();
+//    public UserManagementConnectorService(WebClient.Builder webClientBuilder) {
+//        this.webClient = webClientBuilder
+//                .baseUrl(USERMANAGEMENT_URL)
+//                .build();
 //    }
 
     //CONSTRUCTOR SIN EUREKA
-    public UserManagementConnectorService(WebClient.Builder webClientBuilder) {
+    public UserManagementConnectorService(@Value("${usermanagement.service.url}") String USERMANAGEMENT_URL,
+                                          WebClient.Builder webClientBuilder) {
+        this.USERMANAGEMENT_URL = USERMANAGEMENT_URL;
         this.webClient = webClientBuilder.baseUrl(USERMANAGEMENT_URL).build();
     }
 
@@ -49,12 +53,12 @@ public class UserManagementConnectorService {
     public Mono<UserDto> getUserByUuidBasic(String uuid) {
 
         LOGGER.info("UserManagementConnectorService: getUserByUuidBasic: " + webClient.get()
-                .uri("/getUserBasic/{uuid}", uuid)
+                .uri("/get/userBasic/{uuid}", uuid)
                 .retrieve()
                 .bodyToMono(UserDto.class));
 
         return webClient.get()
-                .uri("/getUserBasic/{uuid}", uuid)
+                .uri("/get/userBasic/{uuid}", uuid)
                 .retrieve()
                 //si llega un 4xx error o 5xx desde el otro servicio lo capturamos y lanzamos una excepcion
                 .onStatus(HttpStatusCode::is4xxClientError,

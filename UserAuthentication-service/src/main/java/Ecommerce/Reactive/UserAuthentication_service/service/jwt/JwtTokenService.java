@@ -1,12 +1,10 @@
-package Ecommerce.Reactive.UserAuthentication_service.service.login;
+package Ecommerce.Reactive.UserAuthentication_service.service.jwt;
 
 import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.TokenDto;
 import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.UserLoginDto;
-import Ecommerce.Reactive.UserAuthentication_service.infrastructure.mongodb.adapter.UserMongoAdapter;
 import Ecommerce.Reactive.UserAuthentication_service.security.JwtProvider;
 import Ecommerce.Reactive.UserAuthentication_service.security.userdetails.UserDetailsImpl;
 import Ecommerce.Reactive.UserAuthentication_service.security.userdetails.service.CustomUserDetailsService;
-import Ecommerce.Reactive.UserAuthentication_service.service.usermanagement.UserManagementConnectorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import Ecommerce.Reactive.UserAuthentication_service.exceptions.BadCredentialsException;
 import Ecommerce.Reactive.UserAuthentication_service.exceptions.EmptyCredentialsException;
@@ -18,18 +16,18 @@ import reactor.core.publisher.Mono;
 import java.util.logging.Logger;
 
 @Service
-public class AuthenticationService {
+public class JwtTokenService {
 
-    private final Logger logger = Logger.getLogger(AuthenticationService.class.getName());
+    private final Logger logger = Logger.getLogger(JwtTokenService.class.getName());
 
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
     private final CustomUserDetailsService customUserDetailsService;
 
     @Autowired
-    public AuthenticationService(JwtProvider jwtProvider,
-                                 PasswordEncoder passwordEncoder,
-                                 CustomUserDetailsService customUserDetailsService) {
+    public JwtTokenService(JwtProvider jwtProvider,
+                           PasswordEncoder passwordEncoder,
+                           CustomUserDetailsService customUserDetailsService) {
         this.jwtProvider = jwtProvider;
         this.passwordEncoder = passwordEncoder;
         this.customUserDetailsService = customUserDetailsService;
@@ -38,13 +36,20 @@ public class AuthenticationService {
     public Mono<TokenDto> authenticate(UserLoginDto userLoginDto) {
 
           return checkIfIsUsernameOrEmail(userLoginDto)
-                .flatMap(usernameOrEmail -> customUserDetailsService.findByUsername(usernameOrEmail))
+                .flatMap(customUserDetailsService::findByUsername)
                     .switchIfEmpty(Mono.error(new UserNotFoundException("User not found")))
                     .doOnNext(userDetails -> logger.info("---> UserDetails: " + userDetails))
+
                 .filter(user -> passwordEncoder.matches(userLoginDto.getPassword(), user.getPassword()))
                     .switchIfEmpty(Mono.error(new BadCredentialsException("Password does not match")))
-                .flatMap(userDetails -> generateToken((UserDetailsImpl) userDetails))
+
+                .cast(UserDetailsImpl.class)
+                .flatMap(this::generateToken)
+                  .switchIfEmpty(Mono.error(new UserNotFoundException("UserDetails not found")))
+
+                    .doOnNext(token -> logger.info("---> Token created successfully" + token))
                     .doOnNext(tokenDto -> logger.info("---> User authenticated successfully"))
+
                 .onErrorResume(ex -> handleLoginErrors(ex));
     }
 
@@ -81,8 +86,22 @@ public class AuthenticationService {
 
     public Mono<TokenDto> generateToken(UserDetailsImpl userDetails) {
 
-        String token = jwtProvider.generateToken(userDetails);
-        return Mono.just(new TokenDto(token));
+        if (userDetails != null){
+            String token = jwtProvider.generateToken(userDetails, userDetails.getUuid());
+            return Mono.just(new TokenDto(token));
+        }
+
+        return Mono.empty();
+    }
+
+
+    public TokenDto validateToken(String token) {
+
+        if (jwtProvider.validate(token)) {
+            return new TokenDto(token);
+        }
+        //FALTA EXCEPTION O ALGO
+        return null;
     }
 
 
@@ -102,4 +121,5 @@ public class AuthenticationService {
         }
         return Mono.error(ex);
     }
+
 }

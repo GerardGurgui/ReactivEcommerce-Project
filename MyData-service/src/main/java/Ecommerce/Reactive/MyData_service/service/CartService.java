@@ -40,11 +40,18 @@ public class CartService {
         this.jwtTokenService = jwtTokenService;
     }
 
-    //--->CRUD
+    //--------->CRUD
+    ////--->GET
+
+    public Mono<CartDto> getCartById(Long idCart) {
+
+        return cartRepository.findById(idCart)
+                .switchIfEmpty(Mono.error(new CartNotFoundException("Cart not found by ID: " + idCart)))
+                .flatMap(cart -> converter.cartToDto(cart));
+
+    }
 
     //falta comprobaciones,propiedades del cart correctas, algo mas
-    //datos erroneos, seguridad, autorizacion del mismo user etc
-    //puede tener varios carritos, pero con nombres diferentes y id por supuesto
 
     /*obtener usuario por uuid del microservicio de userManagement con webclient
     comprobacion de que el usuario existe (en usermanagement)
@@ -52,21 +59,23 @@ public class CartService {
     realizar modificaciones pertinentes sobre el carrito
     devolver el carrito guardado como CartDto*/
 
-    //MODIFICAR, SIN ENVIAR UUID POR PARAMETRO, USAR EL UUID DEL USUARIO QUE SE OBTIENE DEL MICROSERVICIO CON EL TOKEN
-
-//    @PreAuthorize("isAuthenticated()")
     public Mono<CartDto> createCartForUser(CartDto cartDto) {
 
         LOGGER.info("----> Creating cart for user");
 
         return jwtTokenService.extractUserUuidFromToken()
-                .switchIfEmpty(Mono.error(new ResourceNullException("UserUuid is null")))
+                .switchIfEmpty(Mono.error(new ResourceNullException("UserUuid is empty or null")))
+
                 .flatMap(this::verifyUserExists)
+                .doOnSuccess(userDto -> LOGGER.info("----> User found: " + userDto.getUuid()))
+
                 .flatMap(userDto -> verifyCartNameDoesNotExist(cartDto.getName())
                         .then(Mono.just(userDto)))
+
                 .flatMap(userDto -> setCartProperties(userDto, cartDto))
                 .flatMap(userDto -> userDto.addCartDto(cartDto))
                 .flatMap(userDto -> updateActiveCartForUserAndSaveCart(userDto, cartDto))
+
                 .onErrorResume(this::handleError)
                 .doOnNext(cartDto1 -> LOGGER.info("----> Cart created: " + cartDto1.getName()));
 
@@ -78,12 +87,39 @@ public class CartService {
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User not found, Uuid: " + userUuid)));
     }
 
-    private Mono<Void> verifyCartNameDoesNotExist(String cartName) {
+    private Mono<Boolean> verifyCartNameDoesNotExist(String cartName) {
 
-        if (cartRepository.existsCartByName(cartName)) {
-            return Mono.error(new CartNameAlreadyExistsException("Cart name already exists"));
-        }
-        return Mono.empty();
+        return cartRepository.existsCartByName(cartName)
+                .flatMap(exists -> {
+                    if (exists) {
+                        return Mono.error(new CartNameAlreadyExistsException("Cart name already exists: " + cartName));
+                    }
+                    return Mono.just(true);
+                });
+    }
+
+
+    private Mono<UserDto> setCartProperties(UserDto userDto, CartDto cartDto) {
+
+        //AÑADIR PROPIEDADES DEL CARRITO NECESARIAS, FALTAN PROPIEDADES
+        cartDto.setUserUuid(userDto.getUuid());
+        cartDto.setStatus(CartStatus.ACTIVE);
+        return Mono.just(userDto);
+    }
+
+    //---> SEGUIR AQUI: MODIFICAR ORDEN DE LA CADENA, PRIMERO COMPROBAR ERRORES, SI TO_DO OK , ENTONCES ADELANTE
+    //---> MODIFICAR TODOS LOS METODOS EL ORDEN DE SECUENCIA DE OPERACIONES, PRIMER EMPTY O ERROR, DESPUES OPERACIONES
+
+    public Mono<CartDto> updateActiveCartForUserAndSaveCart(UserDto userDto, CartDto cartDto){
+
+        return converter.cartDtoToCart(cartDto)
+                .flatMap(savedCart -> {
+                    UserCartDto userCartDto = new UserCartDto(userDto, cartDto);
+                    return userMngConnectorService.updateUserHasCart(userCartDto)
+                            .then(Mono.just(savedCart));
+                })
+                .flatMap(cartToSave -> cartRepository.save(cartToSave))
+                .flatMap(cartToDto -> converter.cartToDto(cartToDto));
     }
 
     private Mono<CartDto> handleError(Throwable error) {
@@ -105,40 +141,6 @@ public class CartService {
         }
         LOGGER.warning("----> Failed to create cart: " + error.getMessage());
         return Mono.error(new RuntimeException("Failed to create cart: " + error.getMessage()));
-    }
-
-
-    private Mono<UserDto> setCartProperties(UserDto userDto, CartDto cartDto) {
-
-        cartDto.setUserUuid(userDto.getUuid());
-        cartDto.setStatus(CartStatus.ACTIVE);
-        return Mono.just(userDto);
-    }
-
-    //---> SEGUIR AQUI: MODIFICAR ORDEN DE LA CADENA, PRIMERO COMPROBAR ERRORES, SI TO_DO OK , ENTONCES ADELANTE
-    //---> MODIFICAR TODOS LOS METODOS EL ORDEN DE SECUENCIA DE OPERACIONES, PRIMER EMPTY O ERROR, DESPUES OPERACIONES
-
-    public Mono<CartDto> updateActiveCartForUserAndSaveCart(UserDto userDto, CartDto cartDto){
-
-        return converter.cartDtoToCart(cartDto)
-                .flatMap(savedCart -> {
-                    UserCartDto userCartDto = new UserCartDto(userDto, cartDto);
-                    return userMngConnectorService.updateUserHasCart(userCartDto)
-                            .then(Mono.just(savedCart));
-                })
-                .flatMap(cartToSave -> cartRepository.save(cartToSave))
-                .flatMap(cartToDto -> converter.cartToDto(cartToDto));
-    }
-
-
-    ////--->GET
-
-    public Mono<CartDto> getCartById(Long idCart) {
-
-        return cartRepository.findById(idCart)
-                .switchIfEmpty(Mono.error(new CartNotFoundException("Cart not found by ID: " + idCart)))
-                .flatMap(cart -> converter.cartToDto(cart));
-
     }
 
     //error bad sql grammar
