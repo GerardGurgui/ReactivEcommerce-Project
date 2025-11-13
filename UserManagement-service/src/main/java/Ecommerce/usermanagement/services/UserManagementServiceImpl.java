@@ -168,12 +168,21 @@ public class UserManagementServiceImpl implements IUserManagementService {
                 .map(Converter::convertToDtoBasic);
     }
 
-    public Flux<UserInfoOutputDto> getAllUsersInfo() {
 
+    public Mono<List<UserInfoOutputDto>> getAllUsersInfo() {
         return userRepository.findAll()
-                .switchIfEmpty(Mono.error(new UserNotFoundException("No users found")))
-                .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting users, No users found")))
-                .map(Converter::convertToDtoInfo);
+                .map(Converter::convertToDtoInfo)      // convierte cada User a DTO
+                .collectList()                         // agrupa en List<UserInfoOutputDto>
+                .flatMap(list -> {
+                    if (list.isEmpty()) {
+                        return Mono.error(new UserNotFoundException("No users found"));
+                    }
+                    return Mono.just(list);
+                })
+                .onErrorMap(e -> {
+                    if (e instanceof UserNotFoundException) return e;
+                    return new UserNotFoundException("Error getting users");
+                });
     }
 
     ////--> FLUX con operador .filter para filtrar por:

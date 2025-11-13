@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping(value = "/api/usermanagement")
@@ -68,12 +70,15 @@ public class UserManagementController {
 
 
     @GetMapping("/get/allUsersInfo")
-    public ResponseEntity<Flux<UserInfoOutputDto>> getAllUsersInfo() {
+    public Mono<ResponseEntity<List<UserInfoOutputDto>>> getAllUsersInfoAsList() {
 
-        return new ResponseEntity<>(userManagementService.getAllUsersInfo(), HttpStatus.FOUND);
+        return userManagementService.getAllUsersInfo()
+                .map(userInfoOutputDtos -> new ResponseEntity<>(userInfoOutputDtos, HttpStatus.FOUND))
+                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NO_CONTENT));
     }
 
-    ////CONNECTION WITH MYDATA-SERVICE
+
+        ////CONNECTION WITH MYDATA-SERVICE
     //CARTS
 
     //actualiza el campo hasCart del usuario en caso de que añada un nuevo carrito a su lista

@@ -51,11 +51,19 @@ public class CartService {
 
     }
 
+    public Flux<CartDto> getAllCartsByUserUuid(String userUuid) {
+
+//        checkUserUuid(userUuid);
+
+        return cartRepository.getAllCartsByUserUuid(userUuid)
+                .switchIfEmpty(Mono.error(new CartNotFoundException("Carts not found for userUuid: " + userUuid)))
+                .flatMap(cart -> converter.cartToDto(cart));
+
+    }
+
     //falta comprobaciones,propiedades del cart correctas, algo mas
 
-    /*obtener usuario por uuid del microservicio de userManagement con webclient
-    comprobacion de que el usuario existe (en usermanagement)
-    si existe, guardar el carrito con el id del usuario
+    /*
     realizar modificaciones pertinentes sobre el carrito
     devolver el carrito guardado como CartDto*/
 
@@ -63,11 +71,8 @@ public class CartService {
 
         LOGGER.info("----> Creating cart for user");
 
-        return jwtTokenService.extractUserUuidFromToken()
+        return jwtTokenService.extractUserFromToken()
                 .switchIfEmpty(Mono.error(new ResourceNullException("UserUuid is empty or null")))
-
-                .flatMap(this::verifyUserExists)
-                .doOnSuccess(userDto -> LOGGER.info("----> User found: " + userDto.getUuid()))
 
                 .flatMap(userDto -> verifyCartNameDoesNotExist(cartDto.getName())
                         .then(Mono.just(userDto)))
@@ -79,12 +84,6 @@ public class CartService {
                 .onErrorResume(this::handleError)
                 .doOnNext(cartDto1 -> LOGGER.info("----> Cart created: " + cartDto1.getName()));
 
-    }
-
-    private Mono<UserDto> verifyUserExists(String userUuid) {
-
-        return userMngConnectorService.getUserByUuidBasic(userUuid)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User not found, Uuid: " + userUuid)));
     }
 
     private Mono<Boolean> verifyCartNameDoesNotExist(String cartName) {
@@ -113,13 +112,17 @@ public class CartService {
     public Mono<CartDto> updateActiveCartForUserAndSaveCart(UserDto userDto, CartDto cartDto){
 
         return converter.cartDtoToCart(cartDto)
+                //1 - Save cart to repository
+                .flatMap(cartRepository::save)
+                //2- Convert saved cart to DTO
+                .flatMap(cartToDto -> converter.cartToDto(cartToDto))
+                //3- Update user to have active cart and link cart
                 .flatMap(savedCart -> {
                     UserCartDto userCartDto = new UserCartDto(userDto, cartDto);
                     return userMngConnectorService.updateUserHasCart(userCartDto)
                             .then(Mono.just(savedCart));
-                })
-                .flatMap(cartToSave -> cartRepository.save(cartToSave))
-                .flatMap(cartToDto -> converter.cartToDto(cartToDto));
+                });
+
     }
 
     private Mono<CartDto> handleError(Throwable error) {
@@ -143,17 +146,7 @@ public class CartService {
         return Mono.error(new RuntimeException("Failed to create cart: " + error.getMessage()));
     }
 
-    //error bad sql grammar
 
-    public Flux<CartDto> getAllCartsByUserUuid(String userUuid) {
-
-//        checkUserUuid(userUuid);
-
-        return cartRepository.getAllCartsByUserUuid(userUuid)
-                .switchIfEmpty(Mono.error(new CartNotFoundException("Carts not found for userUuid: " + userUuid)))
-                .flatMap(cart -> converter.cartToDto(cart));
-
-    }
 
 
 }

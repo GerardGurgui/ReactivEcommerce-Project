@@ -1,5 +1,6 @@
 package Ecommerce.Reactive.ApiGateway_service.security.config;
 
+import Ecommerce.Reactive.ApiGateway_service.filter.AuthenticationWebFilter;
 import io.jsonwebtoken.io.Decoders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,23 +37,33 @@ public class SecurityConfig {
         return NimbusReactiveJwtDecoder.withSecretKey(secretKeySpec).build();
     }
 
+    /*
+    * strong security filter chain configuration on api gateway level
+    * function addfilterat is used to add custom authentication filter at specific position in the filter chain
+    * then, any microservice validates the token again to ensure security at microservice level.
+    * */
 
     @Bean
-    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http,
+                                                         AuthenticationWebFilter authenticationWebFilter) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .cors(ServerHttpSecurity.CorsSpec::disable)
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/public/**").permitAll()
-                        .pathMatchers("/auth/login").permitAll()
-                        .pathMatchers("/auth/validateToken").permitAll()
+                        .pathMatchers("/auth/**").permitAll()
                         .pathMatchers("/api/usermanagement/addUser").permitAll()
-                        .pathMatchers("/api/usermanagement/get/**").permitAll()
-                        .pathMatchers("/api/MyData/**").permitAll()
+                        .pathMatchers("/api/usermanagement/getUserBasic").permitAll()
+                        .pathMatchers("/api/usermanagement/getUserInfo").permitAll()
+                        .pathMatchers("/public/**").permitAll()
                         .anyExchange().authenticated()
                 )
+                .addFilterAt(authenticationWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .build();
     }
+
+
 
 
 

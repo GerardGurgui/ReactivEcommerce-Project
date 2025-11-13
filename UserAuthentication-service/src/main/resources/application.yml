@@ -10,8 +10,9 @@ spring:
 #  profiles:
 #    active: pro
 
+jwt:
+  secret: SgVkYp3s6v9y_B-E_H-MbQeThWmZq4t7w5dfTmArdUg
 
-  #JWT
 security:
   datasource:
     signUpUrl: /api/user-authentication/login

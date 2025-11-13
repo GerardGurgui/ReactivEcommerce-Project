@@ -50,31 +50,60 @@ public class AuthenticationWebFilter implements WebFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
+        String path = exchange.getRequest().getURI().getPath();
+        String method = exchange.getRequest().getMethod().toString();
+
+        logger.info("========================================");
+        logger.info("🚀 AuthenticationWebFilter - " + method + " " + path);
+
         // Check if the route is secured or not
         if (routeValidator.isSecured.test(exchange.getRequest())) {
-            logger.info("----> Filtering request in gateway");
+                        logger.info("🔒 Route SECURED - Validating JWT...");
 
-            Optional<String> tokenOptional = extractToken(exchange.getRequest());
-
-            if (tokenOptional.isEmpty()) {
-                return onError(exchange, HttpStatus.NO_CONTENT);
-            }
-
-            return validateTokenAndCreateBearerAuthToken(tokenOptional.get())
-                    .map(authToken -> authenticateAndSetSecurityContext(exchange, chain, authToken))
-                    .orElseGet(() -> onError(exchange, HttpStatus.UNAUTHORIZED));
+            return extractToken(exchange.getRequest())
+                    .flatMap(token -> {
+                        logger.info("✅ Token extracted");
+                        return validateTokenAndCreateBearerAuthToken(token)
+                                .flatMap(authToken -> authenticateAndSetSecurityContext(exchange, chain, authToken));
+                    })
+                    .switchIfEmpty(Mono.defer(() -> {
+                        logger.severe("❌ Token extraction failed");
+                        return onError(exchange, HttpStatus.UNAUTHORIZED);
+                    }))
+                    .onErrorResume(MissingAuthorizationHeaderException.class, e -> {
+                        logger.severe("❌ Authorization header missing");
+                        return onError(exchange, HttpStatus.UNAUTHORIZED);
+                    })
+                    .onErrorResume(InvalidAuthorizationHeaderException.class, e -> {
+                        logger.severe("❌ Invalid Authorization header");
+                        return onError(exchange, HttpStatus.UNAUTHORIZED);
+                    })
+                    .onErrorResume(TokenExpiredException.class, e -> {
+                        logger.severe("❌ Token expired");
+                        return onError(exchange, HttpStatus.UNAUTHORIZED);
+                    })
+                    .onErrorResume(UnauthorizedException.class, e -> {
+                        logger.severe("❌ Unauthorized: " + e.getMessage());
+                        return onError(exchange, HttpStatus.UNAUTHORIZED);
+                    })
+                    .onErrorResume(Exception.class, e -> {
+                        logger.severe("❌ Unexpected error: " + e.getMessage());
+                                                logger.log(java.util.logging.Level.SEVERE, "❌ Unexpected error", e);
+                        return onError(exchange, HttpStatus.INTERNAL_SERVER_ERROR);
+                    });
         } else {
-            logger.info("----> Request is unsecured");
+            logger.info("🔓 Route PUBLIC - Skipping JWT validation");
+            logger.info("========================================");
             return chain.filter(exchange);
         }
     }
 
 
-    private Optional<String> extractToken(ServerHttpRequest request) {
+    private Mono<String> extractToken(ServerHttpRequest request) {
 
         if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
             logger.severe("Authorization header is missing");
-            throw new MissingAuthorizationHeaderException("Authorization header is missing");
+            return Mono.error(new MissingAuthorizationHeaderException("Authorization header is missing"));
         }
 
         String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
@@ -84,32 +113,37 @@ public class AuthenticationWebFilter implements WebFilter {
 
             String jwtToken = authHeader.substring(7);
             logger.info("----> Extracted token from header: " + jwtToken);
-            return Optional.of(jwtToken);
+            return Mono.just(jwtToken);
 
         } else {
             logger.severe("----> Invalid Authorization header");
-            throw new InvalidAuthorizationHeaderException("Invalid Authorization header");
+            return Mono.error(new InvalidAuthorizationHeaderException("Invalid Authorization header"));
         }
     }
 
-    private Optional<BearerTokenAuthenticationToken> validateTokenAndCreateBearerAuthToken(String jwtToken) {
 
-        try {
-            Claims claims = jwtUtil.validate(jwtToken);
+    private Mono<BearerTokenAuthenticationToken> validateTokenAndCreateBearerAuthToken(String jwtToken) {
 
-            if (jwtUtil.isTokenExpired(claims)) {
-                logger.severe("----> Token is expired");
-                throw new TokenExpiredException("Token is expired");
+        return Mono.fromCallable(() -> {
+            try {
+                Claims claims = jwtUtil.validate(jwtToken);
+
+                if (jwtUtil.isTokenExpired(claims)) {
+                    logger.severe("----> Token is expired");
+                    throw new TokenExpiredException("Token is expired");
+                }
+                logger.info("----> Token is valid");
+
+                //create a BearerTokenAuthenticationToken
+                return new BearerTokenAuthenticationToken(jwtToken);
+
+            } catch (TokenExpiredException e) {
+                throw e;
+            } catch (Exception e) {
+                logger.severe("----> Token validation failed: " + e.getMessage());
+                throw new UnauthorizedException("Token validation failed");
             }
-            logger.info("----> Token is valid");
-
-            //create a BearerTokenAuthenticationToken
-            return Optional.of(new BearerTokenAuthenticationToken(jwtToken));
-
-        } catch (Exception e) {
-            logger.severe("----> Token validation failed: " + e.getMessage());
-            throw new UnauthorizedException("Token validation failed");
-        }
+        });
     }
 
     private Mono<Void> authenticateAndSetSecurityContext(ServerWebExchange exchange,
