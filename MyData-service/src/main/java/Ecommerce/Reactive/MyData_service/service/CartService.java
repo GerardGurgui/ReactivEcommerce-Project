@@ -3,6 +3,7 @@ import Ecommerce.Reactive.MyData_service.DTO.CartDto;
 import Ecommerce.Reactive.MyData_service.DTO.CartStatus;
 import Ecommerce.Reactive.MyData_service.DTO.UserCartDto;
 import Ecommerce.Reactive.MyData_service.DTO.UserDto;
+import Ecommerce.Reactive.MyData_service.entity.Cart;
 import Ecommerce.Reactive.MyData_service.exceptions.CartNameAlreadyExistsException;
 import Ecommerce.Reactive.MyData_service.exceptions.CartNotFoundException;
 import Ecommerce.Reactive.MyData_service.exceptions.ResourceNullException;
@@ -11,9 +12,7 @@ import Ecommerce.Reactive.MyData_service.mapping.IConverter;
 import Ecommerce.Reactive.MyData_service.repository.ICartRepository;
 import Ecommerce.Reactive.MyData_service.service.jwt.JwtTokenService;
 import Ecommerce.Reactive.MyData_service.service.userManagement.UserManagementConnectorService;
-import lombok.extern.flogger.Flogger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -72,19 +71,18 @@ public class CartService {
         LOGGER.info("----> Creating cart for user");
 
         return jwtTokenService.extractUserFromToken()
-                .switchIfEmpty(Mono.error(new ResourceNullException("UserUuid is empty or null")))
+                .switchIfEmpty(Mono.error(new ResourceNullException("Failed to extract user from token")))
 
                 .flatMap(userDto -> verifyCartNameDoesNotExist(cartDto.getName())
                         .then(Mono.just(userDto)))
-
                 .flatMap(userDto -> setCartProperties(userDto, cartDto))
                 .flatMap(userDto -> userDto.addCartDto(cartDto))
-                .flatMap(userDto -> updateActiveCartForUserAndSaveCart(userDto, cartDto))
-
+                .flatMap(userDto -> saveCartToDbAndLinkToUser(userDto ,cartDto))
                 .onErrorResume(this::handleError)
                 .doOnNext(cartDto1 -> LOGGER.info("----> Cart created: " + cartDto1.getName()));
 
     }
+
 
     private Mono<Boolean> verifyCartNameDoesNotExist(String cartName) {
 
@@ -106,24 +104,26 @@ public class CartService {
         return Mono.just(userDto);
     }
 
-    //---> SEGUIR AQUI: MODIFICAR ORDEN DE LA CADENA, PRIMERO COMPROBAR ERRORES, SI TO_DO OK , ENTONCES ADELANTE
-    //---> MODIFICAR TODOS LOS METODOS EL ORDEN DE SECUENCIA DE OPERACIONES, PRIMER EMPTY O ERROR, DESPUES OPERACIONES
 
-    public Mono<CartDto> updateActiveCartForUserAndSaveCart(UserDto userDto, CartDto cartDto){
+    private Mono<CartDto> saveCartToDbAndLinkToUser(UserDto userDto, CartDto cartDto){
 
         return converter.cartDtoToCart(cartDto)
-                //1 - Save cart to repository
-                .flatMap(cartRepository::save)
-                //2- Convert saved cart to DTO
+                .flatMap(cart -> cartRepository.save(cart))
                 .flatMap(cartToDto -> converter.cartToDto(cartToDto))
-                //3- Update user to have active cart and link cart
-                .flatMap(savedCart -> {
-                    UserCartDto userCartDto = new UserCartDto(userDto, cartDto);
-                    return userMngConnectorService.updateUserHasCart(userCartDto)
-                            .then(Mono.just(savedCart));
-                });
-
+                        .flatMap(savedCartDto -> linkCartToUser(userDto, savedCartDto)
+                        .thenReturn(savedCartDto));
     }
+
+
+    public Mono<UserCartDto> linkCartToUser(UserDto userDto, CartDto cartDto) {
+
+        UserCartDto userCartDto = new UserCartDto(userDto, cartDto);
+
+        return userMngConnectorService.updateUserHasCart(userCartDto)
+                .thenReturn(userCartDto);
+    }
+
+
 
     private Mono<CartDto> handleError(Throwable error) {
 

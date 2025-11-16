@@ -1,9 +1,6 @@
 package Ecommerce.Reactive.MyData_service.DTO;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
@@ -13,6 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
+@Builder
 public class UserDto {
 
     private String uuid;

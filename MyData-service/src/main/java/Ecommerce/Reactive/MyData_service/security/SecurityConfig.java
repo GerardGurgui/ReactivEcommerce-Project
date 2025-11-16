@@ -35,6 +35,14 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    private static final String[] PUBLIC_ENDPOINTS = {
+            "/auth/**",
+            "/api/usermanagement/getUserLoginByUsername",
+            "/api/usermanagement/updateUserHasCart/",
+            "/api/usermanagement/getUserLoginByEmail",
+            "/api/usermanagement/addUser"
+    };
+
     @Bean
     public ReactiveJwtDecoder reactiveJwtDecoder() {
         byte[] secretBytes = Decoders.BASE64URL.decode(secret);
@@ -57,11 +65,7 @@ public class SecurityConfig {
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/auth/**").permitAll()
-                        .pathMatchers("/api/usermanagement/addUser").permitAll()
-                        .pathMatchers("/api/usermanagement/getUserBasic").permitAll()
-                        .pathMatchers("/api/usermanagement/getUserInfo").permitAll()
-                        .pathMatchers("/public/**").permitAll()
+                        .pathMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> {

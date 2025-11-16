@@ -66,10 +66,6 @@ public class AuthenticationWebFilter implements WebFilter {
                         return validateTokenAndCreateBearerAuthToken(token)
                                 .flatMap(authToken -> authenticateAndSetSecurityContext(exchange, chain, authToken));
                     })
-                    .switchIfEmpty(Mono.defer(() -> {
-                        logger.severe("❌ Token extraction failed");
-                        return onError(exchange, HttpStatus.UNAUTHORIZED);
-                    }))
                     .onErrorResume(MissingAuthorizationHeaderException.class, e -> {
                         logger.severe("❌ Authorization header missing");
                         return onError(exchange, HttpStatus.UNAUTHORIZED);

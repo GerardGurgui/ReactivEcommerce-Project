@@ -33,8 +33,6 @@ public class CartController {
     @PostMapping("/createCart")
     public Mono<ResponseEntity<CartDto>> createCart(@Valid @RequestBody CartDto cartDto) {
 
-        LOGGER.info("----> Creating cart for user");
-
         return cartService.createCartForUser(cartDto)
                 .map(cart -> new ResponseEntity<>(cart, HttpStatus.CREATED));
     }
