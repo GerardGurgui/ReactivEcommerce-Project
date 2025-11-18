@@ -1,7 +1,10 @@
 package Ecommerce.Reactive.MyData_service.security;
 
-import Ecommerce.Reactive.MyData_service.jwtFilterDebug.SecurityLoggingFilter;
+import Ecommerce.Reactive.MyData_service.security.validators.AudienceValidator;
+import Ecommerce.Reactive.MyData_service.security.validators.IssuerValidator;
+import Ecommerce.Reactive.MyData_service.security.validators.UserUuidValidator;
 import io.jsonwebtoken.io.Decoders;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +13,9 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
@@ -23,18 +29,25 @@ import java.util.logging.Logger;
 public class SecurityConfig {
 
     //integrar 2 perfiles (dev y prod)??
-    //pruebas basicas sin seguridad por ahora
 
     private final Logger LOGGER = Logger.getLogger(SecurityConfig.class.getName());
 
-    @Value("${jwt.secret}")
-    private String secret;
+    @Value("${security.jwt.secret}")
+    private String secretKey;
+
+    private final JwtProperties jwtProperties;
+
+    public SecurityConfig(JwtProperties jwtProperties){
+        this.jwtProperties = jwtProperties;
+    }
+
 
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
 
+    // NO!!! RESTRINGIR EL ACCESO A ESTOS ENDPOINTS Y AÑADIR MAS SEGURIDAD
     private static final String[] PUBLIC_ENDPOINTS = {
             "/auth/**",
             "/api/usermanagement/getUserLoginByUsername",
@@ -45,17 +58,45 @@ public class SecurityConfig {
 
     @Bean
     public ReactiveJwtDecoder reactiveJwtDecoder() {
-        byte[] secretBytes = Decoders.BASE64URL.decode(secret);
-        SecretKeySpec secretKeySpec = new SecretKeySpec(secretBytes, "HmacSHA256");
-        NimbusReactiveJwtDecoder delegateHeader = NimbusReactiveJwtDecoder.withSecretKey(secretKeySpec).build();
 
-        return token -> delegateHeader.decode(token)
-                 .doOnNext(jwt -> LOGGER.info("JWT Decoded correctly: sub=" + jwt.getSubject() + " aud=" + jwt.getAudience()))
-                .doOnError(err -> LOGGER.warning("Error Decoding JWT: " + err.getMessage()));
+        // 1. Decode the secret key
+        byte[] secretBytes = Decoders.BASE64URL.decode(secretKey);
+        SecretKeySpec secretKeySpec = new SecretKeySpec(secretBytes, "HmacSHA256");
+
+        // 2. Build decoder
+        NimbusReactiveJwtDecoder decoder =
+                NimbusReactiveJwtDecoder.withSecretKey(secretKeySpec).build();
+
+        // 3. Default validator (checks exp, nbf, etc)
+        OAuth2TokenValidator<Jwt> combinedValidators = getJwtOAuth2TokenValidator();
+
+        // 6. Apply validators
+        decoder.setJwtValidator(combinedValidators);
+
+        LOGGER.info("MYDATA SERVICE - JWT Decoder configured with custom validators correctly");
+        return decoder;
     }
 
+    @NotNull
+    private OAuth2TokenValidator<Jwt> getJwtOAuth2TokenValidator() {
+
+        OAuth2TokenValidator<Jwt> withIssuer = new IssuerValidator(jwtProperties.getExpectedIssuer());
+        OAuth2TokenValidator<Jwt> withAudience = new AudienceValidator(jwtProperties.getExpectedAudience());
+        OAuth2TokenValidator<Jwt> withSubject = new UserUuidValidator();
+
+        // 4. Combine validators into a single validator
+        OAuth2TokenValidator<Jwt> combinedValidators =
+                new DelegatingOAuth2TokenValidator<>(
+                        withIssuer,
+                        withAudience,
+                        withSubject
+                );
+        return combinedValidators;
+    }
+
+
     @Bean
-    public SecurityWebFilterChain filterChain(ServerHttpSecurity http) {
+    public SecurityWebFilterChain filterChain(ServerHttpSecurity http, ReactiveJwtDecoder reactiveJwtDecoder) {
 
         LOGGER.info("MYDATA SERVICE - Validating JWT on incoming requests");
 
@@ -68,10 +109,10 @@ public class SecurityConfig {
                         .pathMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .anyExchange().authenticated()
                 )
-                .oauth2ResourceServer(oauth2 -> {
-                    oauth2.jwt(jwt -> jwt.jwtDecoder(reactiveJwtDecoder()));
-                            LOGGER.info("----> MYDATA SERVICE - Configured as OAuth2 Resource Server with JWT");
-                })
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {
+                    jwt.jwtDecoder(reactiveJwtDecoder);
+                    LOGGER.info("----> MYDATA SERVICE - Configured as OAuth2 Resource Server with JWT");
+                }))
                 .build();
     }
 

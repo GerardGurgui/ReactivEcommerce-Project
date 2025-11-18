@@ -22,9 +22,6 @@ public class SecurityConfig {
 
     private final Logger LOGGER = Logger.getLogger(SecurityConfig.class.getName());
 
-    @Value("${jwt.secret}")
-    private String secret;
-
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
@@ -43,8 +40,6 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain filterChain(ServerHttpSecurity http) {
 
-        LOGGER.info("USER AUTHENTICATION - Validating JWT on incoming requests");
-
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .cors(ServerHttpSecurity.CorsSpec::disable)
@@ -53,11 +48,7 @@ public class SecurityConfig {
                 .logout(ServerHttpSecurity.LogoutSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/auth/**").permitAll()
-                        .pathMatchers("/api/usermanagement/addUser").permitAll()
-                        .pathMatchers("/api/usermanagement/getUserBasic").permitAll()
-                        .pathMatchers("/api/usermanagement/getUserInfo").permitAll()
-                        .pathMatchers("/public/**").permitAll()
-                        .anyExchange().authenticated()
+                        .anyExchange().denyAll()
                 )
                 .build();
     }
