@@ -106,7 +106,7 @@ public class CartServiceImpl implements ICartService {
         );
         return userMngConnectorService.linkCartToUser(linkDto)
                 .timeout(Duration.ofSeconds(5))
-                .retryWhen(Retry.fixedDelay(3, Duration.ofSeconds(120)))
+                .retryWhen(Retry.fixedDelay(3, Duration.ofSeconds(3)))
                 .thenReturn(cart);
     }
 
