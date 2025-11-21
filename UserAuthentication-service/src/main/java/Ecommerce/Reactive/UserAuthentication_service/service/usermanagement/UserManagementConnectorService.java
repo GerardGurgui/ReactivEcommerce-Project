@@ -57,23 +57,27 @@ public class UserManagementConnectorService {
 
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/getUserLoginByUsername")
-                        .queryParam("username", username) //username o userName?
+                        .queryParam("username", username)
                         .build())
                 .retrieve()
+                .onStatus(status -> status.value() == 401,
+                        resp -> Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized")))
+                .onStatus(status -> status.value() == 403,
+                        resp -> Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Forbidden")))
+                .onStatus(status -> status.value() == 404,
+                        resp -> Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")))
                 .onStatus(HttpStatusCode::is4xxClientError,
-                        clientResponse -> Mono.error(new UserNotFoundException("Error during GET request to getUserByUsername: User not found for username: " + username)))
+                        resp -> resp.bodyToMono(String.class).defaultIfEmpty("")
+                                .flatMap(body -> Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Client error: " + body))))
                 .onStatus(HttpStatusCode::is5xxServerError,
-                        clientResponse -> Mono.error(new ServerErrorException("Error during GET request to getUserByUsername: Server error",
-                                new RuntimeException("Server error"))))
+                        resp -> resp.bodyToMono(String.class).defaultIfEmpty("")
+                                .flatMap(body -> Mono.error(new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Server error: " + body))))
                 .bodyToMono(UserLoginDto.class)
                 .doOnNext(user -> LOGGER.info("Response From: getUserByUsername: User obtained: " + user))
-                .onErrorMap(UserNotFoundException.class, ex -> {
-                    LOGGER.info("Response From: getUserByUsername: User not found");
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found", ex);
-                })
-                .onErrorMap(ServerErrorException.class, ex -> {
-                    LOGGER.info("Response From: getUserByUsername: Server error");
-                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", ex);
+                .onErrorMap(throwable -> {
+                    if (throwable instanceof ResponseStatusException) return throwable;
+                    LOGGER.severe("Error contacting user-management: " + throwable.getMessage());
+                    return new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error contacting user-management", throwable);
                 });
     }
 

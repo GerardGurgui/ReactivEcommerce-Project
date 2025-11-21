@@ -7,9 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserCartDto {
+public class CartLinkUserDto {
 
-    private UserDto userDto;
-    private CartDto cartDto;
-
+    private Long idCart;
+    private String userUuid;
 }

@@ -52,16 +52,11 @@ UserAuthentication:
 
 #JWT SECRET AND SECURITY CONFIGURATION
 security:
-  datasource:
-    signUpUrl: /api/user-authentication/login
+  jwt:
     secret: SgVkYp3s6v9y_B-E_H-MbQeThWmZq4t7w5dfTmArdUg
-    tokenPrefix: Bearer
-    expiresIn: 1200000
-    authoritiesClaim: authorities
-    error: Auth Error, Token Unavailable
-    userManagementUrl: http://localhost:8085/api/usermanagement/addUser
-    testuser:
-      email:
+    expected-issuer: "http://user-authentication-service:8084"
+    expected-audience: "ApiGateway-service"
+
 
 # Configuracion de los logs
 logging:

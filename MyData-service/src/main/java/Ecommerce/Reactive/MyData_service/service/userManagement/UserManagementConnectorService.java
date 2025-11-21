@@ -1,5 +1,5 @@
 package Ecommerce.Reactive.MyData_service.service.userManagement;
-import Ecommerce.Reactive.MyData_service.DTO.UserCartDto;
+import Ecommerce.Reactive.MyData_service.DTO.CartLinkUserDto;
 import Ecommerce.Reactive.MyData_service.DTO.UserDto;
 import Ecommerce.Reactive.MyData_service.exceptions.CartNotFoundException;
 import Ecommerce.Reactive.MyData_service.exceptions.UserNotFoundException;
@@ -84,36 +84,35 @@ public class UserManagementConnectorService {
     }
 
 
-    public Mono<Void> updateUserHasCart(UserCartDto userCartDto) {
+    public Mono<Void> linkCartToUser(CartLinkUserDto cartLinkUserDto) {
 
         LOGGER.info("Initiating PUT request to updateUserHasCart with UUID: {" +
-                userCartDto.getCartDto().getUserUuid() + "}");
+                cartLinkUserDto.getUserUuid() + "}");
 
 
         return webClient.put()
                 .uri("/updateUserHasCart/")
-                .body(Mono.just(userCartDto), UserCartDto.class)
+                .body(Mono.just(cartLinkUserDto), CartLinkUserDto.class)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError,
                         clientResponse ->
                                 Mono.error(new CartNotFoundException("Cart not found during PUT request to updateUserHasCart with UUID: "
-                                        + userCartDto.getCartDto().getUserUuid())))
-
+                                        + cartLinkUserDto.getUserUuid())))
 
                 .onStatus(HttpStatusCode::is5xxServerError,
                         clientResponse ->
                                 Mono.error(new ServerErrorException("Error during PUT request to updateUserHasCart with UUID: "
-                                        + userCartDto.getCartDto().getUserUuid(),
+                                        + cartLinkUserDto.getUserUuid(),
                                         new RuntimeException("Error during PUT request to updateUserHasCart with UUID: "
-                                        + userCartDto.getCartDto().getUserUuid()))))
+                                        + cartLinkUserDto.getUserUuid()))))
 
                 .bodyToMono(Void.class)
                 .onErrorMap(CartNotFoundException.class, ex -> {
-                    LOGGER.info("Cart not found during PUT request to updateUserHasCart with UUID: " + userCartDto.getCartDto().getUserUuid());
+                    LOGGER.info("Cart not found during PUT request to updateUserHasCart with UUID: " + cartLinkUserDto.getUserUuid());
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage(), ex);
                 })
                 .onErrorMap(ServerErrorException.class, ex -> {
-                    LOGGER.info("Error during PUT request to updateUserHasCart with UUID:" + userCartDto.getCartDto().getUserUuid());
+                    LOGGER.info("Error during PUT request to updateUserHasCart with UUID:" + cartLinkUserDto.getUserUuid());
                     throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,ex.getMessage(),ex);
                 });
 

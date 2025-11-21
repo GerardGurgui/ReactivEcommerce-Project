@@ -1,28 +1,30 @@
 server:
   port: 8084
+
 spring:
   application:
     name: UserAuthentication-service
   jmx:
     enabled: true
 
-  #SECURITY
-#  profiles:
-#    active: pro
-
-
-  #JWT
 security:
-  datasource:
-    signUpUrl: /api/user-authentication/login
+  jwt:
     secret: SgVkYp3s6v9y_B-E_H-MbQeThWmZq4t7w5dfTmArdUg
-    tokenPrefix: Bearer
-    expiresIn: 1200000
-    authoritiesClaim: authorities
-    error: Auth Error, Token Unavailable
-    userManagementUrl: http://localhost:8085/api/usermanagement/addUser
-    testuser:
-      email:
+    issuer: http://user-authentication-service:8084
+    expiration-ms: 1200000  # 20 minutes
+    audiences:
+      - ApiGateway-service
+      - MyData-service
+      - UserManagement-service
+      - ProductCatalog-service
+      - Payment-service
+
+auth:
+  endpoints:
+    login: /api/user-authentication/login
+    register: /api/user-authentication/register
+  user-management-url: http://localhost:8085/api/usermanagement/addUser
+
 
 #eureka:
 #  client:

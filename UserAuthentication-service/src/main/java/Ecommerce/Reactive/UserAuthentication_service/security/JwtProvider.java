@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Logger;
 
 //clase encargada de generar los tokens JWT del usuario y de validarlos
@@ -20,27 +21,33 @@ public class JwtProvider {
 
     private static final Logger LOGGER =  Logger.getLogger(JwtProvider.class.getName());
 
-    @Autowired
-    private SecurityConfigDataSource securityConfigDataSource;
+    private final JwtProperties jwtProperties;
 
-    // Generar un token JWT con el nombre de usuario y los roles del usuario
+    public JwtProvider(JwtProperties jwtProperties){
+        this.jwtProperties = jwtProperties;
+    }
+
+    // Generate a JWT token for the given user details and user UUID, issuer, audience, roles, issued at and expiration
     public String generateToken(UserDetails userDetails, String userUuid) {
 
-          return Jwts.builder()
+        return Jwts.builder()
                 .setSubject(userUuid)
+                .setIssuer(jwtProperties.getIssuer())
+                .claim("aud", jwtProperties.getAudiences())
                 .claim("roles", userDetails.getAuthorities())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + securityConfigDataSource.getExpiresIn()))
-                .signWith(getKey(securityConfigDataSource.getSecret()))
+                .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getExpirationMs()))
+                .signWith(getKey(jwtProperties.getSecret()), SignatureAlgorithm.HS256)
                 .compact();
     }
+
 
     // Validar un token JWT y devolver verdadero si el token es válido
     public boolean validate(String token){
 
         try {
             Jwts.parserBuilder()
-                    .setSigningKey(getKey(securityConfigDataSource.getSecret()))
+                    .setSigningKey(getKey(jwtProperties.getSecret()))
                     .build()
                     .parseClaimsJws(token);
             LOGGER.info("---> token is valid from Auth service");

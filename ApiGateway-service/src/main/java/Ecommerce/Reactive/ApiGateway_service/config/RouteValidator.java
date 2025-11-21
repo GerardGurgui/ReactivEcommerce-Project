@@ -8,9 +8,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.logging.Logger;
 
 @Component
 public class RouteValidator {
+
+    private static final Logger logger = Logger.getLogger(RouteValidator.class.getName());
 
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
@@ -22,15 +25,33 @@ public class RouteValidator {
     }
 
     public static final List<String> openApiEndPoints = List.of(
-            "auth/login",
-            "api/usermanagement/addUser",
-            "api/usermanagement/get",
-            "auth/validateToken"
+            "/auth/login",
+            "/auth/validateToken",
+            "/api/usermanagement/addUser",
+            "/api/usermanagement/getUserBasic",
+            "/api/usermanagement/getUserInfo",
+            "/public"
     );
 
-    public Predicate<ServerHttpRequest> isSecured =
+    public Predicate<ServerHttpRequest> isSecured = request -> {
+        String path = request.getURI().getPath();
 
-            request -> openApiEndPoints
-                    .stream()
-                    .noneMatch(uri -> request.getURI().getPath().contains(uri));
+        logger.info("╔════════════════════════════════════════════════════════╗");
+        logger.info("║ RouteValidator - Checking: " + path);
+
+        // Verificar si el path comienza con alguna ruta pública
+        boolean isPublic = openApiEndPoints.stream()
+                .anyMatch(publicPath -> path.startsWith(publicPath));
+
+        boolean isSecured = !isPublic;
+
+        if (isSecured) {
+            logger.info("║ ✅ SECURED - JWT required");
+        } else {
+            logger.info("║ 🔓 PUBLIC - No JWT required");
+        }
+        logger.info("╚════════════════════════════════════════════════════════╝");
+
+        return isSecured;
+    };
 }

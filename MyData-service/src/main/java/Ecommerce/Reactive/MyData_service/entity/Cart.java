@@ -12,6 +12,7 @@ import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Iterator;
 
 
@@ -20,9 +21,6 @@ import java.util.Iterator;
 @NoArgsConstructor
 @Table("carts")
 public class Cart {
-
-    //falta mejorar e implementar bien atributos, metodos y calculos
-    // eliminar productos, calcular total, ordenar productos, etc
 
     @Id
     private Long id;
@@ -42,9 +40,9 @@ public class Cart {
     @Column("status")
     private CartStatus status;
 
-    //que mas atributos deberia tener un carrito??
+    @Column("created_at")
+    private LocalDateTime createdAt;
 
-    //falta lista productos
-
-
+    @Column("updated_at")
+    private LocalDateTime updatedAt;
 }

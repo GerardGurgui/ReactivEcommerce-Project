@@ -25,10 +25,9 @@ public class UserInfoOutputDto {
     private Long totalPurchase;
     private int totalSpent;
     private boolean isActive;
-    private boolean activeCart;
     private LocalDate loginDate;
     private String latestAcces;
     private Set<Roles> roles;
-    private List<CartDto> carts;
+    private List<Long> cartsId;
 
 }

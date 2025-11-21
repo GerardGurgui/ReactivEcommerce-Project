@@ -1,6 +1,6 @@
 package Ecommerce.usermanagement.document;
 
-import Ecommerce.usermanagement.dto.cart.CartDto;
+import Ecommerce.usermanagement.dto.cart.CartLinkUserDto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.AllArgsConstructor;
@@ -69,9 +69,6 @@ public class User {
     @Field(name = "total_spent")
     private int totalSpent;
 
-    @Field(name = "active_cart")
-    private boolean activeCart;
-
     @Field(name = "login_date")
     private LocalDate loginDate;
 
@@ -83,7 +80,7 @@ public class User {
     private Set<Roles> roles;
 
     @Field(name = "carts")
-    private List<CartDto> carts;
+    private List<Long> cartIds;
 
     //Properties from userDetails
     @Field(name = "is_account_non_expired")
@@ -105,12 +102,12 @@ public class User {
     //operaciones y funciones, añadir producto al carro, eliminar producto del carro, comprar, etc
     //de dinero??
 
-    public void addCart(CartDto cartDto) {
+    public void addCartId(Long cartId) {
 
-        if (carts == null) {
-            carts = new ArrayList<>();
+        if (cartIds == null) {
+            cartIds = new ArrayList<>();
         }
-        carts.add(cartDto);
+        cartIds.add(cartId);
     }
 
     public void addRoleUser() {

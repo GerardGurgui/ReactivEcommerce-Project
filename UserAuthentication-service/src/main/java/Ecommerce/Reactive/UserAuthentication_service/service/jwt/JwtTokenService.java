@@ -50,7 +50,7 @@ public class JwtTokenService {
                     .doOnNext(token -> logger.info("---> Token created successfully" + token))
                     .doOnNext(tokenDto -> logger.info("---> User authenticated successfully"))
 
-                .onErrorResume(ex -> handleLoginErrors(ex));
+                .onErrorResume(this::handleLoginErrors);
     }
 
 
