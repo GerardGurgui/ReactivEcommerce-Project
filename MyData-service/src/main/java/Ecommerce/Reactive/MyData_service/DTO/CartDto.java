@@ -26,7 +26,7 @@ public class CartDto {
 
     @PositiveOrZero(message = "Total products must be zero or positive")
     private int totalProducts;
-    @PositiveOrZero
+    @PositiveOrZero(message = "Total price must be zero or positive")
     private double totalPrice;
     private CartStatus status;
     private LocalDateTime createdAt;
