@@ -66,7 +66,7 @@ public class CartServiceImpl implements ICartService {
         LOGGER.info("----> Creating cart for user");
 
         return securityUtils.extractUserUuid()
-                .switchIfEmpty(Mono.error(new ResourceNullException("Failed to extract uuid from token")))
+                .switchIfEmpty(Mono.error(new ResourceNullException("User UUID not found in JWT token. Ensure the token contains a valid 'sub' claim.")))
                 .flatMap(userUuid -> verifyCartNameDoesNotExist(cartDto.getName())
                         .then(Mono.just(userUuid)))
                 .doOnNext(userUuid -> cartDto.setUserUuid(userUuid))
