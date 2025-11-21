@@ -51,7 +51,6 @@ public class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {
             "/auth/**",
             "/api/usermanagement/getUserLoginByUsername",
-            "/api/usermanagement/updateUserHasCart/",
             "/api/usermanagement/getUserLoginByEmail",
             "/api/usermanagement/addUser"
     };
