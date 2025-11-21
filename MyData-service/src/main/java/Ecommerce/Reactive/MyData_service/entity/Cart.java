@@ -40,11 +40,9 @@ public class Cart {
     @Column("status")
     private CartStatus status;
 
+    @Column("created_at")
     private LocalDateTime createdAt;
 
+    @Column("updated_at")
     private LocalDateTime updatedAt;
-
-    //falta lista productos
-
-
 }

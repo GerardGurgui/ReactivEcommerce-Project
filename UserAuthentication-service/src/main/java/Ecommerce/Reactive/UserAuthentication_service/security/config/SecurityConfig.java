@@ -48,7 +48,7 @@ public class SecurityConfig {
                 .logout(ServerHttpSecurity.LogoutSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/auth/**").permitAll()
-                        .anyExchange().denyAll()
+                        .anyExchange().authenticated()
                 )
                 .build();
     }
