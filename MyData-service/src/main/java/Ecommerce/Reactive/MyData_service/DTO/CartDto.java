@@ -24,7 +24,7 @@ public class CartDto {
     @Size(max = 20, message = "Name must be a maximum than 20 characters")
     private String name;
 
-    @PositiveOrZero
+    @PositiveOrZero(message = "Total products must be zero or positive")
     private int totalProducts;
     @PositiveOrZero
     private double totalPrice;
