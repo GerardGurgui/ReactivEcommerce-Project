@@ -4,7 +4,9 @@ CREATE TABLE IF NOT EXISTS carts (
   name varchar(255) DEFAULT NULL,
   totalProducts int DEFAULT NULL,
   totalPrice double precision DEFAULT NULL,
-  status varchar(255) DEFAULT NULL
+  status varchar(255) DEFAULT NULL,
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP
 );
 
 --CREATE TABLE IF NOT EXISTS cart_products (

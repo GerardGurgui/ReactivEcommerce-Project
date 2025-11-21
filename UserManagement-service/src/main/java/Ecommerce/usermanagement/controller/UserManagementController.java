@@ -1,6 +1,6 @@
 package Ecommerce.usermanagement.controller;
 
-import Ecommerce.usermanagement.dto.cart.UserCartDto;
+import Ecommerce.usermanagement.dto.cart.CartLinkUserDto;
 import Ecommerce.usermanagement.dto.input.UserInputDto;
 import Ecommerce.usermanagement.dto.output.UserBasicOutputDto;
 import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;
@@ -12,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -81,11 +80,10 @@ public class UserManagementController {
         ////CONNECTION WITH MYDATA-SERVICE
     //CARTS
 
-    //actualiza el campo hasCart del usuario en caso de que añada un nuevo carrito a su lista
     @PutMapping("/updateUserHasCart/")
-    public ResponseEntity<Mono<UserInfoOutputDto>> updateUserHasCart(@RequestBody UserCartDto userDto){
+    public ResponseEntity<Mono<UserInfoOutputDto>> updateUserHasCart(@RequestBody CartLinkUserDto cartLinkUserDto){
 
-        return new ResponseEntity<>(userManagementService.updateUserHasCart(userDto), HttpStatus.OK);
+        return new ResponseEntity<>(userManagementService.linkCartToUser(cartLinkUserDto), HttpStatus.OK);
     }
 
     ////CONNECTION WITH AUTHENTICATION-SERVICE

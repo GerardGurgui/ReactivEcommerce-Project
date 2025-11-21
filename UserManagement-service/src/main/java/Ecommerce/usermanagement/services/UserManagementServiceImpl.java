@@ -2,8 +2,7 @@ package Ecommerce.usermanagement.services;
 
 import Ecommerce.usermanagement.document.Roles;
 import Ecommerce.usermanagement.document.User;
-import Ecommerce.usermanagement.dto.cart.UserCartDto;
-import Ecommerce.usermanagement.dto.input.UserEmailDto;
+import Ecommerce.usermanagement.dto.cart.CartLinkUserDto;
 import Ecommerce.usermanagement.dto.input.UserInputDto;
 import Ecommerce.usermanagement.dto.output.UserBasicOutputDto;
 import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;
@@ -14,7 +13,6 @@ import Ecommerce.usermanagement.repository.IUsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.text.SimpleDateFormat;
@@ -24,7 +22,6 @@ import java.util.*;
 @Service
 public class UserManagementServiceImpl implements IUserManagementService {
 
-    
     private final IUsersRepository userRepository;
 
     @Autowired
@@ -117,7 +114,6 @@ public class UserManagementServiceImpl implements IUserManagementService {
         user.setLoginDate(LocalDate.now());
         user.setTotalPurchase(0L);
         user.setTotalSpent(0);
-        user.setActiveCart(false);
         user.addRoleUser(); //default role
         user.getAuthorities();
         //userDetails properties
@@ -222,21 +218,17 @@ public class UserManagementServiceImpl implements IUserManagementService {
 
     /////-----> COMUNICACION CON MICROSERVICIO MYDATA
 
-    //FALTA MODIFICAR EL ESTADO DE LOS CARRITOS DE USUARIO
-    //FALTA CAMBIAR ORDEN DE LA CADENA, PRIMERO COMPROBAR ERRORES, SI TODO OK , ENTONCES ADELANTE
-
     ////CARTS
-    public Mono<UserInfoOutputDto> updateUserHasCart(UserCartDto userCartDto) {
+    public Mono<UserInfoOutputDto> linkCartToUser(CartLinkUserDto cartLinkUserDto) {
 
         //faltan comprobaciones y mejoras, de seguridad eso seguro
 
-        String userDtoUuid = userCartDto.getUserDto().getUuid();
+        String userUuid = cartLinkUserDto.getUserUuid();
 
-        return userRepository.findByUuid(userDtoUuid)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User with Uuid: " + userDtoUuid + " not found")))
+        return userRepository.findByUuid(userUuid)
+                .switchIfEmpty(Mono.error(new UserNotFoundException("User with Uuid: " + userUuid + " not found")))
                 .flatMap(user -> {
-                    user.setActiveCart(true);
-                    user.addCart(userCartDto.getCartDto());
+                    user.addCartId(cartLinkUserDto.getIdCart());
                     return userRepository.save(user)
                             .map(Converter::convertToDtoInfo);
                 });

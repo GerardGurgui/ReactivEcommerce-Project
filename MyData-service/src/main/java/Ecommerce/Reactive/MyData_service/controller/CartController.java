@@ -1,8 +1,7 @@
 package Ecommerce.Reactive.MyData_service.controller;
 
 import Ecommerce.Reactive.MyData_service.DTO.CartDto;
-import Ecommerce.Reactive.MyData_service.DTO.UserDto;
-import Ecommerce.Reactive.MyData_service.service.CartService;
+import Ecommerce.Reactive.MyData_service.service.CartServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,32 +21,31 @@ public class CartController {
 
     private final static Logger LOGGER = Logger.getLogger(CartController.class.getName());
 
-    private final CartService cartService;
+    private final CartServiceImpl cartServiceImpl;
 
     @Autowired
-    public CartController(CartService cartService) {
-        this.cartService = cartService;
+    public CartController(CartServiceImpl cartServiceImpl) {
+        this.cartServiceImpl = cartServiceImpl;
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/createCart")
     public Mono<ResponseEntity<CartDto>> createCart(@Valid @RequestBody CartDto cartDto) {
 
-        return cartService.createCartForUser(cartDto)
+        return cartServiceImpl.createCartForUser(cartDto)
                 .map(cart -> new ResponseEntity<>(cart, HttpStatus.CREATED));
     }
-
 
     @GetMapping("/getCart/{idCart}")
     public ResponseEntity<Mono<CartDto>> getCart(@PathVariable Long idCart) {
 
-        return new ResponseEntity<>(cartService.getCartById(idCart), HttpStatus.FOUND);
+        return new ResponseEntity<>(cartServiceImpl.getCartById(idCart), HttpStatus.FOUND);
     }
 
     @GetMapping("/getAllCartsFromUserUuid/{userUuid}")
     public ResponseEntity<Flux<CartDto>> getAllCartsFromUserUuid(@PathVariable String userUuid) {
 
-        return new ResponseEntity<>(cartService.getAllCartsByUserUuid(userUuid), HttpStatus.FOUND);
+        return new ResponseEntity<>(cartServiceImpl.getAllCartsByUserUuid(userUuid), HttpStatus.FOUND);
     }
 
 
