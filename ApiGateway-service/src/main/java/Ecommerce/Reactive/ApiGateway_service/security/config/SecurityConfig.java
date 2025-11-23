@@ -4,6 +4,7 @@ import Ecommerce.Reactive.ApiGateway_service.security.config.validators.Audience
 import Ecommerce.Reactive.ApiGateway_service.security.config.validators.IssuerValidator;
 import Ecommerce.Reactive.ApiGateway_service.security.config.validators.UserUuidValidator;
 import io.jsonwebtoken.io.Decoders;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -36,16 +36,18 @@ public class CartController {
                 .map(cart -> new ResponseEntity<>(cart, HttpStatus.CREATED));
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/getCart/{idCart}")
-    public ResponseEntity<Mono<CartDto>> getCart(@PathVariable Long idCart) {
+    public Mono<CartDto> getCart(@PathVariable Long idCart) {
 
-        return new ResponseEntity<>(cartServiceImpl.getCartById(idCart), HttpStatus.FOUND);
+        return cartServiceImpl.getCartById(idCart);
     }
 
-    @GetMapping("/getAllCartsFromUserUuid/{userUuid}")
-    public ResponseEntity<Flux<CartDto>> getAllCartsFromUserUuid(@PathVariable String userUuid) {
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/getAllCarts")
+    public Flux<CartDto> getAllCarts() {
 
-        return new ResponseEntity<>(cartServiceImpl.getAllCartsByUserUuid(userUuid), HttpStatus.FOUND);
+        return cartServiceImpl.getAllCarts();
     }
 
 

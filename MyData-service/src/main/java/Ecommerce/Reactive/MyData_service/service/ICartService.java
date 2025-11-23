@@ -8,7 +8,7 @@ public interface ICartService {
 
     Mono<CartDto> getCartById(Long idCart);
 
-    Flux<CartDto> getAllCartsByUserUuid(String userUuid);
+    Flux<CartDto> getAllCarts();
 
     Mono<CartDto> createCartForUser(CartDto cartDto);
 }

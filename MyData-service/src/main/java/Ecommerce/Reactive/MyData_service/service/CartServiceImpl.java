@@ -46,17 +46,28 @@ public class CartServiceImpl implements ICartService {
 
     public Mono<CartDto> getCartById(Long idCart) {
 
-        return cartRepository.findById(idCart)
-                .switchIfEmpty(Mono.error(new CartNotFoundException("Cart not found by ID: " + idCart)))
-                .flatMap(cart -> converter.cartToDto(cart));
-
+        return securityUtils.extractUserUuidFromJwt()
+                .switchIfEmpty(Mono.error(new ResourceNullException("User UUID not found in JWT token.")))
+                .flatMap(userUuid ->  cartRepository.findById(idCart)
+                    .switchIfEmpty(Mono.error(new CartNotFoundException("Cart not found by ID: " + idCart)))
+                        .flatMap(cart -> {
+                                if (!cart.getUserUuid().equals(userUuid)) {
+                                    return Mono.error(new CartNotFoundException(
+                                            "Cart with ID: " + idCart + " does not belong to the authenticated user."));
+                                }
+                                return converter.cartToDto(cart);
+                            })
+                );
     }
 
-    public Flux<CartDto> getAllCartsByUserUuid(String userUuid) {
 
-        return cartRepository.getAllCartsByUserUuid(userUuid)
-                .switchIfEmpty(Mono.error(new CartNotFoundException("Carts not found for userUuid: " + userUuid)))
-                .flatMap(cart -> converter.cartToDto(cart));
+    public Flux<CartDto> getAllCarts() {
+
+        return securityUtils.extractUserUuidFromJwt()
+                .switchIfEmpty(Mono.error(new ResourceNullException("User UUID not found in JWT token. Ensure the token contains a valid 'sub' claim.")))
+                .flatMapMany(userUuid -> cartRepository.getAllCartsByUserUuid((userUuid))
+                    .switchIfEmpty(Flux.error(new CartNotFoundException("No carts found in the database for this user")))
+                    .flatMap(cart -> converter.cartToDto(cart)));
 
     }
 
@@ -65,7 +76,7 @@ public class CartServiceImpl implements ICartService {
 
         LOGGER.info("----> Creating cart for user");
 
-        return securityUtils.extractUserUuid()
+        return securityUtils.extractUserUuidFromJwt()
                 .switchIfEmpty(Mono.error(new ResourceNullException("User UUID not found in JWT token. Ensure the token contains a valid 'sub' claim.")))
                 .flatMap(userUuid -> verifyCartNameDoesNotExist(cartDto.getName())
                         .then(Mono.just(userUuid)))
