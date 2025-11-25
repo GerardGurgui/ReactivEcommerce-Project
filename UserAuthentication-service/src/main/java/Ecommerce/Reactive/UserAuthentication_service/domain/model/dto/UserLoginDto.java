@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor //default constructor needed for jackSon to deserialize
+@NoArgsConstructor
 public class UserLoginDto{
 
     private String uuid;
@@ -22,17 +22,12 @@ public class UserLoginDto{
     private String email;
     private String password;
     private Set<Roles> roles;
-    //Properties from userDetails
-    private boolean isAccountNonExpired;
-    private boolean isAccountNonLocked;
-    private boolean isCredentialsNonExpired;
-    private boolean isEnabled;
 
-    public boolean isAdmin() {
-
-        return roles.stream()
-                .anyMatch(role -> role.equals(Roles.ROLE_ADMIN));
-
-    }
+//    public boolean isAdmin() {
+//
+//        return roles.stream()
+//                .anyMatch(role -> role.equals(Roles.ROLE_ADMIN));
+//
+//    }
 
 }

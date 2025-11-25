@@ -64,7 +64,7 @@ public class CartServiceImpl implements ICartService {
     public Flux<CartDto> getAllCarts() {
 
         return securityUtils.extractUserUuidFromJwt()
-                .switchIfEmpty(Mono.error(new ResourceNullException("User UUID not found in JWT token. Ensure the token contains a valid 'sub' claim.")))
+                .switchIfEmpty(Mono.error(new ResourceNullException("User UUID not found in JWT token.")))
                 .flatMapMany(userUuid -> cartRepository.getAllCartsByUserUuid((userUuid))
                     .switchIfEmpty(Flux.error(new CartNotFoundException("No carts found in the database for this user")))
                     .flatMap(cart -> converter.cartToDto(cart)));

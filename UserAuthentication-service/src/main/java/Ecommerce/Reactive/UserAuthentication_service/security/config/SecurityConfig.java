@@ -20,22 +20,10 @@ import java.util.logging.Logger;
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
 
-    private final Logger LOGGER = Logger.getLogger(SecurityConfig.class.getName());
-
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
-
-    @Bean
-    public ReactiveAuthenticationManager reactiveAuthenticationManager(ReactiveUserDetailsService userDetailsService,
-                                                                       PasswordEncoder passwordEncoder) {
-        UserDetailsRepositoryReactiveAuthenticationManager manager =
-                new UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService);
-        manager.setPasswordEncoder(passwordEncoder);
-        return manager;
-    }
-
 
     @Bean
     public SecurityWebFilterChain filterChain(ServerHttpSecurity http) {
