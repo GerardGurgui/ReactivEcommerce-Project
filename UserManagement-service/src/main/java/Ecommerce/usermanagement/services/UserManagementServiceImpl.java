@@ -119,7 +119,6 @@ public class UserManagementServiceImpl implements IUserManagementService {
         //userDetails properties
         user.setAccountNonExpired(true);
         user.setAccountNonLocked(true);
-        user.setCredentialsNonExpired(true);
         user.setEnabled(true);
         return userRepository.save(user).map(Converter::convertToDtoInfo);
     }

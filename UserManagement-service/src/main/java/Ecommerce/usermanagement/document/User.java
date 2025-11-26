@@ -89,9 +89,6 @@ public class User {
     @Field(name = "is_account_non_locked")
     private boolean isAccountNonLocked;
 
-    @Field(name = "is_credentials_non_expired")
-    private boolean isCredentialsNonExpired;
-
     @Field(name = "is_enabled")
     private boolean isEnabled;
 

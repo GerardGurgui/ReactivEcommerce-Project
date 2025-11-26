@@ -26,14 +26,13 @@ public class UserLoginDto{
     //Properties from userDetails
     private boolean isAccountNonExpired;
     private boolean isAccountNonLocked;
-    private boolean isCredentialsNonExpired;
     private boolean isEnabled;
 
-    public boolean isAdmin() {
-
-        return roles.stream()
-                .anyMatch(role -> role.equals(Roles.ROLE_ADMIN));
-
-    }
+//    public boolean isAdmin() {
+//
+//        return roles.stream()
+//                .anyMatch(role -> role.equals(Roles.ROLE_ADMIN));
+//
+//    }
 
 }

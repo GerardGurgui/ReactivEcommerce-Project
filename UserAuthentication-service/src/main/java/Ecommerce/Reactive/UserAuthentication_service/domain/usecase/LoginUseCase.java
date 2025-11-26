@@ -3,9 +3,7 @@ package Ecommerce.Reactive.UserAuthentication_service.domain.usecase;
 import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.LoginRequestDto;
 import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.TokenDto;
 import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.UserLoginDto;
-import Ecommerce.Reactive.UserAuthentication_service.exceptions.BadCredentialsException;
-import Ecommerce.Reactive.UserAuthentication_service.exceptions.EmptyCredentialsException;
-import Ecommerce.Reactive.UserAuthentication_service.exceptions.UserNotFoundException;
+import Ecommerce.Reactive.UserAuthentication_service.exceptions.*;
 import Ecommerce.Reactive.UserAuthentication_service.security.jwt.JwtProvider;
 import Ecommerce.Reactive.UserAuthentication_service.service.usermanagement.UserManagementConnectorService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,8 +18,8 @@ public class LoginUseCase {
     private final Logger logger = Logger.getLogger(LoginUseCase.class.getName());
 
     private final UserManagementConnectorService userMngConnector;
-    private PasswordEncoder passwordEncoder;
-    private JwtProvider jwtProvider;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtProvider jwtProvider;
 
     public LoginUseCase(UserManagementConnectorService userMngConnector,
                         PasswordEncoder passwordEncoder,
@@ -40,15 +38,21 @@ public class LoginUseCase {
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User not found")))
                 .doOnNext(userDetails -> logger.info("---> User Details: " + userDetails))
                 // 3 - Validate password
-                .filter(userPswd -> passwordEncoder.matches(loginRequestDto.getPassword(), userPswd.getPassword()))
-                .switchIfEmpty(Mono.error(new BadCredentialsException("Password does not match")))
-                // 4 - Generate JWT token
+                .flatMap(userPswd -> {
+                    if (!passwordEncoder.matches(loginRequestDto.getPassword(), userPswd.getPassword())) {
+                        return Mono.error(new BadCredentialsException("Password does not match"));
+                    }
+                    return Mono.just(userPswd);
+                })
+                // 4 - Validate account status
+                .flatMap(user -> validateAccountStatus(user))
+                // 5 - Generate JWT token
                 .flatMap(user -> {
                     String token = jwtProvider.generateToken(user);
                     TokenDto tokenDto = new TokenDto(token);
                     return Mono.just(tokenDto);
                 })
-                .doOnNext(token -> logger.info("---> Token created successfully" + token));
+                .doOnNext(token -> logger.info("---> Token created successfully"));
 
     }
 
@@ -67,6 +71,20 @@ public class LoginUseCase {
         }
 
         return Mono.just(username);
+    }
+
+    private Mono<UserLoginDto> validateAccountStatus(UserLoginDto userLoginDto) {
+
+        if (!userLoginDto.isAccountNonLocked()) {
+            return Mono.error(new UserAccountLockedException("User account is locked"));
+        }
+        if (!userLoginDto.isEnabled()) {
+            return Mono.error(new UserAccountNotEnabledException("User account is disabled"));
+        }
+        if (!userLoginDto.isAccountNonExpired()) {
+            return Mono.error(new UserAccountIsExpiredException("User account is expired"));
+        }
+        return Mono.just(userLoginDto);
     }
 
 
