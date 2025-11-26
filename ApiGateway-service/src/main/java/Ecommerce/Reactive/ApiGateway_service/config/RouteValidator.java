@@ -36,7 +36,6 @@ public class RouteValidator {
     public Predicate<ServerHttpRequest> isSecured = request -> {
         String path = request.getURI().getPath();
 
-        logger.info("╔════════════════════════════════════════════════════════╗");
         logger.info("║ RouteValidator - Checking: " + path);
 
         // Verificar si el path comienza con alguna ruta pública
@@ -50,7 +49,6 @@ public class RouteValidator {
         } else {
             logger.info("║ 🔓 PUBLIC - No JWT required");
         }
-        logger.info("╚════════════════════════════════════════════════════════╝");
 
         return isSecured;
     };

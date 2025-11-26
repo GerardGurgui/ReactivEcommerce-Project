@@ -1,4 +1,4 @@
-package Ecommerce.Reactive.UserAuthentication_service.security;
+package Ecommerce.Reactive.UserAuthentication_service.security.jwt;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

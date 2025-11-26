@@ -51,7 +51,7 @@ public class UserManagementConnectorService {
                 });
     }
 
-    public Mono<UserLoginDto> getUserByUsername(String username){
+    public Mono<UserLoginDto> getUserByUserName(String username){
 
         LOGGER.info("Request to UserManagementConnectorService: getUserByUsername with username: " + username);
 
