@@ -1,9 +1,10 @@
-🛒 ReactivEcommerce – Reactive Ecommerce Microservices Platform
+## 🛒 ReactivEcommerce – Reactive Ecommerce Microservices Platform
 
 ReactivEcommerce is a modern, event-driven, cloud-ready Ecommerce platform built with Java 17, Spring WebFlux, Reactive Programming, Docker, Kafka, and a microservices architecture.
 The system is designed for high throughput, non-blocking IO, horizontal scalability, and clean domain-driven separation.
 
-✨ Key Features
+
+## ✨ Key Features
 
 ⚡ Reactive (Non-Blocking) Architecture using Spring WebFlux
 
@@ -27,9 +28,11 @@ The system is designed for high throughput, non-blocking IO, horizontal scalabil
 
 🔍 Future integration of Eureka/Discovery & load-balanced communication
 
-🏗️ Microservices Overview
+
+## 🏗️ Microservices Overview
 
 The platform consists of the following microservices:
+
 
 🔑 User Authentication Service
 
@@ -42,6 +45,7 @@ Communicates securely with UserManagement through internal API-Key
 Reactive password validation with BCrypt
 
 Fully stateless JWT-based authentication
+
 
 👤 User Management Service
 
@@ -57,6 +61,7 @@ Exposes internal endpoints protected with API-Key
 
 Supports future role-based permissions
 
+
 📦 Product Catalog Service
 
 Manages products using PostgreSQL via Spring Data R2DBC
@@ -65,6 +70,7 @@ Reactive searches, pagination, dynamic filtering
 
 Future integration with caching layer (Redis)
 
+
 🧺 Shopping Cart Service
 
 Manages user carts, line items, quantities
@@ -72,6 +78,7 @@ Manages user carts, line items, quantities
 Reactive operations
 
 Communicates with Product Catalog and User Management
+
 
 📊 MyData Service
 
@@ -83,6 +90,7 @@ Calls UserManagement using API-Key protected internal endpoints
 
 Secured as JWT Resource Server
 
+
 💳 Payment Service
 
 Manages payment processing
@@ -90,6 +98,7 @@ Manages payment processing
 Integrates with external payment gateways (Stripe, PayPal, TBD)
 
 Works alongside the upcoming Order Service
+
 
 🚪 API Gateway (Future Integration)
 
@@ -107,6 +116,7 @@ JWT validation
 
 Security policies
 
+
 🌐 Discovery Service (Optional / Future)
 
 Currently disabled (not necessary for local development)
@@ -116,6 +126,7 @@ Will allow load balancing and dynamic discovery using:
 Eureka
 
 Spring Cloud LoadBalancer
+
 
 📝 Upcoming Microservice: Order Service
 
@@ -141,7 +152,7 @@ MyData
 
 It will also expose internal secure endpoints for communication with PaymentService and MyData.
 
-Patterns used:
+## Patterns used:
 
 Reactive Microservices
 
@@ -157,7 +168,7 @@ CQRS-friendly data separation (MongoDB for users, PostgreSQL for catalog)
 
 Domain-Driven service boundaries
 
-🔐 Security Architecture
+## 🔐 Security Architecture
 External Client Security
 
 JWT Authentication
@@ -194,7 +205,7 @@ Internal authority (INTERNAL_SERVICE)
 
 Fully isolated from external systems
 
-🎯 Technologies Used
+## 🎯 Technologies Used
 Backend & Reactive Stack
 
 Java 17
@@ -307,7 +318,7 @@ Kafka integration tests (future)
 
 ⭐ Full CI/CD pipeline
 
-❤️ Contributions
+## ❤️ Contributions
 
 Contributions, suggestions, and improvements are welcome.
 This is a personal learning and professional-grade project — feedback is encouraged.
