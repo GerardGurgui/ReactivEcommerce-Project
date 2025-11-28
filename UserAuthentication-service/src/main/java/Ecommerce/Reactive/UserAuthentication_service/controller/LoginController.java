@@ -27,9 +27,9 @@ public class LoginController {
 
     @PostMapping("/login")
     public Mono<ResponseEntity<TokenDto>> login(@RequestBody LoginRequestDto loginRequestDto,
-                                                ServerHttpRequest exchange) {
+                                                ServerHttpRequest request) {
 
-        String clientIp = getClientIp(exchange);
+        String clientIp = getClientIp(request);
 
         return loginUseCase.login(loginRequestDto, clientIp)
                 .map(tokenDto -> ResponseEntity.ok(tokenDto));
