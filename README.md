@@ -140,16 +140,6 @@ Integrate with Payment Service
 
 Publish Order Created / Paid / Cancelled Kafka events
 
-Act as the orchestrator between:
-
-UserManagement
-
-ProductCatalog
-
-PaymentService
-
-MyData
-
 It will also expose internal secure endpoints for communication with PaymentService and MyData.
 
 ## Patterns used:
@@ -169,46 +159,32 @@ CQRS-friendly data separation (MongoDB for users, PostgreSQL for catalog)
 Domain-Driven service boundaries
 
 ## 🔐 Security Architecture
-External Client Security
 
-JWT Authentication
+🔑 1. JWT-Based External Security (Public API)
+🌟 Full JWT Protection for Clients
 
-Validated through:
+All public APIs (login, cart, products, etc.) are secured using JSON Web Tokens (JWT).
+Each microservice acts as a Spring Security OAuth2 Resource Server, performing strict token validation.
 
-issuer
+JWT validation includes:
 
-audience
+Issuer ✔
 
-expiration
+Audience ✔
 
-custom validators (subject/userUuid)
+Expiration ✔
 
-Internal Communication Security
+Custom Claims Validators, including:
 
-Service-to-service calls require a custom API-Key:
+sub (must be a valid user UUID)
 
-Header:
-
-X-Internal-API-Key: <secret>
-
-
-This protects private endpoints:
-
-/api/[service]/internal/**
-
-
-Each internal endpoint has:
-
-Dedicated filter
-
-Internal authority (INTERNAL_SERVICE)
-
-Fully isolated from external systems
+userUuid consistency check
 
 ## 🎯 Technologies Used
+
 Backend & Reactive Stack
 
-Java 17
+# Java 17
 
 Spring WebFlux
 
