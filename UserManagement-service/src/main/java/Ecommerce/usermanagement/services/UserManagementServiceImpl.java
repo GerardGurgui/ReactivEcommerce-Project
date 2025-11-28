@@ -200,6 +200,15 @@ public class UserManagementServiceImpl implements IUserManagementService {
     }
 
     //Update the latestAccess field
+    /**
+     * Updates the latest access timestamp for a user based on a login event.
+     * This method is typically called when a user successfully logs in.
+     *
+     * @param userUuid the UUID of the user whose latest access is being updated
+     * @param loginTime the timestamp of the login event
+     * @return a Mono that completes when the update is successful
+     * @throws org.springframework.dao.DataAccessException if the update fails due to a database error
+     */
     public Mono<Void> updateLatestAccess(String userUuid, Instant loginTime) {
 
         Query query = Query.query(Criteria.where("uuid").is(userUuid));
