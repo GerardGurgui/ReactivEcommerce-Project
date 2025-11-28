@@ -17,6 +17,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 
 import javax.validation.constraints.NotBlank;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -73,7 +74,7 @@ public class User {
     private LocalDate loginDate;
 
     @Field(name = "latest_access")
-    private String latestAccess;
+    private Instant latestAccess;
 
     @Field(name = "roles")
     @JsonManagedReference // manejar serializacion de los usuarios
