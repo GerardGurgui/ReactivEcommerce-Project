@@ -1,7 +1,6 @@
 package Ecommerce.usermanagement.mapping;
 
 import Ecommerce.usermanagement.document.User;
-import Ecommerce.usermanagement.dto.cart.CartDto;
 import Ecommerce.usermanagement.dto.input.UserInputDto;
 import Ecommerce.usermanagement.dto.output.UserBasicOutputDto;
 import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;

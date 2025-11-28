@@ -4,8 +4,22 @@ server:
 spring:
   application:
     name: UserAuthentication-service
+
   jmx:
     enabled: true
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
+kafka:
+  topics:
+    user-login: user.login.events
 
 security:
   jwt:
@@ -24,7 +38,6 @@ auth:
     login: /api/user-authentication/login
     register: /api/user-authentication/register
   user-management-url: http://localhost:8085/api/usermanagement/addUser
-
 
 #eureka:
 #  client:

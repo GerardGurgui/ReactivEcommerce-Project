@@ -21,7 +21,6 @@ import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
 import javax.crypto.spec.SecretKeySpec;
-import java.util.Base64;
 import java.util.logging.Logger;
 
 @Configuration
