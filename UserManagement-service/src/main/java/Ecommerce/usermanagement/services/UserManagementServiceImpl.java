@@ -10,55 +10,41 @@ import Ecommerce.usermanagement.dto.output.UserLoginDto;
 import Ecommerce.usermanagement.exceptions.*;
 import Ecommerce.usermanagement.mapping.Converter;
 import Ecommerce.usermanagement.repository.IUsersRepository;
+import com.thoughtworks.xstream.core.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
 public class UserManagementServiceImpl implements IUserManagementService {
 
     private final IUsersRepository userRepository;
+    private final ReactiveMongoTemplate reactiveMongoTemplate;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Autowired
-    public UserManagementServiceImpl(IUsersRepository userRepository) {
+    public UserManagementServiceImpl(IUsersRepository userRepository,
+                                     ReactiveMongoTemplate reactiveMongoTemplate) {
         this.userRepository = userRepository;
+        this.reactiveMongoTemplate = reactiveMongoTemplate;
     }
 
-
-    private Set<Roles> assignRole(Set<String> rolenames){
-
-        Set<Roles> userRoles = new HashSet<>();
-
-        for (String rolename : rolenames) {
-
-            if (rolename.equalsIgnoreCase("ADMIN")) {
-                userRoles.add(Roles.ROLE_ADMIN);
-
-            } else if (rolename.equalsIgnoreCase("USER")) {
-                userRoles.add(Roles.ROLE_USER);
-            }
-        }
-        return userRoles;
-    }
-
-
-    private String generateLastestAcces() {
-
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
-        Date date = new Date(System.currentTimeMillis());
-        return formatter.format(date);
-    }
 
     ////CHECKS
-
     @Override
     public Mono<Void> checkEmailExists(String email) {
 
@@ -109,7 +95,7 @@ public class UserManagementServiceImpl implements IUserManagementService {
 
         User user = Converter.convertFromDtoToUser(userInputDto);
         user.setUuid(UUID.randomUUID().toString());
-        user.setLatestAccess(generateLastestAcces());
+        user.setLatestAccess(generateLatestAccess());
         user.setPassword(passwordEncoder.encode(userInputDto.getPassword()));
         user.setLoginDate(LocalDate.now());
         user.setTotalPurchase(0L);
@@ -214,13 +200,21 @@ public class UserManagementServiceImpl implements IUserManagementService {
 
     }
 
+    //Update the latestAccess field
+    public Mono<Void> updateLatestAccess(String userUuid, Instant loginTime) {
 
-    /////-----> COMUNICACION CON MICROSERVICIO MYDATA
+        Query query = Query.query(Criteria.where("uuid").is(userUuid));
+        Update update = new Update().set("latestAccess", loginTime);
+
+        return reactiveMongoTemplate.updateFirst(query, update, User.class)
+                .then();
+    }
+
+
+    /////-----> MYDATA - CARTS
 
     ////CARTS
-    public Mono<UserInfoOutputDto> linkCartToUser(CartLinkUserDto cartLinkUserDto) {
-
-        //faltan comprobaciones y mejoras, de seguridad eso seguro
+    public Mono<String> linkCartToUser(CartLinkUserDto cartLinkUserDto) {
 
         String userUuid = cartLinkUserDto.getUserUuid();
 
@@ -229,10 +223,34 @@ public class UserManagementServiceImpl implements IUserManagementService {
                 .flatMap(user -> {
                     user.addCartId(cartLinkUserDto.getIdCart());
                     return userRepository.save(user)
-                            .map(Converter::convertToDtoInfo);
+                            .map(u -> "Cart linked successfully to user with UUID: " + userUuid);
                 });
 
+    }
 
+
+    ////UTILITY METHODS
+    private Set<Roles> assignRole(Set<String> rolenames){
+
+        Set<Roles> userRoles = new HashSet<>();
+
+        for (String rolename : rolenames) {
+
+            if (rolename.equalsIgnoreCase("ADMIN")) {
+                userRoles.add(Roles.ROLE_ADMIN);
+
+            } else if (rolename.equalsIgnoreCase("USER")) {
+                userRoles.add(Roles.ROLE_USER);
+            }
+        }
+        return userRoles;
+    }
+
+
+    private String generateLatestAccess() {
+
+        return ZonedDateTime.now(ZoneOffset.UTC)
+                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     }
 
 }

@@ -111,11 +111,11 @@ public class CartServiceImpl implements ICartService {
 
     private Mono<Cart> notifyUserManagementServiceCartCreated(Cart cart){
 
-        CartLinkUserDto linkDto = new CartLinkUserDto(
+        CartLinkUserDto cartLinkUserDto = new CartLinkUserDto(
                 cart.getId(),
                 cart.getUserUuid()
         );
-        return userMngConnectorService.linkCartToUser(linkDto)
+        return userMngConnectorService.linkCartToUser(cartLinkUserDto)
                 .timeout(Duration.ofSeconds(5))
                 .retryWhen(Retry.fixedDelay(3, Duration.ofSeconds(3)))
                 .thenReturn(cart);
