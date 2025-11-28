@@ -21,9 +21,6 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -199,10 +196,19 @@ public class UserManagementServiceImpl implements IUserManagementService {
     }
 
     //Update the latestAccess field
+    /**
+     * Updates the latest access timestamp for a user based on a login event.
+     * This method is typically called when a user successfully logs in.
+     *
+     * @param userUuid the UUID of the user whose latest access is being updated
+     * @param loginTime the timestamp of the login event
+     * @return a Mono that completes when the update is successful
+     * @throws org.springframework.dao.DataAccessException if the update fails due to a database error
+     */
     public Mono<Void> updateLatestAccess(String userUuid, Instant loginTime) {
 
         Query query = Query.query(Criteria.where("uuid").is(userUuid));
-        Update update = new Update().set("latestAccess", loginTime);
+        Update update = new Update().set("latest_access", loginTime);
 
         return reactiveMongoTemplate.updateFirst(query, update, User.class)
                 .then();
@@ -245,10 +251,9 @@ public class UserManagementServiceImpl implements IUserManagementService {
     }
 
 
-    private String generateLatestAccess() {
+    private Instant generateLatestAccess() {
 
-        return ZonedDateTime.now(ZoneOffset.UTC)
-                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        return Instant.now();
     }
 
 }

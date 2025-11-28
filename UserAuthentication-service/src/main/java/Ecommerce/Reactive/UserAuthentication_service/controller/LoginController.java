@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.net.InetSocketAddress;
@@ -28,9 +27,9 @@ public class LoginController {
 
     @PostMapping("/login")
     public Mono<ResponseEntity<TokenDto>> login(@RequestBody LoginRequestDto loginRequestDto,
-                                                ServerHttpRequest exchange) {
+                                                ServerHttpRequest request) {
 
-        String clientIp = getClientIp(exchange);
+        String clientIp = getClientIp(request);
 
         return loginUseCase.login(loginRequestDto, clientIp)
                 .map(tokenDto -> ResponseEntity.ok(tokenDto));
