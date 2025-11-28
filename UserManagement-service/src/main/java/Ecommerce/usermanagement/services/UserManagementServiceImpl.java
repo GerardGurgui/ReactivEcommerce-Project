@@ -10,7 +10,6 @@ import Ecommerce.usermanagement.dto.output.UserLoginDto;
 import Ecommerce.usermanagement.exceptions.*;
 import Ecommerce.usermanagement.mapping.Converter;
 import Ecommerce.usermanagement.repository.IUsersRepository;
-import com.thoughtworks.xstream.core.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
