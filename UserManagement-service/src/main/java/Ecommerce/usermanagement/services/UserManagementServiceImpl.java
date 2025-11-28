@@ -10,7 +10,6 @@ import Ecommerce.usermanagement.dto.output.UserLoginDto;
 import Ecommerce.usermanagement.exceptions.*;
 import Ecommerce.usermanagement.mapping.Converter;
 import Ecommerce.usermanagement.repository.IUsersRepository;
-import com.thoughtworks.xstream.core.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -20,7 +19,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
