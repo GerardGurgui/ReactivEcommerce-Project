@@ -161,7 +161,7 @@ Domain-Driven service boundaries
 ## 🔐 Security Architecture
 
 🔑 1. JWT-Based External Security (Public API)
-🌟 Full JWT Protection for Clients
+Full JWT Protection for Clients
 
 All public APIs (login, cart, products, etc.) are secured using JSON Web Tokens (JWT).
 Each microservice acts as a Spring Security OAuth2 Resource Server, performing strict token validation.
@@ -180,11 +180,32 @@ sub (must be a valid user UUID)
 
 userUuid consistency check
 
+🛰️ 2. API-Key Internal Microservice Security (Private API)
+
+Internal communication between microservices uses private endpoints, not meant for public or client usage.
+
+These endpoints are protected using a shared API-Key transmitted via a custom header.
+
+Internal API features:
+
+Custom reactive WebFilter validates the X-Internal-API-Key header
+
+On success, an INTERNAL_SERVICE authority is granted in the security context
+
+External clients cannot reach these endpoints safely, even with a valid JWT
+
+Clear separation between:
+
+Public API layer (JWT)
+
+Private infrastructure layer (API-Key)
+
+
 ## 🎯 Technologies Used
 
 Backend & Reactive Stack
 
-# Java 17
+Java 17
 
 Spring WebFlux
 
