@@ -42,7 +42,7 @@ public class UserManagementConnectorService {
 //    }
 
     //CONSTRUCTOR SIN EUREKA
-    public UserManagementConnectorService(@Value("${usermanagement.service.url}") String USERMANAGEMENT_URL,
+    public UserManagementConnectorService(@Value("${userManagement.service.url}") String USERMANAGEMENT_URL,
                                           WebClient.Builder webClientBuilder) {
         this.USERMANAGEMENT_URL = USERMANAGEMENT_URL;
         this.webClient = webClientBuilder.baseUrl(USERMANAGEMENT_URL).build();

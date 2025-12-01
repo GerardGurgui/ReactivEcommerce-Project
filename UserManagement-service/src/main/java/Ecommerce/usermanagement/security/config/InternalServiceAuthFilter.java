@@ -11,6 +11,7 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -23,6 +24,18 @@ public class InternalServiceAuthFilter implements WebFilter {
     @Value("${internal.api-key}")
     private String internalApiKey;
 
+    // postConstruct to validate that the internalApiKey is set properly before the filter is used
+    @PostConstruct
+    private void validateInternalApiKey() {
+
+        if (internalApiKey == null || internalApiKey.isEmpty()) {
+            throw new IllegalStateException("Internal API key is not configured properly.");
+        }
+
+        LOGGER.info("InternalServiceAuthFilter initialized with valid internal API key.");
+    }
+
+    // Filter method to authenticate internal service calls any request to /api/usermanagement/internal/**
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
