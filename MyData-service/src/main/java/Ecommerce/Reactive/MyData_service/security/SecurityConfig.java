@@ -47,13 +47,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // NO!!! RESTRINGIR EL ACCESO A ESTOS ENDPOINTS Y AÑADIR MAS SEGURIDAD
-    private static final String[] PUBLIC_ENDPOINTS = {
-            "/auth/**",
-            "/api/usermanagement/getUserLoginByUsername",
-            "/api/usermanagement/getUserLoginByEmail",
-            "/api/usermanagement/addUser"
-    };
 
     @Bean
     public ReactiveJwtDecoder reactiveJwtDecoder() {
@@ -105,7 +98,6 @@ public class SecurityConfig {
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {

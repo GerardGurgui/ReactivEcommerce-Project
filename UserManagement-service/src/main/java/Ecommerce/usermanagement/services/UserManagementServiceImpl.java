@@ -11,11 +11,15 @@ import Ecommerce.usermanagement.exceptions.*;
 import Ecommerce.usermanagement.mapping.Converter;
 import Ecommerce.usermanagement.repository.IUsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -23,42 +27,19 @@ import java.util.*;
 public class UserManagementServiceImpl implements IUserManagementService {
 
     private final IUsersRepository userRepository;
+    private final ReactiveMongoTemplate reactiveMongoTemplate;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Autowired
-    public UserManagementServiceImpl(IUsersRepository userRepository) {
+    public UserManagementServiceImpl(IUsersRepository userRepository,
+                                     ReactiveMongoTemplate reactiveMongoTemplate) {
         this.userRepository = userRepository;
+        this.reactiveMongoTemplate = reactiveMongoTemplate;
     }
 
-
-    private Set<Roles> assignRole(Set<String> rolenames){
-
-        Set<Roles> userRoles = new HashSet<>();
-
-        for (String rolename : rolenames) {
-
-            if (rolename.equalsIgnoreCase("ADMIN")) {
-                userRoles.add(Roles.ROLE_ADMIN);
-
-            } else if (rolename.equalsIgnoreCase("USER")) {
-                userRoles.add(Roles.ROLE_USER);
-            }
-        }
-        return userRoles;
-    }
-
-
-    private String generateLastestAcces() {
-
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
-        Date date = new Date(System.currentTimeMillis());
-        return formatter.format(date);
-    }
 
     ////CHECKS
-
     @Override
     public Mono<Void> checkEmailExists(String email) {
 
@@ -109,7 +90,7 @@ public class UserManagementServiceImpl implements IUserManagementService {
 
         User user = Converter.convertFromDtoToUser(userInputDto);
         user.setUuid(UUID.randomUUID().toString());
-        user.setLatestAccess(generateLastestAcces());
+        user.setLatestAccess(generateLatestAccess());
         user.setPassword(passwordEncoder.encode(userInputDto.getPassword()));
         user.setLoginDate(LocalDate.now());
         user.setTotalPurchase(0L);
@@ -166,8 +147,8 @@ public class UserManagementServiceImpl implements IUserManagementService {
 
     public Mono<List<UserInfoOutputDto>> getAllUsersInfo() {
         return userRepository.findAll()
-                .map(Converter::convertToDtoInfo)      // convierte cada User a DTO
-                .collectList()                         // agrupa en List<UserInfoOutputDto>
+                .map(Converter::convertToDtoInfo)
+                .collectList()
                 .flatMap(list -> {
                     if (list.isEmpty()) {
                         return Mono.error(new UserNotFoundException("No users found"));
@@ -191,10 +172,6 @@ public class UserManagementServiceImpl implements IUserManagementService {
 
     ///// ----> COMUNICACION CON MICROSERVICIO USERAUTHENTICATION - LOGIN
 
-    //QUE IMPLICA EL LOGIN?
-    //Moodificar LastestAccess
-    // que mas ?
-
     //with password (Login)
     public Mono<UserLoginDto> getUserLoginByUserName(String username) {
 
@@ -214,13 +191,30 @@ public class UserManagementServiceImpl implements IUserManagementService {
 
     }
 
+    //Update the latestAccess field
+    /**
+     * Updates the latest access timestamp for a user based on a login event.
+     * This method is typically called when a user successfully logs in.
+     *
+     * @param userUuid the UUID of the user whose latest access is being updated
+     * @param loginTime the timestamp of the login event
+     * @return a Mono that completes when the update is successful
+     * @throws org.springframework.dao.DataAccessException if the update fails due to a database error
+     */
+    public Mono<Void> updateLatestAccess(String userUuid, Instant loginTime) {
 
-    /////-----> COMUNICACION CON MICROSERVICIO MYDATA
+        Query query = Query.query(Criteria.where("uuid").is(userUuid));
+        Update update = new Update().set("latest_access", loginTime);
+
+        return reactiveMongoTemplate.updateFirst(query, update, User.class)
+                .then();
+    }
+
+
+    /////-----> MYDATA - CARTS
 
     ////CARTS
-    public Mono<UserInfoOutputDto> linkCartToUser(CartLinkUserDto cartLinkUserDto) {
-
-        //faltan comprobaciones y mejoras, de seguridad eso seguro
+    public Mono<String> linkCartToUser(CartLinkUserDto cartLinkUserDto) {
 
         String userUuid = cartLinkUserDto.getUserUuid();
 
@@ -229,10 +223,33 @@ public class UserManagementServiceImpl implements IUserManagementService {
                 .flatMap(user -> {
                     user.addCartId(cartLinkUserDto.getIdCart());
                     return userRepository.save(user)
-                            .map(Converter::convertToDtoInfo);
+                            .map(u -> "Cart linked successfully to user with UUID: " + userUuid);
                 });
 
+    }
 
+
+    ////UTILITY METHODS
+    private Set<Roles> assignRole(Set<String> rolenames){
+
+        Set<Roles> userRoles = new HashSet<>();
+
+        for (String rolename : rolenames) {
+
+            if (rolename.equalsIgnoreCase("ADMIN")) {
+                userRoles.add(Roles.ROLE_ADMIN);
+
+            } else if (rolename.equalsIgnoreCase("USER")) {
+                userRoles.add(Roles.ROLE_USER);
+            }
+        }
+        return userRoles;
+    }
+
+
+    private Instant generateLatestAccess() {
+
+        return Instant.now();
     }
 
 }

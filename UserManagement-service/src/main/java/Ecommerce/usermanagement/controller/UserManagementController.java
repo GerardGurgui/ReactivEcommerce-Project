@@ -14,16 +14,14 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.List;
 
 
 @RestController
-@RequestMapping(value = "/api/usermanagement")
+@RequestMapping("/api/usermanagement")
 @Validated
 public class UserManagementController {
-
-
-    //REVISAR MONO CON RESPONSE ENTITY AL REVEEES!
 
     private final UserManagementServiceImpl userManagementService;
 
@@ -32,72 +30,80 @@ public class UserManagementController {
         this.userManagementService = userManagementService;
     }
 
-
+    // Create user
     @PostMapping("/addUser")
-    public ResponseEntity<Mono<UserInfoOutputDto>> addUser(@Valid @RequestBody UserInputDto userInputDto) {
+    public Mono<ResponseEntity<UserInfoOutputDto>> addUser(@Valid @RequestBody UserInputDto userInputDto) {
 
-        return new ResponseEntity<>(userManagementService.createAndSaveUser(userInputDto), HttpStatus.CREATED);
+        return userManagementService.createAndSaveUser(userInputDto)
+                .map(user -> ResponseEntity.status(HttpStatus.CREATED).body(user));
     }
 
-    ////GETS
 
+    // GETS
     @GetMapping("/get/userBasic/{uuid}")
     public Mono<ResponseEntity<UserBasicOutputDto>> getUserByUuidBasic(@PathVariable String uuid) {
 
         return userManagementService.getUserByUuid(uuid)
-                .map(userBasicOutputDto -> new ResponseEntity<>(userBasicOutputDto, HttpStatus.FOUND));
+                .map(user -> ResponseEntity.ok(user))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/get/userInfo/{uuid}")
-    public ResponseEntity<Mono<UserInfoOutputDto>> getUserInfoByUuid(@PathVariable String uuid) {
+    public Mono<ResponseEntity<UserInfoOutputDto>> getUserInfoByUuid(@PathVariable String uuid) {
 
-        return new ResponseEntity<>(userManagementService.getUserInfoByUuid(uuid), HttpStatus.FOUND);
+        return userManagementService.getUserInfoByUuid(uuid)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/get/userByEmail/{email}")
-    public ResponseEntity<Mono<UserBasicOutputDto>> getUserByEmail(@PathVariable String email) {
+    public Mono<ResponseEntity<UserBasicOutputDto>> getUserByEmail(@PathVariable String email) {
 
-        return new ResponseEntity<>(userManagementService.getUserByEmail(email), HttpStatus.FOUND);
+        return userManagementService.getUserByEmail(email)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/get/userByUserName/{username}")
     public Mono<ResponseEntity<UserBasicOutputDto>> getUserBasicByUsername(@PathVariable String username) {
 
         return userManagementService.getUserByUserName(username)
-                .map(userBasicOutputDto -> new ResponseEntity<>(userBasicOutputDto, HttpStatus.FOUND));
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
-
 
     @GetMapping("/get/allUsersInfo")
     public Mono<ResponseEntity<List<UserInfoOutputDto>>> getAllUsersInfoAsList() {
 
         return userManagementService.getAllUsersInfo()
-                .map(userInfoOutputDtos -> new ResponseEntity<>(userInfoOutputDtos, HttpStatus.FOUND))
-                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NO_CONTENT));
+                .map(users -> ResponseEntity.ok(users))
+                .defaultIfEmpty(ResponseEntity.noContent().build());
     }
 
 
-        ////CONNECTION WITH MYDATA-SERVICE
-    //CARTS
+    //--->  CONNECTION WITH MYDATA-SERVICE
+    @PutMapping("/internal/updateUserHasCart")
+    public Mono<ResponseEntity<String>> updateUserHasCart(@RequestBody CartLinkUserDto cartLinkUserDto) {
 
-    @PutMapping("/updateUserHasCart/")
-    public ResponseEntity<Mono<UserInfoOutputDto>> updateUserHasCart(@RequestBody CartLinkUserDto cartLinkUserDto){
-
-        return new ResponseEntity<>(userManagementService.linkCartToUser(cartLinkUserDto), HttpStatus.OK);
-    }
-
-    ////CONNECTION WITH AUTHENTICATION-SERVICE
-    //Login
-
-    @GetMapping("/getUserLoginByUsername")
-    public ResponseEntity<Mono<UserLoginDto>> getUserLoginByUsername(@RequestParam String username) {
-        return new ResponseEntity<>(userManagementService.getUserLoginByUserName(username), HttpStatus.FOUND);
-    }
-
-    @GetMapping("/getUserLoginByEmail")
-    public ResponseEntity<Mono<UserLoginDto>> getUserLoginByEmail(@RequestParam String email) {
-        return new ResponseEntity<>(userManagementService.getUserLoginByEmail(email), HttpStatus.FOUND);
+        return userManagementService.linkCartToUser(cartLinkUserDto)
+                .map(msg -> ResponseEntity.ok(msg));
     }
 
 
+    //---> CONNECTION WITH AUTHENTICATION-SERVICE
+    @GetMapping("/internal/getUserLoginByUsername")
+    public Mono<ResponseEntity<UserLoginDto>> getUserLoginByUsername(@RequestParam String username) {
+
+        return userManagementService.getUserLoginByUserName(username)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/internal/getUserLoginByEmail")
+    public Mono<ResponseEntity<UserLoginDto>> getUserLoginByEmail(@RequestParam String email) {
+
+        return userManagementService.getUserLoginByEmail(email)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
 }

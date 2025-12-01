@@ -13,10 +13,6 @@ import javax.annotation.PostConstruct;
 @RequiredArgsConstructor
 public class MongoDbConfig {
 
-    /**
-     * Removes the _class field for all registers within mongodb
-     */
-
     private final ApplicationContext applicationContext;
 
     @PostConstruct

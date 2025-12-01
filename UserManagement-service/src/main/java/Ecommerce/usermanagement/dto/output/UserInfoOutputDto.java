@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
@@ -26,7 +27,7 @@ public class UserInfoOutputDto {
     private int totalSpent;
     private boolean isActive;
     private LocalDate loginDate;
-    private String latestAcces;
+    private Instant latestAccess;
     private Set<Roles> roles;
     private List<Long> cartsId;
 
