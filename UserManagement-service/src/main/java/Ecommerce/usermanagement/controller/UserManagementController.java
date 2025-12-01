@@ -81,8 +81,8 @@ public class UserManagementController {
     }
 
 
-    // CONNECTION WITH MYDATA-SERVICE
-    @PutMapping("/updateUserHasCart")
+    //--->  CONNECTION WITH MYDATA-SERVICE
+    @PutMapping("/internal/updateUserHasCart")
     public Mono<ResponseEntity<String>> updateUserHasCart(@RequestBody CartLinkUserDto cartLinkUserDto) {
 
         return userManagementService.linkCartToUser(cartLinkUserDto)
@@ -91,7 +91,7 @@ public class UserManagementController {
 
 
     //---> CONNECTION WITH AUTHENTICATION-SERVICE
-    @GetMapping("/getUserLoginByUsername")
+    @GetMapping("/internal/getUserLoginByUsername")
     public Mono<ResponseEntity<UserLoginDto>> getUserLoginByUsername(@RequestParam String username) {
 
         return userManagementService.getUserLoginByUserName(username)
@@ -99,7 +99,7 @@ public class UserManagementController {
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/getUserLoginByEmail")
+    @GetMapping("/internal/getUserLoginByEmail")
     public Mono<ResponseEntity<UserLoginDto>> getUserLoginByEmail(@RequestParam String email) {
 
         return userManagementService.getUserLoginByEmail(email)

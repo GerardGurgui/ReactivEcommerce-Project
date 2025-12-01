@@ -39,6 +39,16 @@ auth:
     register: /api/user-authentication/register
   user-management-url: http://localhost:8085/api/usermanagement/addUser
 
+# 🔐 API Key interna (para llamar a otros microservicios)
+internal:
+  api-key: 3xcdGoMLDT0WpPvxLz1F6CoaEVJIYZxz8OSb2Jreocc=
+
+# 🌐 URLs de otros microservicios (UserAuth es cliente)
+services:
+  user-management:
+    url: http://localhost:8085/api/usermanagement
+
+
 #eureka:
 #  client:
 #    serviceUrl:

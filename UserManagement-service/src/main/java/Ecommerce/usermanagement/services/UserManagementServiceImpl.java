@@ -147,8 +147,8 @@ public class UserManagementServiceImpl implements IUserManagementService {
 
     public Mono<List<UserInfoOutputDto>> getAllUsersInfo() {
         return userRepository.findAll()
-                .map(Converter::convertToDtoInfo)      // convierte cada User a DTO
-                .collectList()                         // agrupa en List<UserInfoOutputDto>
+                .map(Converter::convertToDtoInfo)
+                .collectList()
                 .flatMap(list -> {
                     if (list.isEmpty()) {
                         return Mono.error(new UserNotFoundException("No users found"));
@@ -171,10 +171,6 @@ public class UserManagementServiceImpl implements IUserManagementService {
 
 
     ///// ----> COMUNICACION CON MICROSERVICIO USERAUTHENTICATION - LOGIN
-
-    //QUE IMPLICA EL LOGIN?
-    //Moodificar LastestAccess
-    // que mas ?
 
     //with password (Login)
     public Mono<UserLoginDto> getUserLoginByUserName(String username) {

@@ -30,6 +30,9 @@ public class UserManagementConnectorService {
     //FALTA CENTRALIZAR URLS EN UN ARCHIVO DE PROPIEDADES
     private final String USERMANAGEMENT_URL;
 
+    @Value("${internal.api-key}")
+    private String internalApiKey;
+
 
 //    CONSTRUCTOR CON EUREKA Y LOAD BALANCER
 //    public UserManagementConnectorService(WebClient.Builder webClientBuilder) {
@@ -91,7 +94,8 @@ public class UserManagementConnectorService {
 
 
         return webClient.put()
-                .uri("/updateUserHasCart/")
+                .uri("/internal/updateUserHasCart/")
+                .header("X-Internal-API-Key", internalApiKey)
                 .body(Mono.just(cartLinkUserDto), CartLinkUserDto.class)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError,

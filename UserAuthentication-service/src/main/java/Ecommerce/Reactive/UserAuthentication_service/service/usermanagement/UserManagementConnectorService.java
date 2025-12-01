@@ -2,6 +2,7 @@ package Ecommerce.Reactive.UserAuthentication_service.service.usermanagement;
 
 import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.UserLoginDto;
 import Ecommerce.Reactive.UserAuthentication_service.exceptions.UserNotFoundException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,9 @@ public class UserManagementConnectorService {
     private final WebClient webClient;
     private final String USERMANAGEMENT_URL = "http://localhost:8085/api/usermanagement";
 
+    @Value("${internal.api-key}")
+    private String internalApiKey;
+
     public UserManagementConnectorService(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.baseUrl(USERMANAGEMENT_URL).build();
     }
@@ -30,9 +34,10 @@ public class UserManagementConnectorService {
         LOGGER.info("Request to UserManagementConnectorService: getUserByEmail with email: " + email);
 
         return webClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/getUserLoginByEmail")
+                .uri(uriBuilder -> uriBuilder.path("/internal/getUserLoginByEmail")
                         .queryParam("email", email)
                         .build())
+                .header("X-Internal-API-Key", internalApiKey)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError,
                         clientResponse -> Mono.error(new UserNotFoundException("Error during GET request to getUserByEmail: User not found for email: " + email)))
@@ -56,9 +61,10 @@ public class UserManagementConnectorService {
         LOGGER.info("Request to UserManagementConnectorService: getUserByUsername with username: " + username);
 
         return webClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/getUserLoginByUsername")
+                .uri(uriBuilder -> uriBuilder.path("/internal/getUserLoginByUsername")
                         .queryParam("username", username)
                         .build())
+                .header("X-Internal-API-Key", internalApiKey)
                 .retrieve()
                 .onStatus(status -> status.value() == 401,
                         resp -> Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized")))
