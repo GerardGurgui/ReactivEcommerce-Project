@@ -1,321 +1,405 @@
-## 🛒 ReactivEcommerce – Reactive Ecommerce Microservices Platform
+# 🛒 ReactivEcommerce – Reactive Ecommerce Microservices Platform
+
+[![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://openjdk.java.net/projects/jdk/17/)
+[![Spring WebFlux](https://img.shields.io/badge/Spring-WebFlux-green.svg)](https://spring.io/reactive)
+[![Kafka](https://img.shields.io/badge/Apache-Kafka-black.svg)](https://kafka.apache.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-blue.svg)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+## 📌 Overview
+
+**ReactivEcommerce** is a modern, event-driven ecommerce platform built entirely on **reactive principles** using **Spring WebFlux**. It demonstrates production-ready patterns for building scalable microservices with non-blocking I/O, asynchronous messaging, and robust security.
+
+### ✨ Key Highlights
+
+- ⚡ **Fully reactive** end-to-end with Spring WebFlux and R2DBC
+- 🧩 **Microservices architecture** with clear domain boundaries
+- 🔐 **Multi-layer security**: JWT for users + API-Key for service-to-service
+- 📨 **Event-driven** workflows using Apache Kafka
+- 🐳 **Containerized** infrastructure with Docker Compose
+- 🧪 **Test coverage** with JUnit 5, Mockito, and WebTestClient
+
+## 🎯 Project Goals
+
+This project aims to showcase:
+
+1. **High-performance reactive systems** capable of handling thousands of concurrent requests
+2. **Clean microservices architecture** with proper separation of concerns
+3. **Production-grade security** patterns for public and internal APIs
+4. **Event-driven design** for loose coupling and scalability
+5. **Modern DevOps practices** with containerization and orchestration
+
+## 🛠️ Tech Stack
+
+### Core Technologies
+
+| Technology | Purpose | Version |
+|------------|---------|---------|
+| ☕ **Java** | Primary language | 17 |
+| ⚡ **Spring WebFlux** | Reactive web framework | 3.x |
+| 🛢️ **PostgreSQL + R2DBC** | Relational data (reactive) | Latest |
+| 🍃 **MongoDB Reactive** | Document storage | Latest |
+| 🔐 **Spring Security** | Authentication & Authorization | 6.x |
+| 📦 **Apache Kafka** | Event streaming | 3.6+ |
+| 🐳 **Docker** | Containerization | Latest |
+| 🛠️ **Maven** | Build tool | 3.9+ |
+
+### Testing & Quality
+
+- 🧪 **JUnit 5** - Unit testing framework
+- 🎭 **Mockito** - Mocking framework
+- 🌐 **WebTestClient** - Reactive integration tests
+- ✅ **AssertJ** - Fluent assertions
+
+## 🏗️ Architecture
+
+### High-Level Design
+```
+┌─────────────┐
+│   Clients   │ (Web, Mobile, APIs)
+└──────┬──────┘
+       │
+       ├─────────────────────────────────────────┐
+       │                                         │
+┌──────▼──────┐  JWT Auth   ┌─────────────────┐ │
+│  API Gateway│◄────────────►│  Auth Service   │ │
+│  (Future)   │              └─────────────────┘ │
+└──────┬──────┘                                  │
+       │                                         │
+       ├──────────┬──────────┬──────────────────┤
+       │          │          │                  │
+┌──────▼──────┐ ┌▼──────────▼┐ ┌───────────────▼┐
+│   Product   │ │   Cart      │ │   User Mgmt    │
+│   Catalog   │ │   Service   │ │   Service      │
+└──────┬──────┘ └──────┬──────┘ └────────┬───────┘
+       │               │                 │
+       └───────────────┼─────────────────┘
+                       │
+                ┌──────▼──────┐
+                │    Kafka    │ (Event Bus)
+                └─────────────┘
+```
+
+### Communication Patterns
+
+- 🌐 **REST APIs**: Synchronous communication between services and clients
+- 📨 **Kafka Events**: Asynchronous workflows (login tracking, order processing)
+- 🔒 **API-Key Headers**: Secure internal service-to-service calls
+
+### Security Model
+```
+┌─────────────────────────────────────────────────────┐
+│                  Security Layers                    │
+├─────────────────────────────────────────────────────┤
+│  👥 Public APIs     → JWT Bearer Token             │
+│  🔒 Internal APIs   → X-Internal-API-Key Header    │
+│  🛡️ Database Access → Encrypted connections        │
+└─────────────────────────────────────────────────────┘
+```
+
+#### 🔑 External Security (JWT)
+
+- **Purpose**: Authenticate end-users (customers, admins)
+- **Validation**: Each microservice validates JWT issuer, audience, expiration, and subject (user UUID)
+- **Token contains**: User UUID, roles, expiration timestamp
+- **Example header**: `Authorization: Bearer eyJhbGciOiJIUzI1Ni...`
+
+#### 🛰️ Internal Security (API-Key)
+
+- **Purpose**: Secure service-to-service communication
+- **Implementation**: Custom `WebFilter` validates `X-Internal-API-Key` header
+- **Authority granted**: `INTERNAL_SERVICE` role
+- **Protected routes**: `/api/<service>/internal/**`
+- **Example header**: `X-Internal-API-Key: X7k9mP2vQ8wR4tY6uI1oP3aS5dF7gH9j`
+
+## 🧩 Microservices
+
+### 👤 User Management Service
+
+**Responsibility**: Core user data and profile management
+
+- **Database**: MongoDB (flexible user schema)
+- **Key features**:
+  - User CRUD operations
+  - Account status management (`isActive`, `isLocked`)
+  - `latestAccess` tracking via Kafka events
+  - Cart/order relationship management
+- **Public endpoints**: User registration, profile updates (JWT protected)
+- **Internal endpoints**: `/internal/updateUserHasCart`, `/internal/getUserByUuid` (API-Key protected)
+
+### 🔑 User Authentication Service
+
+**Responsibility**: Login and JWT token generation
 
-ReactivEcommerce is a modern, event-driven, cloud-ready Ecommerce platform built with Java 17, Spring WebFlux, Reactive Programming, Docker, Kafka, and a microservices architecture.
-The system is designed for high throughput, non-blocking IO, horizontal scalability, and clean domain-driven separation.
-
-
-## ✨ Key Features
-
-⚡ Reactive (Non-Blocking) Architecture using Spring WebFlux
-
-🧩 Modular Microservices, each responsible for a core business domain
-
-🔐 JWT Authentication & Authorization using Spring Security Resource Servers
-
-🔐 Internal Service-to-Service Authentication (API-Key) for private internal communication
-
-📦 Kafka Event Streaming for login events, future order events, and asynchronous workflows
-
-🗄️ Reactive PostgreSQL (R2DBC) for product catalog data
-
-📘 Reactive MongoDB for user data and document storage
-
-🐳 Docker + Docker Compose for full environment orchestration
-
-📡 REST APIs for internal and external clients
-
-🏗️ Scalable architecture ready for production
-
-🔍 Future integration of Eureka/Discovery & load-balanced communication
-
-
-## 🏗️ Microservices Overview
-
-The platform consists of the following microservices:
-
-
-🔑 User Authentication Service
-
-Handles login, JWT token generation, and account validation
-
-Publishes User Login Events to Kafka
-
-Communicates securely with UserManagement through internal API-Key
-
-Reactive password validation with BCrypt
-
-Fully stateless JWT-based authentication
-
-
-👤 User Management Service
-
-Manages users (registration, profile, flags, security state)
-
-Stores user data in MongoDB
-
-Provides Resource Server protection (JWT validation)
-
-Consumes Kafka login events and updates latestAccess
-
-Exposes internal endpoints protected with API-Key
-
-Supports future role-based permissions
-
-
-📦 Product Catalog Service
-
-Manages products using PostgreSQL via Spring Data R2DBC
-
-Reactive searches, pagination, dynamic filtering
-
-Future integration with caching layer (Redis)
-
-
-🧺 Shopping Cart Service
-
-Manages user carts, line items, quantities
-
-Reactive operations
-
-Communicates with Product Catalog and User Management
-
-
-📊 MyData Service
-
-Stores user-related transactional data
-
-Acts as a bridge between Orders and User services
-
-Calls UserManagement using API-Key protected internal endpoints
-
-Secured as JWT Resource Server
-
-
-💳 Payment Service
-
-Manages payment processing
-
-Integrates with external payment gateways (Stripe, PayPal, TBD)
-
-Works alongside the upcoming Order Service
-
-
-🚪 API Gateway (Future Integration)
-
-Will serve as the unified entrypoint for clients
-
-Will support:
-
-Routing
-
-Rate limiting
-
-Filters
-
-JWT validation
-
-Security policies
-
-
-🌐 Discovery Service (Optional / Future)
-
-Currently disabled (not necessary for local development)
-
-Will allow load balancing and dynamic discovery using:
-
-Eureka
-
-Spring Cloud LoadBalancer
-
-
-📝 Upcoming Microservice: Order Service
-
-A dedicated Order Service will manage the full lifecycle of user orders:
-
-Create orders based on cart and user data
-
-Validate product stock
-
-Integrate with Payment Service
-
-Publish Order Created / Paid / Cancelled Kafka events
-
-It will also expose internal secure endpoints for communication with PaymentService and MyData.
-
-## Patterns used:
-
-Reactive Microservices
-
-Event-Driven Architecture (Kafka)
-
-API Gateway Pattern (future)
-
-Service-to-Service Authentication Pattern
-
-JWT Resource Servers
-
-CQRS-friendly data separation (MongoDB for users, PostgreSQL for catalog)
-
-Domain-Driven service boundaries
-
-## 🔐 Security Architecture
-
-🔑 1. JWT-Based External Security (Public API)
-Full JWT Protection for Clients
-
-All public APIs (login, cart, products, etc.) are secured using JSON Web Tokens (JWT).
-Each microservice acts as a Spring Security OAuth2 Resource Server, performing strict token validation.
-
-JWT validation includes:
-
-Issuer ✔
-
-Audience ✔
-
-Expiration ✔
-
-Custom Claims Validators, including:
-
-sub (must be a valid user UUID)
-
-userUuid consistency check
-
-🛰️ 2. API-Key Internal Microservice Security (Private API)
-
-Internal communication between microservices uses private endpoints, not meant for public or client usage.
-
-These endpoints are protected using a shared API-Key transmitted via a custom header.
-
-Internal API features:
-
-Custom reactive WebFilter validates the X-Internal-API-Key header
-
-On success, an INTERNAL_SERVICE authority is granted in the security context
-
-External clients cannot reach these endpoints safely, even with a valid JWT
-
-Clear separation between:
-
-Public API layer (JWT)
-
-Private infrastructure layer (API-Key)
-
-
-## 🎯 Technologies Used
-
-Backend & Reactive Stack
-
-Java 17
-
-Spring WebFlux
-
-Spring Security
-
-Spring Boot 3
-
-Spring Data MongoDB (Reactive)
-
-Spring Data R2DBC (PostgreSQL)
-
-Event System
-
-Kafka
-
-Zookeeper
-
-KafkaTemplate / ReactiveKafkaConsumer
-
-DevOps & Infrastructure
-
-Docker
-
-Docker Compose
-
-Multi-container orchestration (Kafka, Mongo, PG, services)
-
-Testing Stack
-
-JUnit 5
-
-Mockito
-
-Integration testing (WebTestClient + Reactive repositories)
-
-🐳 Docker Support
-
-Docker Compose orchestrates:
-
-Kafka + Zookeeper
-
-PostgreSQL
-
-MongoDB
-
-Future: multiple microservices
-
-Future: distributed environment with load balancing
-
-Start the full environment:
-
+- **Database**: None (stateless, queries User Management)
+- **Key features**:
+  - Username/email + password validation
+  - JWT token generation with custom claims
+  - Publishes `UserLoginEvent` to Kafka
+  - Bcrypt password hashing
+- **Public endpoints**: `/auth/login`, `/auth/register`
+- **Kafka events**: `user.login.events` topic
+
+### 📦 Product Catalog Service
+
+**Responsibility**: Product inventory and metadata
+
+- **Database**: PostgreSQL with R2DBC (relational product data)
+- **Key features**:
+  - Product CRUD (name, description, price, stock)
+  - Category management
+  - Stock validation for orders
+  - Reactive queries with R2DBC
+- **Public endpoints**: `/products` (GET all, GET by ID - JWT protected)
+- **Admin endpoints**: `/products` (POST, PUT, DELETE - Admin role required)
+
+### 🧺 Shopping Cart Service
+
+**Responsibility**: User cart and item management
+
+- **Database**: MongoDB (nested cart items structure)
+- **Key features**:
+  - Add/remove/update cart items
+  - Cart validation before checkout
+  - Integration with Product Catalog (stock checks)
+  - Links cart to user via User Management
+- **Public endpoints**: `/carts` (JWT protected, user-scoped)
+- **Internal communication**: Calls Product Catalog and User Management
+
+### 📊 MyData Service
+
+**Responsibility**: User-related transactional and aggregated data
+
+- **Database**: MongoDB (user-centric documents)
+- **Key features**:
+  - Order history aggregation
+  - User statistics (total spent, order count)
+  - Wishlist management
+  - Creates cart records linked to users
+- **Public endpoints**: `/mydata/stats` (JWT protected)
+- **Internal endpoints**: Calls User Management via API-Key
+
+### 💳 Payment Service
+
+**Responsibility**: Payment processing workflows
+
+- **Database**: PostgreSQL (payment transactions)
+- **Key features**:
+  - Payment intent creation
+  - Transaction status tracking
+  - Future integrations: Stripe, PayPal
+  - Idempotency for duplicate prevention
+- **Public endpoints**: `/payments/process` (JWT protected)
+- **Kafka events**: `payment.completed`, `payment.failed`
+
+### 🧾 Order Service *(Planned)*
+
+**Responsibility**: Order lifecycle orchestration
+
+- **Database**: PostgreSQL (order records, line items)
+- **Key features**:
+  - Order creation from cart
+  - Stock reservation (saga pattern)
+  - Payment coordination
+  - Order status management (PENDING, PAID, SHIPPED, DELIVERED)
+- **Kafka events**: `order.created`, `order.paid`, `order.shipped`
+- **Saga orchestration**: Handles distributed transactions across Product, Payment, and User services
+
+### 🌐 API Gateway *(Planned)*
+
+**Responsibility**: Single entry point for all clients
+
+- **Technology**: Spring Cloud Gateway
+- **Key features**:
+  - Request routing to microservices
+  - Rate limiting and throttling
+  - Global CORS configuration
+  - Centralized JWT validation
+  - Request/response logging
+
+### 🔍 Service Discovery *(Optional)*
+
+**Responsibility**: Dynamic service registration and discovery
+
+- **Technology**: Eureka or Consul
+- **Key features**:
+  - Automatic service registration
+  - Client-side load balancing
+  - Health checks and failover
+
+## 📨 Event-Driven Workflows
+
+### Kafka Topics
+
+| Topic | Producer | Consumer | Purpose |
+|-------|----------|----------|---------|
+| `user.login.events` | Auth Service | User Management | Update `latestAccess` and `lastLoginIp` |
+| `order.created` | Order Service | Payment, Inventory | Trigger payment and reserve stock |
+| `payment.completed` | Payment Service | Order Service | Update order status to PAID |
+| `order.shipped` | Order Service | User Management | Send notification to user |
+
+### Example: Login Flow
+```
+1. User sends credentials → Auth Service
+2. Auth validates password → Queries User Management
+3. Auth generates JWT token
+4. Auth publishes UserLoginEvent → Kafka
+5. User Management consumes event → Updates latestAccess
+6. Auth returns JWT to user
+```
+
+## 🐳 Infrastructure
+
+### Docker Compose Services
+```yaml
+services:
+  zookeeper:     # Kafka dependency
+  kafka:         # Event streaming
+  mongodb:       # User Management, Cart, MyData
+  postgres:      # Product Catalog, Payment, Orders
+  # Microservices containers (future)
+```
+
+### Running the Platform
+```bash
+# Start infrastructure
 docker-compose up -d
 
+# Verify services
+docker ps
 
-Stop everything:
+# View Kafka topics
+docker exec -it kafka kafka-topics --list --bootstrap-server localhost:9092
 
-docker-compose down
+# Start microservices (in separate terminals)
+cd user-management-service && mvn spring-boot:run
+cd user-auth-service && mvn spring-boot:run
+cd product-catalog-service && mvn spring-boot:run
+# ... etc
+```
 
-🚀 Running Locally
-1. Clone repository
-git clone <repo-url>
+## 🚀 Getting Started
 
-2. Start infrastructure
+### Prerequisites
+
+- ☕ **Java 17+** installed
+- 🐳 **Docker** and **Docker Compose** installed
+- 🛠️ **Maven 3.9+** installed
+- 📝 **IDE** (IntelliJ IDEA recommended)
+
+### Quick Start
+```bash
+# 1. Clone the repository
+git clone https://github.com/yourusername/reactive-ecommerce.git
+cd reactive-ecommerce
+
+# 2. Start infrastructure
 docker-compose up -d
 
-3. Build the platform
+# 3. Build all services
 mvn clean install
 
-4. Run each microservice
-
-From IntelliJ or via:
-
+# 4. Run User Management Service
+cd user-management-service
 mvn spring-boot:run
 
-🧪 Testing
+# 5. Run User Auth Service (new terminal)
+cd user-auth-service
+mvn spring-boot:run
 
-Run full test suite:
+# 6. Test login
+curl -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "admin123"}'
+```
 
+## 🧪 Testing
+
+### Running Tests
+```bash
+# Run all tests
 mvn test
 
+# Run tests for specific service
+cd user-management-service && mvn test
 
-Tests include:
+# Run integration tests only
+mvn test -Dgroups=integration
 
-Unit tests (Mockito + JUnit 5)
+# Generate coverage report
+mvn jacoco:report
+```
 
-Reactive integration tests
+### Test Structure
+```
+src/test/java/
+├── unit/              # Unit tests with Mockito
+├── integration/       # Integration tests with TestContainers
+└── e2e/              # End-to-end API tests
+```
 
-WebTestClient-based functional tests
+## 📊 Monitoring & Observability *(Planned)*
 
-Kafka integration tests (future)
+- 📈 **Prometheus**: Metrics collection
+- 📊 **Grafana**: Metrics visualization
+- 🔍 **Zipkin**: Distributed tracing
+- 📝 **ELK Stack**: Centralized logging
+- 🚨 **Alertmanager**: Alert management
 
-🔮 Future Improvements
+## 🔮 Roadmap
 
-⚙️ Order Service: complete purchase flow
+### Phase 1: Core Services ✅
+- [x] User Management
+- [x] User Authentication
+- [x] Product Catalog
+- [x] Shopping Cart
+- [x] Kafka integration
+- [x] JWT security
+- [x] API-Key internal auth
 
-⚙️ Saga / Orchestration Pattern for Payments
+### Phase 2: Order & Payment 🚧
+- [ ] Order Service implementation
+- [ ] Payment Service integration
+- [ ] Saga pattern for distributed transactions
+- [ ] Stock reservation logic
 
-🧱 API Gateway with rate limiting & routing
+### Phase 3: Gateway & Discovery 📋
+- [ ] API Gateway with Spring Cloud Gateway
+- [ ] Service Discovery (Eureka)
+- [ ] Circuit breaker pattern (Resilience4j)
 
-🧰 Redis cache layer
+### Phase 4: Advanced Features 📋
+- [ ] Redis caching layer
+- [ ] Elasticsearch for product search
+- [ ] Admin dashboard
+- [ ] Email notifications
 
-☁️ Full deployment in Kubernetes
+### Phase 5: Production Ready 📋
+- [ ] Kubernetes deployment manifests
+- [ ] Helm charts
+- [ ] CI/CD pipelines (GitHub Actions)
+- [ ] Monitoring stack (Prometheus + Grafana)
+- [ ] Performance testing (Gatling)
 
-📡 Observability (Prometheus + Grafana)
+## 🤝 Contributing
 
-🛡️ Distributed tracing (Zipkin/Jaeger)
+Contributions are welcome! Please follow these steps:
 
-⭐ Full CI/CD pipeline
+1. 🍴 Fork the repository
+2. 🌿 Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. 💾 Commit your changes (`git commit -m 'Add amazing feature'`)
+4. 📤 Push to the branch (`git push origin feature/amazing-feature`)
+5. 🔀 Open a Pull Request
 
-## ❤️ Contributions
+### Contribution Guidelines
 
-Contributions, suggestions, and improvements are welcome.
-This is a personal learning and professional-grade project — feedback is encouraged.
+- ✅ Write tests for new features
+- 📝 Update documentation
+- 🎨 Follow code style conventions
+- 🔍 Ensure all tests pass before submitting PR
+
+---
+
+⭐ **Star this repository** if you find it helpful!
+
+📧 **Questions?** Open an issue or reach out!
