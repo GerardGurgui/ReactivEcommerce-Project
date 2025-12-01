@@ -63,7 +63,7 @@ This project aims to showcase:
        │                                         │
 ┌──────▼──────┐  JWT Auth   ┌─────────────────┐ │
 │  API Gateway│◄────────────►│  Auth Service   │ │
-│  (Future)   │              └─────────────────┘ │
+│     │                     └─────────────────┘ │
 └──────┬──────┘                                  │
        │                                         │
        ├──────────┬──────────┬──────────────────┤
@@ -337,15 +337,6 @@ src/test/java/
 ├── integration/       # Integration tests with TestContainers
 └── e2e/              # End-to-end API tests
 ```
-
-## 📊 Monitoring & Observability *(Planned)*
-
-- 📈 **Prometheus**: Metrics collection
-- 📊 **Grafana**: Metrics visualization
-- 🔍 **Zipkin**: Distributed tracing
-- 📝 **ELK Stack**: Centralized logging
-- 🚨 **Alertmanager**: Alert management
-
 ## 🔮 Roadmap
 
 ### Phase 1: Core Services ✅
