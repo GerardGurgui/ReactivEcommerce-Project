@@ -120,10 +120,10 @@ This project aims to showcase:
 
 - **Database**: MongoDB (flexible user schema)
 - **Key features**:
-    - User CRUD operations
-    - Account status management (`isActive`, `isLocked`)
-    - `latestAccess` tracking via Kafka events
-    - Cart/order relationship management
+  - User CRUD operations
+  - Account status management (`isActive`, `isLocked`)
+  - `latestAccess` tracking via Kafka events
+  - Cart/order relationship management
 - **Public endpoints**: User registration, profile updates (JWT protected)
 - **Internal endpoints**: `/internal/updateUserHasCart`, `/internal/getUserByUuid` (API-Key protected)
 
@@ -133,10 +133,10 @@ This project aims to showcase:
 
 - **Database**: None (stateless, queries User Management)
 - **Key features**:
-    - Username/email + password validation
-    - JWT token generation with custom claims
-    - Publishes `UserLoginEvent` to Kafka
-    - Bcrypt password hashing
+  - Username/email + password validation
+  - JWT token generation with custom claims
+  - Publishes `UserLoginEvent` to Kafka
+  - Bcrypt password hashing
 - **Public endpoints**: `/auth/login`, `/auth/register`
 - **Kafka events**: `user.login.events` topic
 
@@ -146,10 +146,10 @@ This project aims to showcase:
 
 - **Database**: PostgreSQL with R2DBC (relational product data)
 - **Key features**:
-    - Product CRUD (name, description, price, stock)
-    - Category management
-    - Stock validation for orders
-    - Reactive queries with R2DBC
+  - Product CRUD (name, description, price, stock)
+  - Category management
+  - Stock validation for orders
+  - Reactive queries with R2DBC
 - **Public endpoints**: `/products` (GET all, GET by ID - JWT protected)
 - **Admin endpoints**: `/products` (POST, PUT, DELETE - Admin role required)
 
@@ -159,10 +159,10 @@ This project aims to showcase:
 
 - **Database**: MongoDB (nested cart items structure)
 - **Key features**:
-    - Add/remove/update cart items
-    - Cart validation before checkout
-    - Integration with Product Catalog (stock checks)
-    - Links cart to user via User Management
+  - Add/remove/update cart items
+  - Cart validation before checkout
+  - Integration with Product Catalog (stock checks)
+  - Links cart to user via User Management
 - **Public endpoints**: `/carts` (JWT protected, user-scoped)
 - **Internal communication**: Calls Product Catalog and User Management
 
@@ -172,10 +172,10 @@ This project aims to showcase:
 
 - **Database**: MongoDB (user-centric documents)
 - **Key features**:
-    - Order history aggregation
-    - User statistics (total spent, order count)
-    - Wishlist management
-    - Creates cart records linked to users
+  - Order history aggregation
+  - User statistics (total spent, order count)
+  - Wishlist management
+  - Creates cart records linked to users
 - **Public endpoints**: `/mydata/stats` (JWT protected)
 - **Internal endpoints**: Calls User Management via API-Key
 
@@ -185,10 +185,10 @@ This project aims to showcase:
 
 - **Database**: PostgreSQL (payment transactions)
 - **Key features**:
-    - Payment intent creation
-    - Transaction status tracking
-    - Future integrations: Stripe, PayPal
-    - Idempotency for duplicate prevention
+  - Payment intent creation
+  - Transaction status tracking
+  - Future integrations: Stripe, PayPal
+  - Idempotency for duplicate prevention
 - **Public endpoints**: `/payments/process` (JWT protected)
 - **Kafka events**: `payment.completed`, `payment.failed`
 
@@ -198,10 +198,10 @@ This project aims to showcase:
 
 - **Database**: PostgreSQL (order records, line items)
 - **Key features**:
-    - Order creation from cart
-    - Stock reservation (saga pattern)
-    - Payment coordination
-    - Order status management (PENDING, PAID, SHIPPED, DELIVERED)
+  - Order creation from cart
+  - Stock reservation (saga pattern)
+  - Payment coordination
+  - Order status management (PENDING, PAID, SHIPPED, DELIVERED)
 - **Kafka events**: `order.created`, `order.paid`, `order.shipped`
 - **Saga orchestration**: Handles distributed transactions across Product, Payment, and User services
 
@@ -211,11 +211,11 @@ This project aims to showcase:
 
 - **Technology**: Spring Cloud Gateway
 - **Key features**:
-    - Request routing to microservices
-    - Rate limiting and throttling
-    - Global CORS configuration
-    - Centralized JWT validation
-    - Request/response logging
+  - Request routing to microservices
+  - Rate limiting and throttling
+  - Global CORS configuration
+  - Centralized JWT validation
+  - Request/response logging
 
 ### 🔍 Service Discovery *(Optional)*
 
@@ -223,9 +223,9 @@ This project aims to showcase:
 
 - **Technology**: Eureka or Consul
 - **Key features**:
-    - Automatic service registration
-    - Client-side load balancing
-    - Health checks and failover
+  - Automatic service registration
+  - Client-side load balancing
+  - Health checks and failover
 
 ## 📨 Event-Driven Workflows
 
