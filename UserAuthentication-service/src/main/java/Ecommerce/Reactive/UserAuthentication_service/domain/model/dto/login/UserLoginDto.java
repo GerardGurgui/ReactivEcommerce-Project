@@ -1,17 +1,12 @@
-package Ecommerce.Reactive.UserAuthentication_service.domain.model.dto;
+package Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.login;
 
 import Ecommerce.Reactive.UserAuthentication_service.domain.roles.Roles;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-import java.util.Collection;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Data
 @AllArgsConstructor

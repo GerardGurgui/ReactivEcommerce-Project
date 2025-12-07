@@ -1,4 +1,4 @@
-package Ecommerce.Reactive.UserAuthentication_service.domain.model.dto;
+package Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.login;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

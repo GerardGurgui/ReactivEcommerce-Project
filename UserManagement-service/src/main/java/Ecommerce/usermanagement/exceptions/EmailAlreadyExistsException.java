@@ -6,11 +6,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Getter
-public class UsernameAlreadyExistsException extends RuntimeException{
+public class EmailAlreadyExistsException extends RuntimeException {
 
     private final LocalDateTime timestamp;
 
-    public UsernameAlreadyExistsException(String message) {
+    public EmailAlreadyExistsException(String message) {
         super(message);
         this.timestamp = LocalDateTime.now();
     }
@@ -24,5 +24,4 @@ public class UsernameAlreadyExistsException extends RuntimeException{
     public String toString() {
         return super.toString() + " at " + getFormattedTimestamp();
     }
-
 }

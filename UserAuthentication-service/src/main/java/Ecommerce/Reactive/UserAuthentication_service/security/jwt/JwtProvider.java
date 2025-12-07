@@ -1,6 +1,6 @@
 package Ecommerce.Reactive.UserAuthentication_service.security.jwt;
 
-import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.UserLoginDto;
+import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.login.UserLoginDto;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;

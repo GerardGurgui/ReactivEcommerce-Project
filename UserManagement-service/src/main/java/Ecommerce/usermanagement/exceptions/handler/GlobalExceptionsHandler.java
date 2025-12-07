@@ -8,19 +8,20 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionsHandler{
 
 
     @ExceptionHandler(UsernameAlreadyExistsException.class)
     public Mono<Void> handleUsernameAlreadyExistsException(ServerWebExchange exchange, UsernameAlreadyExistsException exception) throws JsonProcessingException {
 
-        exchange.getResponse().setStatusCode(HttpStatus.FOUND);
+        exchange.getResponse().setStatusCode(HttpStatus.CONFLICT);
         exchange.getResponse().getHeaders().add("Content-Type", "application/json");
 
         ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());
@@ -37,10 +38,10 @@ public class GlobalExceptionsHandler{
         );
     }
 
-    @ExceptionHandler(EmailExistsException.class)
-    public Mono<Void> handleEmailExistsException(ServerWebExchange exchange, EmailExistsException exception) throws JsonProcessingException {
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public Mono<Void> handleEmailExistsException(ServerWebExchange exchange, EmailAlreadyExistsException exception) throws JsonProcessingException {
 
-        exchange.getResponse().setStatusCode(HttpStatus.FOUND);
+        exchange.getResponse().setStatusCode(HttpStatus.CONFLICT);
         exchange.getResponse().getHeaders().add("Content-Type", "application/json");
 
         ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());

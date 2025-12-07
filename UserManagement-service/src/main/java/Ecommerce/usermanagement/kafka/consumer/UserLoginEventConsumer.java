@@ -1,7 +1,7 @@
 package Ecommerce.usermanagement.kafka.consumer;
 
 import Ecommerce.usermanagement.kafka.events.UserLoginEvent;
-import Ecommerce.usermanagement.services.UserManagementServiceImpl;
+import Ecommerce.usermanagement.services.UserManagementService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -10,10 +10,10 @@ import java.util.logging.Logger;
 @Service
 public class UserLoginEventConsumer {
 
-    private final UserManagementServiceImpl userManagementService;
+    private final UserManagementService userManagementService;
     private static final Logger LOGGER = Logger.getLogger(UserLoginEventConsumer.class.getName());
 
-    public UserLoginEventConsumer(UserManagementServiceImpl userManagementService) {
+    public UserLoginEventConsumer(UserManagementService userManagementService) {
         this.userManagementService = userManagementService;
     }
 

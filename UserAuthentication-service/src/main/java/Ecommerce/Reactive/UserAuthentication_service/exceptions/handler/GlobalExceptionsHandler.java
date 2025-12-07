@@ -1,20 +1,68 @@
 package Ecommerce.Reactive.UserAuthentication_service.exceptions.handler;
 
-import Ecommerce.Reactive.UserAuthentication_service.exceptions.BadCredentialsException;
-import Ecommerce.Reactive.UserAuthentication_service.exceptions.EmptyCredentialsException;
-import Ecommerce.Reactive.UserAuthentication_service.exceptions.UserNotFoundException;
+import Ecommerce.Reactive.UserAuthentication_service.exceptions.*;
 import Ecommerce.Reactive.UserAuthentication_service.exceptions.errorDetails.ErrorResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionsHandler {
+
+
+    @ExceptionHandler(UsernameAlreadyExistsException.class)
+    public Mono<Void> handleUsernameAlreadyExistsException(ServerWebExchange exchange, UsernameAlreadyExistsException exception) {
+
+        exchange.getResponse().setStatusCode(HttpStatus.CONFLICT);
+        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
+
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+        try {
+            return exchange.getResponse().writeWith(
+                    Mono.just(
+                            exchange.getResponse()
+                                    .bufferFactory()
+                                    .wrap(objectMapper.writeValueAsBytes(errorResponse))
+                    )
+            );
+        } catch (JsonProcessingException e) {
+            return Mono.error(e);
+        }
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public Mono<Void> handleEmailAlreadyExistsException(ServerWebExchange exchange, EmailAlreadyExistsException exception) {
+
+        exchange.getResponse().setStatusCode(HttpStatus.CONFLICT);
+        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
+
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+        try {
+            return exchange.getResponse().writeWith(
+                    Mono.just(
+                            exchange.getResponse()
+                                    .bufferFactory()
+                                    .wrap(objectMapper.writeValueAsBytes(errorResponse))
+                    )
+            );
+        } catch (JsonProcessingException e) {
+            return Mono.error(e);
+        }
+    }
+
 
     @ExceptionHandler(BadCredentialsException.class)
     public Mono<Void> handleBadCredentialsException(ServerWebExchange exchange, BadCredentialsException exception) {

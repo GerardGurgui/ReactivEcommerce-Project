@@ -13,12 +13,20 @@ import org.springframework.r2dbc.connection.init.CompositeDatabasePopulator;
 import org.springframework.r2dbc.connection.init.ConnectionFactoryInitializer;
 import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator;
 
+import javax.annotation.PostConstruct;
+
 @Configuration
 public class DbInitializer extends AbstractR2dbcConfiguration {
 
     @Value("${spring.r2dbc.url}")
     private String dbUrl;
 
+    @PostConstruct
+    private void validateDbUrl() {
+        if (dbUrl == null || dbUrl.isEmpty()) {
+            throw new IllegalArgumentException("Database URL cannot be null or empty");
+        }
+    }
 
     @NotNull
     @Override

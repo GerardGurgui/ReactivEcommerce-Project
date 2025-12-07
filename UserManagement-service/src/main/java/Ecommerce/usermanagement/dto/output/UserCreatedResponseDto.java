@@ -1,20 +1,19 @@
 package Ecommerce.usermanagement.dto.output;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-import java.util.List;
+import java.time.Instant;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-public class UserBasicOutputDto {
+@Builder
+public class UserCreatedResponseDto {
 
     private String uuid;
     private String username;
     private String email;
+    private Instant createdAt;
 
 }
