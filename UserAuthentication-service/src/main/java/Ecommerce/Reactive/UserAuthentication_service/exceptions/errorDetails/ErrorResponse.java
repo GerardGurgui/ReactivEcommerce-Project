@@ -10,6 +10,7 @@ public class ErrorResponse {
 
     @JsonProperty("Error details")
     private String errorDetails;
+
     @JsonProperty("Timestamp")
     private String timestamp;
 
