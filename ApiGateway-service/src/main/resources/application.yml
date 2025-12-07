@@ -17,6 +17,16 @@ spring:
           uri: lb://${UserAuthentication.service.name}
           predicates:
             - Path=${UserAuthentication.service.route}
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@ipKeyResolver}"
+  redis:
+    host: localhost
+    port: 6379
+
     discovery:
       client:
         simple:

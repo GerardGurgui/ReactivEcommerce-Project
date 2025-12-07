@@ -1,8 +1,11 @@
 package Ecommerce.Reactive.UserAuthentication_service.controller;
 
-import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.LoginRequestDto;
+import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.login.LoginRequestDto;
 import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.TokenDto;
+import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.register.RegisterRequestDto;
+import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.register.RegistrationResponseDto;
 import Ecommerce.Reactive.UserAuthentication_service.domain.usecase.LoginUseCase;
+import Ecommerce.Reactive.UserAuthentication_service.domain.usecase.UserRegistrationUseCase;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.validation.annotation.Validated;
@@ -17,22 +20,32 @@ import java.net.InetSocketAddress;
 @RestController
 @Validated
 @RequestMapping("/auth")
-public class LoginController {
+public class AuthController {
 
     private final LoginUseCase loginUseCase;
+    private final UserRegistrationUseCase userRegistrationUseCase;
 
-    public LoginController(LoginUseCase loginUseCase) {
+    public AuthController(LoginUseCase loginUseCase, UserRegistrationUseCase userRegistrationUseCase) {
         this.loginUseCase = loginUseCase;
+        this.userRegistrationUseCase = userRegistrationUseCase;
     }
 
     @PostMapping("/login")
     public Mono<ResponseEntity<TokenDto>> login(@RequestBody LoginRequestDto loginRequestDto,
                                                 ServerHttpRequest request) {
-
         String clientIp = getClientIp(request);
 
         return loginUseCase.login(loginRequestDto, clientIp)
                 .map(tokenDto -> ResponseEntity.ok(tokenDto));
+    }
+
+    @PostMapping("/register")
+    public Mono<ResponseEntity<RegistrationResponseDto>> registerUser(@RequestBody RegisterRequestDto registerRequestDto,
+                                                                      ServerHttpRequest request) {
+        String clientIp = getClientIp(request);
+
+        return userRegistrationUseCase.register(registerRequestDto, clientIp)
+                .map(responseDto -> ResponseEntity.ok(responseDto));
     }
 
 

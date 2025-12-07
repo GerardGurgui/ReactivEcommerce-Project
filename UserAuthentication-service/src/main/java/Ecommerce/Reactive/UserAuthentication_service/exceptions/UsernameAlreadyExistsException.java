@@ -1,4 +1,4 @@
-package Ecommerce.usermanagement.exceptions;
+package Ecommerce.Reactive.UserAuthentication_service.exceptions;
 
 import lombok.Getter;
 
@@ -24,5 +24,4 @@ public class UsernameAlreadyExistsException extends RuntimeException{
     public String toString() {
         return super.toString() + " at " + getFormattedTimestamp();
     }
-
 }

@@ -32,6 +32,7 @@ public class User {
     //COMPROBAR CONSTRASEÑA? INTRODUCIR 2 VECES?
 
     @Id
+    @JsonIgnore
     private ObjectId id;
 
     @Field(name = "uuid")
@@ -40,26 +41,23 @@ public class User {
 
     @Field(name = "username")
     @Indexed(unique = true)
-    @NotBlank
     private String username;
 
-    @NotBlank
+    @Field(name = "name")
     private String name;
 
-    @NotBlank
+    @Field(name = "lastname")
     private String lastname;
 
     @Field(name = "phone")
     @Indexed(unique = true)
     private String phone;
 
-    @NotBlank
     @Field(name = "email")
     @Indexed(unique = true)
     private String email;
 
     @JsonIgnore
-    @NotBlank
     @Field(name = "password")
     @Indexed(unique = true)
     private String password;
@@ -71,25 +69,35 @@ public class User {
     private int totalSpent;
 
     @Field(name = "login_date")
-    private LocalDate loginDate;
+    private Instant loginDate;
 
     @Field(name = "latest_access")
     private Instant latestAccess;
 
+    @JsonIgnore
+    @Field(name = "registration_ip")
+    private String registrationIp;
+
     @Field(name = "roles")
     @JsonManagedReference // manejar serializacion de los usuarios
-    private Set<Roles> roles;
+    private List<String> roles;
 
     @Field(name = "carts")
     private List<Long> cartIds;
 
+    @Field(name = "orders")
+    private List<Long> orderIds;
+
     //Properties from userDetails
+    @JsonIgnore
     @Field(name = "is_account_non_expired")
     private boolean isAccountNonExpired;
 
+    @JsonIgnore
     @Field(name = "is_account_non_locked")
     private boolean isAccountNonLocked;
 
+    @JsonIgnore
     @Field(name = "is_enabled")
     private boolean isEnabled;
 
@@ -111,15 +119,15 @@ public class User {
     public void addRoleUser() {
 
         if (roles == null) {
-            roles = new HashSet<>();
+            roles = new ArrayList<>();
         }
-        roles.add(Roles.ROLE_USER);
+        roles.add("ROLE_USER");
     }
 
     public Collection<? extends GrantedAuthority> getAuthorities() {
 
         return roles.stream()
-                .map(role -> new SimpleGrantedAuthority(role.name()))
+                .map(role -> new SimpleGrantedAuthority(role))
                 .collect(Collectors.toList());
     }
 

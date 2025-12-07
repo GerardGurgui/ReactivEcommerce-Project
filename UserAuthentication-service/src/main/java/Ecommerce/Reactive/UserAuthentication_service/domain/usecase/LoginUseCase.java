@@ -1,8 +1,8 @@
 package Ecommerce.Reactive.UserAuthentication_service.domain.usecase;
 
-import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.LoginRequestDto;
+import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.login.LoginRequestDto;
 import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.TokenDto;
-import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.UserLoginDto;
+import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.login.UserLoginDto;
 import Ecommerce.Reactive.UserAuthentication_service.exceptions.*;
 import Ecommerce.Reactive.UserAuthentication_service.kafka.events.UserLoginEvent;
 import Ecommerce.Reactive.UserAuthentication_service.security.jwt.JwtProvider;
@@ -10,13 +10,13 @@ import Ecommerce.Reactive.UserAuthentication_service.service.usermanagement.User
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.util.logging.Logger;
 
-@Component
+@Service
 public class LoginUseCase {
 
     private final Logger logger = Logger.getLogger(LoginUseCase.class.getName());
@@ -55,27 +55,26 @@ public class LoginUseCase {
                 .flatMap(user -> validateAccountStatus(user))
                 .flatMap(user -> {
                     String token = jwtProvider.generateToken(user);
-
-                    //PUBLISH LOGIN EVENT TO KAFKA
-                    UserLoginEvent event = new UserLoginEvent(
-                            user.getUuid(),
-                            Instant.now(),
-                            clientIp
-                    );
-                    kafkaTemplate.send(userLoginTopic, user.getUuid(), event)
-                            .whenComplete((result, ex) -> {
-                                if (ex != null) {
-                                    logger.warning("❌ Failed to publish login event: " + ex.getMessage());
-                                } else {
-                                    logger.info("✅ Login event published for user: " + user.getUsername());
-                                }
-                            });
-
+                    kafkaPublishLoginEvent(user,clientIp);
                     return Mono.just(new TokenDto(token));
                 })
                 .doOnNext(token -> logger.info("---> Token created successfully"));
     }
 
+    // Kafka publish login event to update lasted login timestamp
+    private void kafkaPublishLoginEvent(UserLoginDto user, String clientIp) {
+
+        UserLoginEvent loginEvent = new UserLoginEvent(user.getUuid(), Instant.now(), clientIp);
+
+        kafkaTemplate.send(userLoginTopic,user.getUuid() ,loginEvent)
+                        .whenComplete((result, ex) -> {
+                            if (ex != null) {
+                                logger.severe("Failed to publish UserLoginEvent to Kafka for user: " + user.getUsername() + ", error: " + ex.getMessage());
+                            } else {
+                                logger.info("Successfully published UserLoginEvent to Kafka for user: " + user.getUsername());
+                            }
+                        });
+    }
 
     private Mono<String> validateUserLoginDto(LoginRequestDto loginRequestDto) {
 
@@ -111,11 +110,13 @@ public class LoginUseCase {
     private Mono<UserLoginDto> userGatewayExistsValidation(String userNameOrEmail){
 
         if (userNameOrEmail.contains("@")) {
-            return userMngConnector.getUserByEmail(userNameOrEmail);
+            return userMngConnector.getUserLoginByEmail(userNameOrEmail);
         } else {
-            return userMngConnector.getUserByUserName(userNameOrEmail);
+            return userMngConnector.getUserLoginByUsername(userNameOrEmail);
         }
     }
+
+
 
 
 }

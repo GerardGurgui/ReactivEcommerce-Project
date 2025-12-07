@@ -1,7 +1,12 @@
 package Ecommerce.Reactive.UserAuthentication_service.service.usermanagement;
 
-import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.UserLoginDto;
+import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.login.UserLoginDto;
+import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.register.UserCreatedResponseDto;
+import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.register.UserRegisterInternalDto;
+import Ecommerce.Reactive.UserAuthentication_service.exceptions.EmailAlreadyExistsException;
 import Ecommerce.Reactive.UserAuthentication_service.exceptions.UserNotFoundException;
+import Ecommerce.Reactive.UserAuthentication_service.exceptions.UsernameAlreadyExistsException;
+import Ecommerce.Reactive.UserAuthentication_service.exceptions.errorDetails.ErrorResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -28,8 +33,9 @@ public class UserManagementConnectorService {
         this.webClient = webClientBuilder.baseUrl(USERMANAGEMENT_URL).build();
     }
 
+    // Login calls
 
-    public Mono<UserLoginDto> getUserByEmail(String email){
+    public Mono<UserLoginDto> getUserLoginByEmail(String email){
 
         LOGGER.info("Request to UserManagementConnectorService: getUserByEmail with email: " + email);
 
@@ -39,8 +45,12 @@ public class UserManagementConnectorService {
                         .build())
                 .header("X-Internal-API-Key", internalApiKey)
                 .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError,
-                        clientResponse -> Mono.error(new UserNotFoundException("Error during GET request to getUserByEmail: User not found for email: " + email)))
+                .onStatus(status -> status.value() == 401,
+                        resp -> Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized")))
+                .onStatus(status -> status.value() == 403,
+                        resp -> Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Forbidden")))
+                .onStatus(status -> status.value() == 404,
+                        resp -> Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")))
                 .onStatus(HttpStatusCode::is5xxServerError,
                         clientResponse -> Mono.error(new ServerErrorException("Error during GET request to getUserByEmail: Server error",
                                 new RuntimeException("Server error"))))
@@ -56,7 +66,7 @@ public class UserManagementConnectorService {
                 });
     }
 
-    public Mono<UserLoginDto> getUserByUserName(String username){
+    public Mono<UserLoginDto> getUserLoginByUsername(String username){
 
         LOGGER.info("Request to UserManagementConnectorService: getUserByUsername with username: " + username);
 
@@ -85,6 +95,48 @@ public class UserManagementConnectorService {
                     LOGGER.severe("Error contacting user-management: " + throwable.getMessage());
                     return new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error contacting user-management", throwable);
                 });
+    }
+
+    // Registration calls
+    public Mono<UserCreatedResponseDto> createUser(UserRegisterInternalDto userRegisterInternalDto){
+
+        LOGGER.info("Request to UserManagementConnectorService: sendUserDtoToSignIn with username: " + userRegisterInternalDto.getUsername());
+
+        return webClient.post()
+                .uri("/internal/addUser")
+                .header("X-Internal-API-Key", internalApiKey)
+                .bodyValue(userRegisterInternalDto)
+                .retrieve()
+                .onStatus(status -> status.value() == HttpStatus.CONFLICT.value(),
+                        response -> response.bodyToMono(ErrorResponse.class)
+                                .flatMap(errorResponse -> {
+
+                                    String message = errorResponse.getErrorDetails();
+
+                                    LOGGER.warning("❌ Conflict error: " + message);
+
+                                    if (message.contains("Username")) {
+                                        return Mono.error(new UsernameAlreadyExistsException(message));
+                                    }
+                                    if (message.contains("Email")) {
+                                        return Mono.error(new EmailAlreadyExistsException(message));
+                                    }
+                                    return Mono.error(new RuntimeException(message));
+                                })
+                )
+                .onStatus(status -> status.is4xxClientError() && status.value() != HttpStatus.CONFLICT.value(),
+                        response -> response.bodyToMono(String.class)
+                                .flatMap(errorBody -> {
+                                    LOGGER.warning("❌ Client error (4xx): " + errorBody);
+                                    return Mono.error(new RuntimeException("Client error: " + errorBody));
+                                })
+                )
+                .onStatus(HttpStatusCode::is5xxServerError,
+                        clientResponse -> Mono.error(new ServerErrorException("Error during POST request to registerUser: Server error",
+                                new RuntimeException("Server error"))))
+                .bodyToMono(UserCreatedResponseDto.class)
+                .doOnSuccess(response -> LOGGER.info("Response From: sendUserDtoToSignIn: RegistrationResponse obtained: " + response))
+                .doOnError( error -> LOGGER.warning("❌ Error From: sendUserDtoToSignIn: " + error.getMessage()));
     }
 
 

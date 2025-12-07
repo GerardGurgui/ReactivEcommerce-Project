@@ -28,7 +28,7 @@ public class UserInfoOutputDto {
     private boolean isActive;
     private LocalDate loginDate;
     private Instant latestAccess;
-    private Set<Roles> roles;
+    private List<String> roles;
     private List<Long> cartsId;
 
 }

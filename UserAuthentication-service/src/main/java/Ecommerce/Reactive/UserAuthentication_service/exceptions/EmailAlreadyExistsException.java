@@ -1,4 +1,4 @@
-package Ecommerce.usermanagement.exceptions;
+package Ecommerce.Reactive.UserAuthentication_service.exceptions;
 
 import lombok.Getter;
 
@@ -6,15 +6,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Getter
-public class EmailExistsException extends RuntimeException {
-
-    private final String email;
+public class EmailAlreadyExistsException extends RuntimeException {
 
     private final LocalDateTime timestamp;
 
-    public EmailExistsException(String message, String email) {
+    public EmailAlreadyExistsException(String message) {
         super(message);
-        this.email = email;
         this.timestamp = LocalDateTime.now();
     }
 

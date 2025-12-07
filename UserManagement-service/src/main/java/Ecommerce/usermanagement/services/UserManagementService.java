@@ -3,8 +3,8 @@ package Ecommerce.usermanagement.services;
 import Ecommerce.usermanagement.document.Roles;
 import Ecommerce.usermanagement.document.User;
 import Ecommerce.usermanagement.dto.cart.CartLinkUserDto;
-import Ecommerce.usermanagement.dto.input.UserInputDto;
-import Ecommerce.usermanagement.dto.output.UserBasicOutputDto;
+import Ecommerce.usermanagement.dto.input.UserRegisterInternalDto;
+import Ecommerce.usermanagement.dto.output.UserCreatedResponseDto;
 import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;
 import Ecommerce.usermanagement.dto.output.UserLoginDto;
 import Ecommerce.usermanagement.exceptions.*;
@@ -20,11 +20,13 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.*;
+import java.util.logging.Logger;
 
 @Service
-public class UserManagementServiceImpl implements IUserManagementService {
+public class UserManagementService {
+
+    private final Logger LOGGER = Logger.getLogger(UserManagementService.class.getName());
 
     private final IUsersRepository userRepository;
     private final ReactiveMongoTemplate reactiveMongoTemplate;
@@ -32,82 +34,64 @@ public class UserManagementServiceImpl implements IUserManagementService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public UserManagementServiceImpl(IUsersRepository userRepository,
-                                     ReactiveMongoTemplate reactiveMongoTemplate) {
+    public UserManagementService(IUsersRepository userRepository,
+                                 ReactiveMongoTemplate reactiveMongoTemplate) {
         this.userRepository = userRepository;
         this.reactiveMongoTemplate = reactiveMongoTemplate;
     }
 
+    ///// CRUD
+    public Mono<UserCreatedResponseDto> createUser(UserRegisterInternalDto dto) {
 
-    ////CHECKS
-    @Override
-    public Mono<Void> checkEmailExists(String email) {
-
-        return userRepository.existsByEmail(email)
-                .flatMap(emailExists -> {
-                    if (emailExists) {
-                        return Mono.error(new EmailExistsException("Email already exists", email));
-                    } else {
-                        return Mono.empty();
-                    }
-                });
+        return checkUsername(dto.getUsername())
+                .then(checkEmail(dto.getEmail()))
+                .then(Mono.just(dto))
+                .map(Converter::convertFromDtoToUser)
+                .flatMap(userRepository::save)
+                .map(this::toUserCreatedDto);
     }
 
-    @Override
-    public Mono<Void> checkUsernameExists(String username) {
+    private Mono<Void> checkUsername(String username) {
 
         return userRepository.existsByUsername(username)
-                .flatMap(usernameExists -> {
-                    if (usernameExists) {
-                        return Mono.error(new UsernameAlreadyExistsException("Username already exists", username));
+                .flatMap(exists -> {
+                    if (exists) {
+                        LOGGER.info("Username already exists: " + username);
+                        return Mono.error(new UsernameAlreadyExistsException("Username already exists: " + username));
                     } else {
                         return Mono.empty();
                     }
                 });
     }
 
-    @Override
-    public Mono<UserInfoOutputDto> createAndSaveUser(UserInputDto userInputDto) {
+    private Mono<Void> checkEmail(String email) {
 
-        Mono<Void> checkEmail = checkEmailExists(userInputDto.getEmail())
-                .onErrorResume(e -> Mono.error(new EmailExistsException("Email already exists", userInputDto.getEmail())));
-
-        Mono<Void> checkUsername = checkUsernameExists(userInputDto.getUsername())
-                .onErrorResume(e -> Mono.error(new UsernameAlreadyExistsException("Username already exists", userInputDto.getUsername())));
-
-        return Mono.when(checkEmail, checkUsername)
-                .then(addUser(userInputDto));
+        return userRepository.existsByEmail(email)
+                .flatMap(exists -> {
+                    if (exists) {
+                        LOGGER.info("Email already exists: " + email);
+                        return Mono.error(new EmailAlreadyExistsException("Email already exists: " + email));
+                    } else {
+                        return Mono.empty();
+                    }
+                });
     }
 
-
-
-    ///// CRUD
 
     /////FALTA UPDATE PARA QUE EL USUARIO PUEDA MODIFICAR SUS DATOS
 
-    @Override
-    public Mono<UserInfoOutputDto> addUser(UserInputDto userInputDto) {
+    private UserCreatedResponseDto toUserCreatedDto(User user) {
 
-        User user = Converter.convertFromDtoToUser(userInputDto);
-        user.setUuid(UUID.randomUUID().toString());
-        user.setLatestAccess(generateLatestAccess());
-        user.setPassword(passwordEncoder.encode(userInputDto.getPassword()));
-        user.setLoginDate(LocalDate.now());
-        user.setTotalPurchase(0L);
-        user.setTotalSpent(0);
-        user.addRoleUser(); //default role
-        user.getAuthorities();
-        //userDetails properties
-        user.setAccountNonExpired(true);
-        user.setAccountNonLocked(true);
-        user.setEnabled(true);
-        return userRepository.save(user).map(Converter::convertToDtoInfo);
+        return UserCreatedResponseDto.builder()
+                .uuid(user.getUuid())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .createdAt(user.getLoginDate())
+                .build();
     }
 
     ////GET
-
-    @Override
-    public Mono<UserBasicOutputDto> getUserByUuid(String userUuidDto) {
+    public Mono<UserCreatedResponseDto> getUserByUuid(String userUuidDto) {
 
     return userRepository.findByUuid(userUuidDto)
             .switchIfEmpty(Mono.error(new UserNotFoundException("User with Uuid: " + userUuidDto + " not found")))
@@ -115,7 +99,7 @@ public class UserManagementServiceImpl implements IUserManagementService {
             .map(Converter::convertToDtoBasic);
     }
 
-    @Override
+
     public Mono<UserInfoOutputDto> getUserInfoByUuid(String userUuidDto) {
 
         return userRepository.findByUuid(userUuidDto)
@@ -125,8 +109,7 @@ public class UserManagementServiceImpl implements IUserManagementService {
     }
 
     //without password
-    @Override
-    public Mono<UserBasicOutputDto> getUserByUserName(String userName) {
+    public Mono<UserCreatedResponseDto> getUserByUserName(String userName) {
 
         return userRepository.findByUsername(userName)
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User with username: " + userName + " not found")))
@@ -135,8 +118,7 @@ public class UserManagementServiceImpl implements IUserManagementService {
     }
 
     //without password
-    @Override
-    public Mono<UserBasicOutputDto> getUserByEmail(String email) {
+    public Mono<UserCreatedResponseDto> getUserByEmail(String email) {
 
         return userRepository.findByEmail(email)
                 .switchIfEmpty(Mono.error(new EmailNotFoundException("Email not found",email)))
@@ -244,12 +226,6 @@ public class UserManagementServiceImpl implements IUserManagementService {
             }
         }
         return userRoles;
-    }
-
-
-    private Instant generateLatestAccess() {
-
-        return Instant.now();
     }
 
 }

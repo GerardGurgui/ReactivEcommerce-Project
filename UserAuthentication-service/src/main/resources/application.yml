@@ -43,7 +43,7 @@ auth:
 internal:
   api-key: 3xcdGoMLDT0WpPvxLz1F6CoaEVJIYZxz8OSb2Jreocc=
 
-# 🌐 URLs de otros microservicios (UserAuth es cliente)
+# URLs de otros microservicios (UserAuth es cliente)
 services:
   user-management:
     url: http://localhost:8085/api/usermanagement
