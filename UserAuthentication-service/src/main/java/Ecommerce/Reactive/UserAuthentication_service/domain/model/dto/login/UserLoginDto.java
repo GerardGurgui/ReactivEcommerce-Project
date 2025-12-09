@@ -11,7 +11,7 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserLoginDto{
+public class UserLoginDto {
 
     private String uuid;
     private String username;
