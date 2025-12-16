@@ -6,8 +6,6 @@ import reactor.core.publisher.Mono;
 
 public interface IMapper {
 
-    //Mono para la entrada y la salida por que es un flujo de datos y no sabemos cuando se va a terminar
-
     Mono<Product> ProductDtoToProduct(ProductDTO input);
 
     Mono<ProductDTO> mapProductToProductDto(Product product);

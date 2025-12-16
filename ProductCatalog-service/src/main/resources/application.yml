@@ -1,0 +1,38 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: ProductCatalog-service
+
+  # R2DBC PostgreSQL configuration
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/product_catalog_db
+    username: postgres
+    password: gerry
+    pool:
+      initial-size: 5
+      max-size: 20
+      max-idle-time: 30m
+    initialize-schema: false
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+
+logging:
+  level:
+    root: INFO
+    com.ecommerce.productcatalog: DEBUG
+    io.r2dbc.postgresql.QUERY: DEBUG
+    io.r2dbc.postgresql.PARAM: DEBUG
+
+# Internal API Key
+internal:
+  api:
+    key: 3xcdGoMLDT0WpPvxLz1F6CoaEVJIYZxz8OSb2Jreocc=
+

@@ -83,7 +83,7 @@ public class SecurityConfig {
                 .authorizeExchange(auth -> auth
                         .pathMatchers("/auth/**").permitAll()
                         .pathMatchers("/public/**").permitAll()
-                        .pathMatchers("/api/usermanagement/addUser").permitAll()
+                        .pathMatchers("/api/productcatalog/**").permitAll()
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

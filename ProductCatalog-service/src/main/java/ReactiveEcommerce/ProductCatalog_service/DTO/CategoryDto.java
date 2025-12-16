@@ -1,19 +1,16 @@
 package ReactiveEcommerce.ProductCatalog_service.DTO;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductDTO {
+@Builder
+public class CategoryDto {
 
+    private Long id;
     private String name;
-    private String description;
-    private double price;
-    private String category;
-
 }

@@ -128,6 +128,7 @@ public class UserManagementService {
 
 
     public Mono<List<UserInfoOutputDto>> getAllUsersInfo() {
+
         return userRepository.findAll()
                 .map(Converter::convertToDtoInfo)
                 .collectList()

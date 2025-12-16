@@ -4,43 +4,30 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.sql.Timestamp;
+import java.util.UUID;
 
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table("products")
-public class Product {
+@Table("categories")
+public class Category {
 
     @Id
     private Long id;
 
     private String name;
+
     private String description;
-    private Double price;
-
-    @Column("category_id")
-    private Long categoryId;
-    private Boolean active;
-
-    @Column("image_url")
-    private String imageUrl;
 
     @Column("created_at")
     private Timestamp createdAt;
 
     @Column("updated_at")
     private Timestamp updatedAt;
-
-    @Transient
-    private Category category;
-
-
-
 }
