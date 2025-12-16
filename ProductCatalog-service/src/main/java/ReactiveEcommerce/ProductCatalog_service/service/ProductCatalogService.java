@@ -16,13 +16,9 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.logging.Logger;
-
 @Slf4j
 @Service
 public class ProductCatalogService {
-
-    private final Logger logger = Logger.getLogger(ProductCatalogService.class.getName());
 
     private final ICategoryRepository categoryRepository;
     private final IProductRepository productRepository;
@@ -60,7 +56,7 @@ public class ProductCatalogService {
 
         return productRepository.findAll()
                 .flatMap(this::buildProductDtoWithCategory)
-                .doOnComplete(() -> logger.info("Successfully fetched all products"))
+                .doOnComplete(() -> log.info("Successfully fetched all products"))
                 .onErrorResume(this::handleProductFetchError);
     }
 
@@ -70,7 +66,7 @@ public class ProductCatalogService {
 
         return productRepository.findByActiveTrue()
                 .flatMap(this::buildProductDtoWithCategory)
-                .doOnComplete(() -> logger.info("Successfully fetched all active products"))
+                .doOnComplete(() -> log.info("Successfully fetched all active products"))
                 .onErrorResume(this::handleProductFetchError);
     }
 
@@ -100,7 +96,7 @@ public class ProductCatalogService {
 
         return productRepository.findByPriceBetweenAndActiveTrue(minPrice, maxPrice)
                 .flatMap(this::buildProductDtoWithCategory)
-                .doOnComplete(() -> logger.info("Successfully fetched products by price range: " + minPrice + " - " + maxPrice))
+                .doOnComplete(() -> log.info("Successfully fetched products by price range: " + minPrice + " - " + maxPrice))
                 .onErrorResume(this::handleProductFetchError);
     }
 
@@ -110,7 +106,7 @@ public class ProductCatalogService {
 
         return productRepository.findByActiveTrueOrderByPriceAsc()
                 .flatMap(this::buildProductDtoWithCategory)
-                .doOnComplete(() -> logger.info("Successfully fetched active products ordered by price ascending"))
+                .doOnComplete(() -> log.info("Successfully fetched active products ordered by price ascending"))
                 .onErrorResume(this::handleProductFetchError);
     }
 
@@ -120,7 +116,7 @@ public class ProductCatalogService {
 
         return productRepository.findByActiveTrueOrderByPriceDesc()
                 .flatMap(this::buildProductDtoWithCategory)
-                .doOnComplete(() -> logger.info("Successfully fetched active products ordered by price descending"))
+                .doOnComplete(() -> log.info("Successfully fetched active products ordered by price descending"))
                 .onErrorResume(this::handleProductFetchError);
     }
 
@@ -129,7 +125,7 @@ public class ProductCatalogService {
     public Mono<Boolean> checkProductExistsAndActive(Long productId) {
 
         return productRepository.existsByIdAndActiveTrue(productId)
-                .doOnSuccess(exists -> logger.info("Product ID " + productId + " exists and active: " + exists))
+                .doOnSuccess(exists -> log.info("Product ID " + productId + " exists and active: " + exists))
                 .doOnError(e -> log.error("Error checking product existence: {}", e.getMessage(), e));
     }
 
@@ -142,7 +138,7 @@ public class ProductCatalogService {
         return findCategoryById(categoryId)
                 .flatMapMany(this::findProductsForCategory)
                 .switchIfEmpty(Flux.defer(() -> {
-                    logger.warning("No products found for category ID: " + categoryId);
+                    log.warn("No products found for category ID: " + categoryId);
                     return Flux.empty();
                 }))
                 .onErrorResume(this::handleProductFetchError);
@@ -157,7 +153,7 @@ public class ProductCatalogService {
         return findCategoryByName(categoryNameTrimmed)
                 .flatMapMany(this::findProductsForCategory)
                 .switchIfEmpty(Flux.defer(() -> {
-                    logger.warning("No products found for category name: " + categoryNameTrimmed);
+                    log.warn("No products found for category name: " + categoryNameTrimmed);
                     return Flux.empty();
                 }))
                 .onErrorResume(this::handleProductFetchError);
