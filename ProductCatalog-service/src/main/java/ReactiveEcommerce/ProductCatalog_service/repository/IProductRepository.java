@@ -22,12 +22,10 @@ public interface IProductRepository extends ReactiveCrudRepository<Product, Long
     Flux<Product> findByNameContainingIgnoreCaseAndActiveTrue(String name);
 
     /**
-     * 3. Filtrar productos activos por categoría id y por nombre
+     * 3. Filtrar productos activos por categoría id
      * USO: Filtro de categoría - "Mostrar solo Laptops"
      */
     Flux<Product> findByCategoryIdAndActiveTrue(Long categoryId);
-
-    Flux<Product> findByCategoryNameIgnoreCaseAndActiveTrue(String name);
 
     /**
      * 4. Filtrar productos activos por rango de precio
