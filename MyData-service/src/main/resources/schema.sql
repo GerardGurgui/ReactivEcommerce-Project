@@ -9,10 +9,15 @@ CREATE TABLE IF NOT EXISTS carts (
   updated_at TIMESTAMP
 );
 
---CREATE TABLE IF NOT EXISTS cart_products (
---  cart_id int NOT NULL,
---  product_id int NOT NULL,
---  PRIMARY KEY (cart_id,product_id),
---  FOREIGN KEY (cart_id) REFERENCES carts (id),
---  FOREIGN KEY (product_id) REFERENCES products (id)
---);
+CREATE TABLE IF NOT EXISTS cart_products (
+  id SERIAL PRIMARY KEY,
+  cart_id int NOT NULL,
+  product_id int NOT NULL,
+  productName varchar(255) DEFAULT NULL,
+  quantity int NOT NULL,
+  productPrice double precision NOT NULL,
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP,
+  FOREIGN KEY (cart_id) REFERENCES carts (id),
+  UNIQUE (cart_id, product_id)
+);

@@ -82,12 +82,6 @@ public class User {
     @JsonManagedReference // manejar serializacion de los usuarios
     private List<String> roles;
 
-    @Field(name = "carts")
-    private List<Long> cartIds;
-
-    @Field(name = "orders")
-    private List<Long> orderIds;
-
     //Properties from userDetails
     @JsonIgnore
     @Field(name = "is_account_non_expired")
@@ -100,21 +94,6 @@ public class User {
     @JsonIgnore
     @Field(name = "is_enabled")
     private boolean isEnabled;
-
-    //AÑADIR RELACION CON PEDIDOS (Order) FALTA CREAR MICROSERVICIO DE PEDIDOS
-
-    //posible ampliacion, ultima conexion etc
-
-    //operaciones y funciones, añadir producto al carro, eliminar producto del carro, comprar, etc
-    //de dinero??
-
-    public void addCartId(Long cartId) {
-
-        if (cartIds == null) {
-            cartIds = new ArrayList<>();
-        }
-        cartIds.add(cartId);
-    }
 
     public void addRoleUser() {
 

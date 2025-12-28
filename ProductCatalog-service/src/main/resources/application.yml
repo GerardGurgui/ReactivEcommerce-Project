@@ -16,6 +16,13 @@ spring:
       max-idle-time: 30m
     initialize-schema: false
 
+#JWT
+security:
+  jwt:
+    secret: SgVkYp3s6v9y_B-E_H-MbQeThWmZq4t7w5dfTmArdUg
+    expected-issuer: http://user-authentication-service:8084
+    expected-audience: ProductCatalog-service
+
 # Eureka Client Configuration
 eureka:
   client:

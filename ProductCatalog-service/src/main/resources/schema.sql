@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS products (
     category_id BIGINT NOT NULL,
     active BOOLEAN NOT NULL DEFAULT TRUE,
     image_url VARCHAR(500),
+    stock INT NOT NULL DEFAULT 0 CHECK (stock >= 0),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_category FOREIGN KEY (category_id) REFERENCES categories(id)

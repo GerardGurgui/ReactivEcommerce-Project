@@ -1,15 +1,16 @@
-package Ecommerce.Reactive.MyData_service.security;
+package ReactiveEcommerce.ProductCatalog_service.security;
 
-import Ecommerce.Reactive.MyData_service.security.validators.AudienceValidator;
-import Ecommerce.Reactive.MyData_service.security.validators.IssuerValidator;
-import Ecommerce.Reactive.MyData_service.security.validators.UserUuidValidator;
+import ReactiveEcommerce.ProductCatalog_service.security.validators.AudienceValidator;
+import ReactiveEcommerce.ProductCatalog_service.security.validators.IssuerValidator;
+import ReactiveEcommerce.ProductCatalog_service.security.validators.UserUuidValidator;
 import io.jsonwebtoken.io.Decoders;
-import org.jetbrains.annotations.NotNull;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,9 +35,12 @@ public class SecurityConfig {
     private String secretKey;
 
     private final JwtProperties jwtProperties;
+    private final InternalServiceAuthFilter internalServiceAuthFilter;
 
-    public SecurityConfig(JwtProperties jwtProperties){
+    public SecurityConfig(JwtProperties jwtProperties,
+                          InternalServiceAuthFilter internalServiceAuthFilter){
         this.jwtProperties = jwtProperties;
+        this.internalServiceAuthFilter = internalServiceAuthFilter;
     }
 
 
@@ -63,9 +67,14 @@ public class SecurityConfig {
         // 6. Apply validators
         decoder.setJwtValidator(combinedValidators);
 
-        LOGGER.info("MYDATA SERVICE - JWT Decoder configured with custom validators correctly");
+        LOGGER.info("PRODUCT CATALOG SERVICE - JWT Decoder configured with custom validators correctly");
         return decoder;
     }
+
+    // Internal endpoints used by other services, requires api key authentication
+    private static final String[] INTERNAL_ENDPOINTS = {
+            "/internal/**"
+    };
 
     @NotNull
     private OAuth2TokenValidator<Jwt> getJwtOAuth2TokenValidator() {
@@ -82,11 +91,10 @@ public class SecurityConfig {
         );
     }
 
-
     @Bean
     public SecurityWebFilterChain filterChain(ServerHttpSecurity http, ReactiveJwtDecoder reactiveJwtDecoder) {
 
-        LOGGER.info("MYDATA SERVICE - Validating JWT on incoming requests");
+        LOGGER.info("PRODUCT CATALOG SERVICE - Validating JWT on incoming requests");
 
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
@@ -94,11 +102,13 @@ public class SecurityConfig {
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers(INTERNAL_ENDPOINTS).hasAuthority("INTERNAL_SERVICE")
                         .anyExchange().authenticated()
                 )
+                .addFilterAt(internalServiceAuthFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {
                     jwt.jwtDecoder(reactiveJwtDecoder);
-                    LOGGER.info("----> MYDATA SERVICE - Configured as OAuth2 Resource Server with JWT");
+                    LOGGER.info("----> PRODUCT CATALOG SERVICE - Configured as OAuth2 Resource Server with JWT");
                 }))
                 .build();
     }

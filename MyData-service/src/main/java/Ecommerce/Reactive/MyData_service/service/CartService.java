@@ -1,48 +1,68 @@
 package Ecommerce.Reactive.MyData_service.service;
-import Ecommerce.Reactive.MyData_service.DTO.CartDto;
-import Ecommerce.Reactive.MyData_service.DTO.CartLinkUserDto;
-import Ecommerce.Reactive.MyData_service.DTO.CartStatus;
+import Ecommerce.Reactive.MyData_service.DTO.carts.CartDto;
+import Ecommerce.Reactive.MyData_service.DTO.carts.CartStatus;
 import Ecommerce.Reactive.MyData_service.entity.Cart;
-import Ecommerce.Reactive.MyData_service.exceptions.CartNameAlreadyExistsException;
-import Ecommerce.Reactive.MyData_service.exceptions.CartNotFoundException;
-import Ecommerce.Reactive.MyData_service.exceptions.InternalServiceException;
-import Ecommerce.Reactive.MyData_service.exceptions.ResourceNullException;
+import Ecommerce.Reactive.MyData_service.exceptions.*;
 import Ecommerce.Reactive.MyData_service.mapping.IConverter;
+import Ecommerce.Reactive.MyData_service.repository.ICartProductsRepository;
 import Ecommerce.Reactive.MyData_service.repository.ICartRepository;
 import Ecommerce.Reactive.MyData_service.security.SecurityUtils;
-import Ecommerce.Reactive.MyData_service.service.userManagement.UserManagementConnectorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.retry.Retry;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.logging.Logger;
 
 @Service
-public class CartServiceImpl implements ICartService {
+public class CartService {
 
-    private final static Logger LOGGER = Logger.getLogger(CartServiceImpl.class.getName());
+    private final static Logger LOGGER = Logger.getLogger(CartService.class.getName());
 
     private final ICartRepository cartRepository;
-    private final UserManagementConnectorService userMngConnectorService;
+    private final ICartProductsRepository cartProductsRepository;
     private final SecurityUtils securityUtils;
 
     @Autowired
     private IConverter converter;
 
     @Autowired
-    public CartServiceImpl(ICartRepository cartRepository,
-                           UserManagementConnectorService userMngConnectorService,
-                           SecurityUtils securityUtils){
+    public CartService(ICartRepository cartRepository,
+                       ICartProductsRepository cartProductsRepository,
+                       SecurityUtils securityUtils){
         this.cartRepository = cartRepository;
-        this.userMngConnectorService = userMngConnectorService;
+        this.cartProductsRepository = cartProductsRepository;
         this.securityUtils = securityUtils;
     }
 
+    // UTILITY METHODS
+    private Mono<CartDto> getAllProductsFromCartAndBuildCartDto(Cart cart){
+
+        return cartProductsRepository.findAllByCartId(cart.getId())
+                .collectList()
+                .map(products -> CartDto.builder()
+                        .userUuid(cart.getUserUuid())
+                        .name(cart.getName())
+                        .status(cart.getStatus())
+                        .createdAt(cart.getCreatedAt())
+                        .updatedAt(cart.getUpdatedAt())
+                        .products(products)
+                        .build());
+
+    }
+
+    private Mono<Cart> validateCartBelongsToUser(Cart cart, String userUuid) {
+
+        if (!cart.getUserUuid().equals(userUuid)) {
+            return Mono.error(new UnauthorizedCartAccessException(
+                    "Cart with ID: " + cart.getId() + " does not belong to the authenticated user."));
+        }
+        return Mono.just(cart);
+    }
+
     //--------->CRUD METHODS<-----------
+    // --> GETS<--
 
     public Mono<CartDto> getCartById(Long idCart) {
 
@@ -50,14 +70,8 @@ public class CartServiceImpl implements ICartService {
                 .switchIfEmpty(Mono.error(new ResourceNullException("User UUID not found in JWT token.")))
                 .flatMap(userUuid ->  cartRepository.findById(idCart)
                     .switchIfEmpty(Mono.error(new CartNotFoundException("Cart not found by ID: " + idCart)))
-                        .flatMap(cart -> {
-                                if (!cart.getUserUuid().equals(userUuid)) {
-                                    return Mono.error(new CartNotFoundException(
-                                            "Cart with ID: " + idCart + " does not belong to the authenticated user."));
-                                }
-                                return converter.cartToDto(cart);
-                            })
-                );
+                        .flatMap(cart -> validateCartBelongsToUser(cart,userUuid))
+                            .flatMap(this::getAllProductsFromCartAndBuildCartDto));
     }
 
 
@@ -67,20 +81,20 @@ public class CartServiceImpl implements ICartService {
                 .switchIfEmpty(Mono.error(new ResourceNullException("User UUID not found in JWT token.")))
                 .flatMapMany(userUuid -> cartRepository.getAllCartsByUserUuid((userUuid))
                     .switchIfEmpty(Flux.error(new CartNotFoundException("No carts found in the database for this user")))
-                    .flatMap(cart -> converter.cartToDto(cart)));
+                        .flatMap(this::getAllProductsFromCartAndBuildCartDto));
 
     }
 
+    /// --> CREATE CART <--
 
     public Mono<CartDto> createCartForUser(CartDto cartDto){
 
         return securityUtils.extractUserUuidFromJwt()
-                .switchIfEmpty(Mono.error(new ResourceNullException("User UUID not found in JWT token. Ensure the token contains a valid 'sub' claim.")))
+                .switchIfEmpty(Mono.error(new ResourceNullException("User UUID not found in JWT token. Ensure the token is valid and is the same user.")))
                 .flatMap(userUuid -> verifyCartNameDoesNotExist(cartDto.getName())
                         .then(Mono.just(userUuid)))
                 .doOnNext(userUuid -> cartDto.setUserUuid(userUuid))
                 .flatMap(saveCart -> saveCartToDb(cartDto))
-                    .flatMap(this::notifyUserManagementServiceCartCreated)
                 .flatMap(converter::cartToDto);
     }
 
@@ -99,24 +113,14 @@ public class CartServiceImpl implements ICartService {
 
         return converter.cartDtoToCart(cartDto)
                 .map(cart -> {
+                    cart.setTotalProducts(0);
+                    cart.setTotalPrice(0.0);
                     cart.setStatus(CartStatus.ACTIVE);
                     cart.setCreatedAt(LocalDateTime.now());
                     return cart;
                 })
                 .flatMap(cart -> cartRepository.save(cart))
                 .switchIfEmpty(Mono.error(new InternalServiceException("Failed to save cart to database")));
-    }
-
-    private Mono<Cart> notifyUserManagementServiceCartCreated(Cart cart){
-
-        CartLinkUserDto cartLinkUserDto = new CartLinkUserDto(
-                cart.getId(),
-                cart.getUserUuid()
-        );
-        return userMngConnectorService.linkCartToUser(cartLinkUserDto)
-                .timeout(Duration.ofSeconds(5))
-                .retryWhen(Retry.fixedDelay(3, Duration.ofSeconds(3)))
-                .thenReturn(cart);
     }
 
 

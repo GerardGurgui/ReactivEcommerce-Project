@@ -1,4 +1,4 @@
-package Ecommerce.Reactive.MyData_service.DTO;
+package Ecommerce.Reactive.MyData_service.DTO.carts;
 
 public enum CartStatus {
 

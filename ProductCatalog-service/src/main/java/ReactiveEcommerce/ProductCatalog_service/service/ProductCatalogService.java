@@ -1,7 +1,6 @@
 package ReactiveEcommerce.ProductCatalog_service.service;
 
-import ReactiveEcommerce.ProductCatalog_service.DTO.CategoryDto;
-import ReactiveEcommerce.ProductCatalog_service.DTO.output.ProductsResponseDto;
+import ReactiveEcommerce.ProductCatalog_service.DTO.output.ProductDetailsDto;
 import ReactiveEcommerce.ProductCatalog_service.entity.Category;
 import ReactiveEcommerce.ProductCatalog_service.entity.Product;
 import ReactiveEcommerce.ProductCatalog_service.exceptions.CategoryNotFoundException;
@@ -34,29 +33,36 @@ public class ProductCatalogService {
     }
 
     //Utilities
-    private Mono<ProductsResponseDto> buildProductDtoWithCategory(Product product) {
+    private Mono<ProductDetailsDto> buildProductDtoWithCategory(Product product) {
 
         return categoryRepository.findById(product.getCategoryId())
                 .switchIfEmpty(Mono.error(new CategoryNotFoundException(product.getCategoryId())))
-                .map(category -> ProductsResponseDto.builder()
+                .map(category -> ProductDetailsDto.builder()
                         .id(product.getId())
                         .name(product.getName())
                         .description(product.getDescription())
                         .price(product.getPrice())
                         .active(product.getActive())
-                        .category(CategoryDto.builder()
-                                .id(category.getId())
-                                .name(category.getName())
-                                .build())
+                        .stock(product.getStock())
                         .build())
-                .doOnError(e -> log.error("Error building product DTO: {}", e.getMessage(), e));
+                .doOnError(e -> log.error("Error creating product DTO: {}", e.getMessage(), e));
     }
 
-    // ------> CRUD
+    // ----> CRUD
     // ----> GETS
 
+    // --> Get product to MyData microservice by id (internal use)
+    public Mono<ProductDetailsDto> getProductToMyData(Long productId) {
+
+        return productRepository.findById(productId)
+                .switchIfEmpty(Mono.error(new ProductNotFoundException(productId)))
+                .flatMap(this::buildProductDtoWithCategory)
+                .doOnSuccess(productDto -> logger.info("---> Successfully fetched product for MyData with ID: " + productDto.getId()))
+                .onErrorResume(this::handleProductFetchError);
+    }
+
     // --> Get All
-    public Flux<ProductsResponseDto> getAllProducts() {
+    public Flux<ProductDetailsDto> getAllProducts() {
 
         return productRepository.findAll()
                 .flatMap(this::buildProductDtoWithCategory)
@@ -65,8 +71,7 @@ public class ProductCatalogService {
     }
 
     // --> Get Active Products
-
-    public Flux<ProductsResponseDto> getActiveProducts() {
+    public Flux<ProductDetailsDto> getActiveProducts() {
 
         return productRepository.findByActiveTrue()
                 .flatMap(this::buildProductDtoWithCategory)
@@ -75,8 +80,7 @@ public class ProductCatalogService {
     }
 
     // --> Get Products by Name
-
-    public Flux<ProductsResponseDto> getProductsByName(String name) {
+    public Flux<ProductDetailsDto> getProductsByName(String name) {
 
         // trim to avoid leading/trailing spaces
         String nameTrimmed = name.trim();
@@ -91,8 +95,7 @@ public class ProductCatalogService {
     }
 
     // --> Get Products by Price Range
-
-    public Flux<ProductsResponseDto> getProductsByPriceRange(Double minPrice, Double maxPrice) {
+    public Flux<ProductDetailsDto> getProductsByPriceRange(Double minPrice, Double maxPrice) {
 
         if (minPrice > maxPrice) {
             return Flux.error(new IllegalArgumentException("min price cannot be greater than max price"));
@@ -105,8 +108,7 @@ public class ProductCatalogService {
     }
 
     // --> Get Active Products Ordered by Price Ascending
-
-    public Flux<ProductsResponseDto> getActiveProductsOrderedByPriceAsc() {
+    public Flux<ProductDetailsDto> getActiveProductsOrderedByPriceAsc() {
 
         return productRepository.findByActiveTrueOrderByPriceAsc()
                 .flatMap(this::buildProductDtoWithCategory)
@@ -115,8 +117,7 @@ public class ProductCatalogService {
     }
 
     // --> Get Active Products Ordered by Price Descending
-
-    public Flux<ProductsResponseDto> getActiveProductsOrderedByPriceDesc() {
+    public Flux<ProductDetailsDto> getActiveProductsOrderedByPriceDesc() {
 
         return productRepository.findByActiveTrueOrderByPriceDesc()
                 .flatMap(this::buildProductDtoWithCategory)
@@ -125,7 +126,6 @@ public class ProductCatalogService {
     }
 
     // --> Check if Product Exists and is Active (for Cart Validation)
-
     public Mono<Boolean> checkProductExistsAndActive(Long productId) {
 
         return productRepository.existsByIdAndActiveTrue(productId)
@@ -136,8 +136,7 @@ public class ProductCatalogService {
     // ----> CATEGORY BASED QUERIES
 
     // --> Get Products by Category id - if the product's category_id does not exist -> error 500
-
-    public Flux<ProductsResponseDto> getProductsByCategoryId(Long categoryId) {
+    public Flux<ProductDetailsDto> getProductsByCategoryId(Long categoryId) {
 
         return findCategoryById(categoryId)
                 .flatMapMany(this::findProductsForCategory)
@@ -149,8 +148,7 @@ public class ProductCatalogService {
     }
 
     // --> Get Products by Category Name - if the product's category_name doesn't exist return empty list
-
-    public Flux<ProductsResponseDto> getProductsByCategoryName(String categoryName) {
+    public Flux<ProductDetailsDto> getProductsByCategoryName(String categoryName) {
 
         String categoryNameTrimmed = categoryName.trim();
 
@@ -173,42 +171,46 @@ public class ProductCatalogService {
         return categoryRepository.findById(categoryId);
     }
 
-    private Flux<ProductsResponseDto> findProductsForCategory(Category category) {
+    private Flux<ProductDetailsDto> findProductsForCategory(Category category) {
 
         return productRepository.findByCategoryIdAndActiveTrue(category.getId())
                 .flatMap(this::buildProductDtoWithCategory);
     }
 
-    // Handle Errors
-    private Flux<ProductsResponseDto> handleProductFetchError(Throwable error) {
+    // ERROR HANDLING
+    private <T> Mono<T> handleProductFetchError(Throwable error) {
 
         if (error instanceof CategoryNotFoundException) {
+
             log.error("Category not found: {}", error.getMessage());
-            return Flux.error(error);
+            return Mono.error(error);
         }
 
         if (error instanceof ProductNotFoundException) {
+
             log.error("Product not found: {}", error.getMessage());
-            return Flux.error(error);
+            return Mono.error(error);
         }
 
-        if (error instanceof ConstraintViolationException){
+        if (error instanceof ConstraintViolationException) {
+
             log.error("Validation error: {}", error.getMessage());
-            return Flux.error(new RuntimeException("Validation error: " + error.getMessage(), error));
+            return Mono.error(new RuntimeException("Validation error: " + error.getMessage(), error));
         }
 
         if (error instanceof R2dbcException) {
+
             log.error("Database error: {}", error.getMessage(), error);
-            return Flux.error(new RuntimeException("Database connection error", error));
+            return Mono.error(new RuntimeException("Database connection error", error));
         }
 
         if (error instanceof TimeoutException) {
+
             log.error("Timeout fetching products: {}", error.getMessage());
-            return Flux.error(new RuntimeException("Request timeout", error));
+            return Mono.error(new RuntimeException("Request timeout", error));
         }
 
-        // Generic error handler
         log.error("Unexpected error fetching products: {}", error.getMessage(), error);
-        return Flux.error(new RuntimeException("Failed to fetch products", error));
+        return Mono.error(new RuntimeException("Failed to fetch products", error));
     }
 }

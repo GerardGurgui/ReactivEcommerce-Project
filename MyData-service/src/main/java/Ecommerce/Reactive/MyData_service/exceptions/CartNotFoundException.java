@@ -8,11 +8,11 @@ import java.time.format.DateTimeFormatter;
 @Getter
 public class CartNotFoundException extends RuntimeException{
 
-//    private final LocalDateTime timestamp;
+    private final LocalDateTime timestamp;
 
     public CartNotFoundException(String message) {
         super(message);
-//        this.timestamp = LocalDateTime.now();
+        this.timestamp = LocalDateTime.now();
     }
 
 //    public String getFormattedTimestamp() {

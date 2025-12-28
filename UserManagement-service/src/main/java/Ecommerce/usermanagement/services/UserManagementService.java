@@ -40,7 +40,7 @@ public class UserManagementService {
         this.reactiveMongoTemplate = reactiveMongoTemplate;
     }
 
-    ///// CRUD
+    /// // CRUD
     public Mono<UserCreatedResponseDto> createUser(UserRegisterInternalDto dto) {
 
         return checkUsername(dto.getUsername())
@@ -78,7 +78,7 @@ public class UserManagementService {
     }
 
 
-    /////FALTA UPDATE PARA QUE EL USUARIO PUEDA MODIFICAR SUS DATOS
+    /// //FALTA UPDATE PARA QUE EL USUARIO PUEDA MODIFICAR SUS DATOS
 
     private UserCreatedResponseDto toUserCreatedDto(User user) {
 
@@ -90,13 +90,13 @@ public class UserManagementService {
                 .build();
     }
 
-    ////GET
+    /// /GET
     public Mono<UserCreatedResponseDto> getUserByUuid(String userUuidDto) {
 
-    return userRepository.findByUuid(userUuidDto)
-            .switchIfEmpty(Mono.error(new UserNotFoundException("User with Uuid: " + userUuidDto + " not found")))
-            .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting user by Uuid: " + userUuidDto + ", User not found")))
-            .map(Converter::convertToDtoBasic);
+        return userRepository.findByUuid(userUuidDto)
+                .switchIfEmpty(Mono.error(new UserNotFoundException("User with Uuid: " + userUuidDto + " not found")))
+                .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting user by Uuid: " + userUuidDto + ", User not found")))
+                .map(Converter::convertToDtoBasic);
     }
 
 
@@ -121,7 +121,7 @@ public class UserManagementService {
     public Mono<UserCreatedResponseDto> getUserByEmail(String email) {
 
         return userRepository.findByEmail(email)
-                .switchIfEmpty(Mono.error(new EmailNotFoundException("Email not found",email)))
+                .switchIfEmpty(Mono.error(new EmailNotFoundException("Email not found", email)))
                 .onErrorResume(e -> Mono.error(new EmailNotFoundException("Error getting user by email:, Email not found", email)))
                 .map(Converter::convertToDtoBasic);
     }
@@ -153,7 +153,7 @@ public class UserManagementService {
     // 6. user.getRoles().contains(Roles.ADMIN) etc
 
 
-    ///// ----> COMUNICACION CON MICROSERVICIO USERAUTHENTICATION - LOGIN
+    /// // ----> COMUNICACION CON MICROSERVICIO USERAUTHENTICATION - LOGIN
 
     //with password (Login)
     public Mono<UserLoginDto> getUserLoginByUserName(String username) {
@@ -175,11 +175,12 @@ public class UserManagementService {
     }
 
     //Update the latestAccess field
+
     /**
      * Updates the latest access timestamp for a user based on a login event.
      * This method is typically called when a user successfully logs in.
      *
-     * @param userUuid the UUID of the user whose latest access is being updated
+     * @param userUuid  the UUID of the user whose latest access is being updated
      * @param loginTime the timestamp of the login event
      * @return a Mono that completes when the update is successful
      * @throws org.springframework.dao.DataAccessException if the update fails due to a database error
@@ -192,41 +193,5 @@ public class UserManagementService {
         return reactiveMongoTemplate.updateFirst(query, update, User.class)
                 .then();
     }
-
-
-    /////-----> MYDATA - CARTS
-
-    ////CARTS
-    public Mono<String> linkCartToUser(CartLinkUserDto cartLinkUserDto) {
-
-        String userUuid = cartLinkUserDto.getUserUuid();
-
-        return userRepository.findByUuid(userUuid)
-                .switchIfEmpty(Mono.error(new UserNotFoundException("User with Uuid: " + userUuid + " not found")))
-                .flatMap(user -> {
-                    user.addCartId(cartLinkUserDto.getIdCart());
-                    return userRepository.save(user)
-                            .map(u -> "Cart linked successfully to user with UUID: " + userUuid);
-                });
-
-    }
-
-
-    ////UTILITY METHODS
-    private Set<Roles> assignRole(Set<String> rolenames){
-
-        Set<Roles> userRoles = new HashSet<>();
-
-        for (String rolename : rolenames) {
-
-            if (rolename.equalsIgnoreCase("ADMIN")) {
-                userRoles.add(Roles.ROLE_ADMIN);
-
-            } else if (rolename.equalsIgnoreCase("USER")) {
-                userRoles.add(Roles.ROLE_USER);
-            }
-        }
-        return userRoles;
-    }
-
 }
+
