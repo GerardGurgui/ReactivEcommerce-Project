@@ -10,6 +10,4 @@ public interface ICategoryRepository extends ReactiveCrudRepository<Category, Lo
 
     Mono<Category> findByNameIgnoreCase(String name);
 
-    Mono<Category> findByid(Long id);
-
 }

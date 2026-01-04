@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
 
         ErrorResponse error = ErrorResponse.builder()
                 .error("Product data inconsistency: " + ex.getMessage())
-                .status(HttpStatus.NOT_FOUND.value())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .timestamp(LocalDateTime.now())
                 .build();
 
