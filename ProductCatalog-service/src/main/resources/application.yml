@@ -19,7 +19,7 @@ spring:
 #JWT
 security:
   jwt:
-    secret: SgVkYp3s6v9y_B-E_H-MbQeThWmZq4t7w5dfTmArdUg
+    secret: ${JWT_SECRET}
     expected-issuer: http://user-authentication-service:8084
     expected-audience: ProductCatalog-service
 
@@ -41,5 +41,5 @@ logging:
 # Internal API Key
 internal:
   api:
-    key: 3xcdGoMLDT0WpPvxLz1F6CoaEVJIYZxz8OSb2Jreocc=
+    key: ${INTERNAL_API_KEY}
 

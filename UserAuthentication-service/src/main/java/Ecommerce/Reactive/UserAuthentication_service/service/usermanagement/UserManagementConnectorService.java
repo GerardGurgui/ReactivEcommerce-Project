@@ -26,7 +26,7 @@ public class UserManagementConnectorService {
     private final WebClient webClient;
     private final String USERMANAGEMENT_URL = "http://localhost:8085/api/usermanagement";
 
-    @Value("${internal.api-key}")
+    @Value("${internal.api.key}")
     private String internalApiKey;
 
     public UserManagementConnectorService(WebClient.Builder webClientBuilder) {

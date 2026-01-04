@@ -87,7 +87,7 @@ ProductCatalog:
 #JWT SECRET AND SECURITY CONFIGURATION
 security:
   jwt:
-    secret: SgVkYp3s6v9y_B-E_H-MbQeThWmZq4t7w5dfTmArdUg
+    secret: ${JWT_SECRET}
     expected-issuer: "http://user-authentication-service:8084"
     expected-audience: "ApiGateway-service"
 

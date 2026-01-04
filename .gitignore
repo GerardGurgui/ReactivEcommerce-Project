@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### SECRET KEYS ###
+**/application-local.properties
+**/application-local.yml
