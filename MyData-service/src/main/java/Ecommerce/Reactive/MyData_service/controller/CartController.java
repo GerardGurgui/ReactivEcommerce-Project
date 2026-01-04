@@ -1,7 +1,10 @@
 package Ecommerce.Reactive.MyData_service.controller;
 
-import Ecommerce.Reactive.MyData_service.DTO.CartDto;
-import Ecommerce.Reactive.MyData_service.service.CartServiceImpl;
+import Ecommerce.Reactive.MyData_service.DTO.cartProducts.AddProductToCartRequestDto;
+import Ecommerce.Reactive.MyData_service.DTO.cartProducts.ResponseProductToCartDto;
+import Ecommerce.Reactive.MyData_service.DTO.carts.CartDto;
+import Ecommerce.Reactive.MyData_service.service.CartProductService;
+import Ecommerce.Reactive.MyData_service.service.CartService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,27 +15,27 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/api/MyData/cart")
 @Validated
 public class CartController {
 
-    private final static Logger LOGGER = Logger.getLogger(CartController.class.getName());
-
-    private final CartServiceImpl cartServiceImpl;
+    private final CartService cartService;
+    private final CartProductService cartProductService;
 
     @Autowired
-    public CartController(CartServiceImpl cartServiceImpl) {
-        this.cartServiceImpl = cartServiceImpl;
+    public CartController(CartService cartService, CartProductService cartProductService) {
+        this.cartService = cartService;
+        this.cartProductService = cartProductService;
     }
+
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/createCart")
     public Mono<ResponseEntity<CartDto>> createCart(@Valid @RequestBody CartDto cartDto) {
 
-        return cartServiceImpl.createCartForUser(cartDto)
+        return cartService.createCartForUser(cartDto)
                 .map(cart -> new ResponseEntity<>(cart, HttpStatus.CREATED));
     }
 
@@ -40,14 +43,26 @@ public class CartController {
     @GetMapping("/getCart/{idCart}")
     public Mono<CartDto> getCart(@PathVariable Long idCart) {
 
-        return cartServiceImpl.getCartById(idCart);
+        return cartService.getCartById(idCart);
     }
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/getAllCarts")
     public Flux<CartDto> getAllCarts() {
 
-        return cartServiceImpl.getAllCarts();
+        return cartService.getAllCarts();
+    }
+
+    // ----> CREATE OPERATION FOR ADDING PRODUCTS TO CART <----
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/addProducts/{cartId}/items")
+    public Mono<ResponseEntity<ResponseProductToCartDto>> addProductToCart(
+            @PathVariable Long cartId,
+            @Valid @RequestBody AddProductToCartRequestDto requestDto) {
+
+        return cartProductService.addProductToCart(cartId, requestDto)
+                .map(response -> new ResponseEntity<>(response, HttpStatus.CREATED));
     }
 
 

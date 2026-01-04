@@ -28,8 +28,6 @@ import java.util.logging.Logger;
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
 
-    //integrar 2 perfiles (dev y prod)??
-
     private final Logger LOGGER = Logger.getLogger(SecurityConfig.class.getName());
 
     @Value("${security.jwt.secret}")
@@ -77,13 +75,11 @@ public class SecurityConfig {
         OAuth2TokenValidator<Jwt> withSubject = new UserUuidValidator();
 
         // 4. Combine validators into a single validator
-        OAuth2TokenValidator<Jwt> combinedValidators =
-                new DelegatingOAuth2TokenValidator<>(
-                        withIssuer,
-                        withAudience,
-                        withSubject
-                );
-        return combinedValidators;
+        return new DelegatingOAuth2TokenValidator<>(
+                withIssuer,
+                withAudience,
+                withSubject
+        );
     }
 
 

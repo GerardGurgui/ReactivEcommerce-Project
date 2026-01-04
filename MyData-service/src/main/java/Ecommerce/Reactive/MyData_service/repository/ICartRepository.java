@@ -11,9 +11,9 @@ import java.util.Optional;
 @Repository
 public interface ICartRepository extends ReactiveCrudRepository<Cart, Long> {
 
-    Optional<String> findCartByName(String cartName);
+    Mono<Cart> findCartByName(String cartName);
 
-    Mono<Boolean> existsCartByName(String cartName);
+    Mono<Boolean> existsCartByNameAndUserUuid(String name, String userUuid);
 
     Flux<Cart> getAllCartsByUserUuid(String userUuid);
 

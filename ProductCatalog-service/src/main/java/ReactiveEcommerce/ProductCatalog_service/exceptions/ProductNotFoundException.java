@@ -9,12 +9,12 @@ import java.time.format.DateTimeFormatter;
 @Getter
 public class ProductNotFoundException extends RuntimeException {
 
-    private final String name;
+    private final Long productId;
     private final LocalDateTime timestamp;
 
-    public ProductNotFoundException(String name) {
-        super("Product not found: " + name);
-        this.name = name;
+    public ProductNotFoundException(Long productId) {
+        super("Product not found: " + productId);
+        this.productId = productId;
         this.timestamp = LocalDateTime.now();
     }
 

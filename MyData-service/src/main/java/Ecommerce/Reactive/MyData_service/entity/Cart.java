@@ -1,6 +1,6 @@
 package Ecommerce.Reactive.MyData_service.entity;
 
-import Ecommerce.Reactive.MyData_service.DTO.CartStatus;
+import Ecommerce.Reactive.MyData_service.DTO.carts.CartStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,12 +8,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Iterator;
+import java.util.List;
 
 
 @Getter @Setter
@@ -25,6 +26,9 @@ public class Cart {
     @Id
     private Long id;
 
+    @Version
+    private Long version;
+
     @Column("user_uuid")
     private String userUuid;
 
@@ -32,10 +36,10 @@ public class Cart {
     private String name;
 
     @Column("total_products")
-    private int totalProducts;
+    private Integer totalProducts;
 
     @Column("total_price")
-    private double totalPrice;
+    private Double totalPrice;
 
     @Column("status")
     private CartStatus status;
@@ -45,4 +49,7 @@ public class Cart {
 
     @Column("updated_at")
     private LocalDateTime updatedAt;
+
+    @Transient
+    private List<CartProduct> cartProducts;
 }

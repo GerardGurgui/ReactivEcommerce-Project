@@ -72,15 +72,6 @@ public class UserManagementController {
     }
 
 
-    //--->  CONNECTION WITH MYDATA-SERVICE
-    @PutMapping("/internal/updateUserHasCart")
-    public Mono<ResponseEntity<String>> updateUserHasCart(@RequestBody CartLinkUserDto cartLinkUserDto) {
-
-        return userManagementService.linkCartToUser(cartLinkUserDto)
-                .map(msg -> ResponseEntity.ok(msg));
-    }
-
-
     //---> CONNECTION WITH AUTHENTICATION-SERVICE
         //---> Login
     @GetMapping("/internal/getUserLoginByUsername")

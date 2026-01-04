@@ -23,7 +23,7 @@ kafka:
 
 security:
   jwt:
-    secret: SgVkYp3s6v9y_B-E_H-MbQeThWmZq4t7w5dfTmArdUg
+    secret: ${JWT_SECRET}
     issuer: http://user-authentication-service:8084
     expiration-ms: 1200000  # 20 minutes
     audiences:
@@ -39,9 +39,10 @@ auth:
     register: /api/user-authentication/register
   user-management-url: http://localhost:8085/api/usermanagement/addUser
 
-# 🔐 API Key interna (para llamar a otros microservicios)
+# API Key interna
 internal:
-  api-key: 3xcdGoMLDT0WpPvxLz1F6CoaEVJIYZxz8OSb2Jreocc=
+  api:
+    key: ${INTERNAL_API_KEY}
 
 # URLs de otros microservicios (UserAuth es cliente)
 services:

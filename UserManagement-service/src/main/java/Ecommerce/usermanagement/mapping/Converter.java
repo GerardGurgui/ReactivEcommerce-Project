@@ -32,9 +32,6 @@ public class Converter {
         user.setRoles(List.of(userDto.getRole()));
         //audit info
         user.setRegistrationIp(userDto.getRegistrationIp());
-        //other fields can be set to default or null
-        user.setCartIds(new ArrayList<>());
-        user.setOrderIds(new ArrayList<>());
         // account status
         user.setEnabled(true);
         user.setAccountNonExpired(true);

@@ -27,6 +27,7 @@ public class Product {
 
     @Column("category_id")
     private Long categoryId;
+
     private Boolean active;
 
     @Column("image_url")
@@ -37,6 +38,8 @@ public class Product {
 
     @Column("updated_at")
     private Timestamp updatedAt;
+
+    private Integer stock;
 
     @Transient
     private Category category;

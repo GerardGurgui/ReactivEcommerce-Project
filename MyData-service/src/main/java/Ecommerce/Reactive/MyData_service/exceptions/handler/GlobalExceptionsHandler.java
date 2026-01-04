@@ -1,9 +1,7 @@
 package Ecommerce.Reactive.MyData_service.exceptions.handler;
 
 
-import Ecommerce.Reactive.MyData_service.exceptions.CartNameAlreadyExistsException;
-import Ecommerce.Reactive.MyData_service.exceptions.CartNotFoundException;
-import Ecommerce.Reactive.MyData_service.exceptions.ResourceNullException;
+import Ecommerce.Reactive.MyData_service.exceptions.*;
 import Ecommerce.usermanagement.exceptions.UserNotFoundException;
 import Ecommerce.usermanagement.exceptions.errordetails.ErrorResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -23,7 +21,7 @@ public class GlobalExceptionsHandler{
     @ExceptionHandler(CartNameAlreadyExistsException.class)
     public Mono<Void> handleCartNameAlreadyExistsException(ServerWebExchange exchange, CartNameAlreadyExistsException exception) throws JsonProcessingException {
 
-        exchange.getResponse().setStatusCode(HttpStatus.FOUND);
+        exchange.getResponse().setStatusCode(HttpStatus.CONFLICT);
         exchange.getResponse().getHeaders().add("Content-Type", "application/json");
 
         ErrorResponse errorResponse = new ErrorResponse(exception.getMessage());
@@ -88,6 +86,66 @@ public class GlobalExceptionsHandler{
         exchange.getResponse().getHeaders().add("Content-Type", "application/json");
 
         ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+        return exchange.getResponse().writeWith(
+                Mono.just(
+                        exchange.getResponse()
+                                .bufferFactory()
+                                .wrap(objectMapper.writeValueAsBytes(errorResponse))
+                )
+        );
+    }
+
+    @ExceptionHandler(NotEnoughStockException.class)
+    public Mono<Void> handleNotEnoughStockException(ServerWebExchange exchange, NotEnoughStockException exception) throws JsonProcessingException {
+
+        exchange.getResponse().setStatusCode(HttpStatus.BAD_REQUEST);
+        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
+
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+        return exchange.getResponse().writeWith(
+                Mono.just(
+                        exchange.getResponse()
+                                .bufferFactory()
+                                .wrap(objectMapper.writeValueAsBytes(errorResponse))
+                )
+        );
+    }
+
+    @ExceptionHandler(ProductNotAvailableException.class)
+    public Mono<Void> handleProductNotAvailableException(ServerWebExchange exchange, ProductNotAvailableException exception) throws JsonProcessingException {
+
+        exchange.getResponse().setStatusCode(HttpStatus.BAD_REQUEST);
+        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
+
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+        return exchange.getResponse().writeWith(
+                Mono.just(
+                        exchange.getResponse()
+                                .bufferFactory()
+                                .wrap(objectMapper.writeValueAsBytes(errorResponse))
+                )
+        );
+    }
+
+    @ExceptionHandler(UnauthorizedCartAccessException.class)
+    public Mono<Void> handleUnauthorizedCartAccessException(ServerWebExchange exchange, UnauthorizedCartAccessException exception) throws JsonProcessingException {
+
+        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
+
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage());
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
