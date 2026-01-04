@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class ProductDetailsFromMsDto {
+public class ProductDetailsDto {
 
     private Long id;
     private String name;

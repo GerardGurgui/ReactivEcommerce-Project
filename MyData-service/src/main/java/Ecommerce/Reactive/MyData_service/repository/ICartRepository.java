@@ -13,7 +13,7 @@ public interface ICartRepository extends ReactiveCrudRepository<Cart, Long> {
 
     Mono<Cart> findCartByName(String cartName);
 
-    Mono<Boolean> existsCartByName(String cartName);
+    Mono<Boolean> existsCartByNameAndUserUuid(String name, String userUuid);
 
     Flux<Cart> getAllCartsByUserUuid(String userUuid);
 

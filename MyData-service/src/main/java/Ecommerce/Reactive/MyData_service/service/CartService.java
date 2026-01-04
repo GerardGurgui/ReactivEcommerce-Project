@@ -7,6 +7,7 @@ import Ecommerce.Reactive.MyData_service.mapping.IConverter;
 import Ecommerce.Reactive.MyData_service.repository.ICartProductsRepository;
 import Ecommerce.Reactive.MyData_service.repository.ICartRepository;
 import Ecommerce.Reactive.MyData_service.security.SecurityUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -15,6 +16,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.logging.Logger;
 
+@Slf4j
 @Service
 public class CartService {
 
@@ -23,17 +25,17 @@ public class CartService {
     private final ICartRepository cartRepository;
     private final ICartProductsRepository cartProductsRepository;
     private final SecurityUtils securityUtils;
-
-    @Autowired
-    private IConverter converter;
+    private final IConverter converter;
 
     @Autowired
     public CartService(ICartRepository cartRepository,
                        ICartProductsRepository cartProductsRepository,
-                       SecurityUtils securityUtils){
+                       SecurityUtils securityUtils,
+                       IConverter converter) {
         this.cartRepository = cartRepository;
         this.cartProductsRepository = cartProductsRepository;
         this.securityUtils = securityUtils;
+        this.converter = converter;
     }
 
     // UTILITY METHODS
@@ -87,41 +89,45 @@ public class CartService {
 
     /// --> CREATE CART <--
 
-    public Mono<CartDto> createCartForUser(CartDto cartDto){
+    public Mono<CartDto> createCartForUser(CartDto cartDto) {
+
+        log.info("Creating cart with name: {}", cartDto.getName());
 
         return securityUtils.extractUserUuidFromJwt()
-                .switchIfEmpty(Mono.error(new ResourceNullException("User UUID not found in JWT token. Ensure the token is valid and is the same user.")))
-                .flatMap(userUuid -> verifyCartNameDoesNotExist(cartDto.getName())
-                        .then(Mono.just(userUuid)))
-                .doOnNext(userUuid -> cartDto.setUserUuid(userUuid))
-                .flatMap(saveCart -> saveCartToDb(cartDto))
-                .flatMap(converter::cartToDto);
+                .switchIfEmpty(Mono.error(new ResourceNullException("User UUID not found in JWT token.")))
+                .flatMap(userUuid -> verifyCartNameDoesNotExistForUser(cartDto.getName(), userUuid)
+                        .thenReturn(userUuid))
+                .flatMap(userUuid -> saveCartToDb(cartDto, userUuid))
+                .flatMap(converter::cartToDto)
+                .doOnSuccess(saved -> log.info("Cart '{}' created successfully", saved.getName()));
     }
 
-    private Mono<Boolean> verifyCartNameDoesNotExist(String cartName) {
+    private Mono<Boolean> verifyCartNameDoesNotExistForUser(String cartName, String userUuid) {
 
-        return cartRepository.existsCartByName(cartName)
+        return cartRepository.existsCartByNameAndUserUuid(cartName, userUuid)
                 .flatMap(exists -> {
                     if (exists) {
-                        return Mono.error(new CartNameAlreadyExistsException("Cart name already exists: " + cartName));
+                        log.warn("User {} already has a cart named '{}'", userUuid, cartName);
+                        return Mono.error(new CartNameAlreadyExistsException("You already have a cart named: " + cartName));
                     }
                     return Mono.just(true);
                 });
     }
 
-    private Mono<Cart> saveCartToDb(CartDto cartDto){
+    // PENDIENTE CUANDO IMPLEMENTE CHECKOUT CAMBIAR ESTADOS DE LOS CARRITOS
+
+    private Mono<Cart> saveCartToDb(CartDto cartDto, String userUuid) {
 
         return converter.cartDtoToCart(cartDto)
                 .map(cart -> {
+                    cart.setUserUuid(userUuid);
                     cart.setTotalProducts(0);
                     cart.setTotalPrice(0.0);
                     cart.setStatus(CartStatus.ACTIVE);
                     cart.setCreatedAt(LocalDateTime.now());
                     return cart;
                 })
-                .flatMap(cart -> cartRepository.save(cart))
-                .switchIfEmpty(Mono.error(new InternalServiceException("Failed to save cart to database")));
+                .flatMap(cartRepository::save)
+                .switchIfEmpty(Mono.error(new InternalServiceException("Failed to save cart in the database.")));
     }
-
-
 }

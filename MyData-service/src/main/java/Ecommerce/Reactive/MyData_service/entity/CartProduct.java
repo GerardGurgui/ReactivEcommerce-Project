@@ -3,6 +3,7 @@ package Ecommerce.Reactive.MyData_service.entity;
 import lombok.*;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -18,6 +19,9 @@ public class CartProduct {
 
     @Id
     private Long id;
+
+    @Version
+    private Long version;
 
     @Column("cart_id")
     private Long cartId;

@@ -12,6 +12,8 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -54,7 +56,7 @@ public class InternalServiceAuthFilter implements WebFilter {
             return exchange.getResponse().setComplete();
         }
 
-        if (!internalApiKey.equals(apiKey)) {
+        if (!isValidApiKey(apiKey)) {
             LOGGER.warning("❌ Invalid internal API key for: " + path);
             exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
             return exchange.getResponse().setComplete();
@@ -72,5 +74,14 @@ public class InternalServiceAuthFilter implements WebFilter {
 
         return chain.filter(exchange)
                 .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication));
+    }
+
+    private boolean isValidApiKey(String providedKey) {
+        if (providedKey == null) return false;
+
+        byte[] expected = internalApiKey.getBytes(StandardCharsets.UTF_8);
+        byte[] provided = providedKey.getBytes(StandardCharsets.UTF_8);
+
+        return MessageDigest.isEqual(expected, provided);
     }
 }

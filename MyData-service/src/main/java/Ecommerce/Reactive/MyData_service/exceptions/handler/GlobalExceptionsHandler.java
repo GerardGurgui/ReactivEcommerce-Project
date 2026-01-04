@@ -21,7 +21,7 @@ public class GlobalExceptionsHandler{
     @ExceptionHandler(CartNameAlreadyExistsException.class)
     public Mono<Void> handleCartNameAlreadyExistsException(ServerWebExchange exchange, CartNameAlreadyExistsException exception) throws JsonProcessingException {
 
-        exchange.getResponse().setStatusCode(HttpStatus.FOUND);
+        exchange.getResponse().setStatusCode(HttpStatus.CONFLICT);
         exchange.getResponse().getHeaders().add("Content-Type", "application/json");
 
         ErrorResponse errorResponse = new ErrorResponse(exception.getMessage());

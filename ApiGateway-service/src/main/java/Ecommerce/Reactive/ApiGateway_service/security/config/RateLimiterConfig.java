@@ -10,8 +10,10 @@ public class RateLimiterConfig {
 
     @Bean
     public KeyResolver ipKeyResolver() {
-        return exchange -> Mono.just(
-                exchange.getRequest().getRemoteAddress().getAddress().getHostAddress()
-        );
+        return exchange -> {
+            String ip = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
+            System.out.println("🔍 IP detectada: " + ip);
+            return Mono.just(ip);
+        };
     }
 }

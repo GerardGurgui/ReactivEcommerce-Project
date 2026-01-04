@@ -1,6 +1,7 @@
 package Ecommerce.Reactive.MyData_service.service.communication.productsMs;
 
-import Ecommerce.Reactive.MyData_service.DTO.cartProducts.ProductDetailsFromMsDto;
+import Ecommerce.Reactive.MyData_service.DTO.cartProducts.ProductDetailsDto;
+import Ecommerce.Reactive.MyData_service.exceptions.ProductNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
@@ -28,7 +29,7 @@ public class ProductCatalogConnectorService {
         this.webClient = webClientBuilder.baseUrl(PRODUCTMS_URL).build();
     }
 
-    public Mono<ProductDetailsFromMsDto> getProductInfoFromProductsMs(Long productId) {
+    public Mono<ProductDetailsDto> getProductInfoFromProductsMs(Long productId) {
 
         LOGGER.info("Initiating GET request to fetch product info for productId: {" +
                 productId + "}");
@@ -39,13 +40,13 @@ public class ProductCatalogConnectorService {
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse -> {
                     LOGGER.warning("4xx error when fetching product info for productId: {" + productId + "}");
-                    return Mono.error(new RuntimeException("Product not found with id: " + productId));
+                    return Mono.error(new ProductNotFoundException(productId));
                 })
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse -> {
                     LOGGER.severe("5xx error when fetching product info for productId: {" + productId + "}");
                     return Mono.error(new RuntimeException("Server error when fetching product with id: " + productId));
                 })
-                .bodyToMono(ProductDetailsFromMsDto.class)
+                .bodyToMono(ProductDetailsDto.class)
                 .doOnSuccess(response -> LOGGER.info("Successfully fetched product info for productId: {" + productId + "}"))
                 .doOnError(error -> LOGGER.severe("Error fetching product info for productId: {" + productId + "}: " + error.getMessage()));
 

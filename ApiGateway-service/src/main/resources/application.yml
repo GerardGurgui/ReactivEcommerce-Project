@@ -14,6 +14,12 @@ spring:
           uri: lb://${MyData.service.name}
           predicates:
             - Path=${MyData.service.route}
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@ipKeyResolver}"
 
         - id: ${UserAuthentication.service.name}  # USERAUTHENTICATION 8084
           uri: lb://${UserAuthentication.service.name}
@@ -30,6 +36,12 @@ spring:
           uri: lb://${ProductCatalog.service.name}
           predicates:
             - Path=${ProductCatalog.service.route}
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 30
+                key-resolver: "#{@ipKeyResolver}"
 
   redis:
     host: localhost
@@ -66,7 +78,7 @@ MyData:
 UserAuthentication:
   service:
     name: UserAuthentication-service
-    route: /api/userauthentication/**
+    route: /auth/**
 ProductCatalog:
   service:
     name: ProductCatalog-service
