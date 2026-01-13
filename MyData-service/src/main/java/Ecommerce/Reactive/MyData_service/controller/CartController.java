@@ -1,5 +1,6 @@
 package Ecommerce.Reactive.MyData_service.controller;
 
+import Ecommerce.Reactive.MyData_service.DTO.RemoveProductsFromCartResponseDto;
 import Ecommerce.Reactive.MyData_service.DTO.cartProducts.AddProductToCartRequestDto;
 import Ecommerce.Reactive.MyData_service.DTO.cartProducts.ResponseProductToCartDto;
 import Ecommerce.Reactive.MyData_service.DTO.carts.CartDto;
@@ -53,16 +54,29 @@ public class CartController {
         return cartService.getAllCarts();
     }
 
-    // ----> CREATE OPERATION FOR ADDING PRODUCTS TO CART <----
+    // ----> ADDING PRODUCTS TO CART <----
 
     @PreAuthorize("isAuthenticated()")
-    @PostMapping("/addProducts/{cartId}/items")
+    @PostMapping("/{cartId}/items")
     public Mono<ResponseEntity<ResponseProductToCartDto>> addProductToCart(
             @PathVariable Long cartId,
             @Valid @RequestBody AddProductToCartRequestDto requestDto) {
 
         return cartProductService.addProductToCart(cartId, requestDto)
                 .map(response -> new ResponseEntity<>(response, HttpStatus.CREATED));
+    }
+
+
+    // ----> DELETE TOTAL PRODUCT FROM CART <----
+
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/{cartId}/items/{productId}")
+    public Mono<ResponseEntity<RemoveProductsFromCartResponseDto>> removeProductsFromCart(
+            @PathVariable Long cartId,
+            @PathVariable Long productId) {
+
+        return cartProductService.removeProductsFromCart(cartId, productId)
+                .map(response -> new ResponseEntity<>(response, HttpStatus.OK));
     }
 
 

@@ -25,7 +25,10 @@ public class CartDto {
     @Pattern(regexp = "^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s\\-_]+$",
             message = "Cart name can only contain letters, numbers, spaces, hyphens and underscores")
     private String name;
+    private Long id;
     private CartStatus status;
+    private Integer cartTotalItems;
+    private Double cartTotalPrice;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<CartProduct> products;

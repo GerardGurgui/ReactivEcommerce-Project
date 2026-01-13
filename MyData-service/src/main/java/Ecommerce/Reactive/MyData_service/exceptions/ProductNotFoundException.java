@@ -11,8 +11,8 @@ public class ProductNotFoundException extends RuntimeException {
     private final Long productId;
     private final LocalDateTime timestamp;
 
-    public ProductNotFoundException(Long productId) {
-        super("Product not found, ID: " + productId);
+    public ProductNotFoundException(String message, Long productId) {
+        super(message);
         this.productId = productId;
         this.timestamp = LocalDateTime.now();
     }
