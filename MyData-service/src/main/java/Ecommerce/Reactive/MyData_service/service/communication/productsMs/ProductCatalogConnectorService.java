@@ -40,7 +40,7 @@ public class ProductCatalogConnectorService {
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse -> {
                     LOGGER.warning("4xx error when fetching product info for productId: {" + productId + "}");
-                    return Mono.error(new ProductNotFoundException(productId));
+                    return Mono.error(new ProductNotFoundException("Product with id " + productId + " not found.", productId));
                 })
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse -> {
                     LOGGER.severe("5xx error when fetching product info for productId: {" + productId + "}");

@@ -38,6 +38,46 @@ public class GlobalExceptionsHandler{
         );
     }
 
+    @ExceptionHandler(ProductNotFoundException.class)
+    public Mono<Void> handleCartNameAlreadyExistsException(ServerWebExchange exchange, ProductNotFoundException exception) throws JsonProcessingException {
+
+        exchange.getResponse().setStatusCode(HttpStatus.NOT_FOUND);
+        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
+
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+        return exchange.getResponse().writeWith(
+                Mono.just(
+                        exchange.getResponse()
+                                .bufferFactory()
+                                .wrap(objectMapper.writeValueAsBytes(errorResponse))
+                )
+        );
+    }
+
+    @ExceptionHandler(MaxQuantityExceededException.class)
+    public Mono<Void> handleCartNameAlreadyExistsException(ServerWebExchange exchange, MaxQuantityExceededException exception) throws JsonProcessingException {
+
+        exchange.getResponse().setStatusCode(HttpStatus.NOT_FOUND);
+        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
+
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+        return exchange.getResponse().writeWith(
+                Mono.just(
+                        exchange.getResponse()
+                                .bufferFactory()
+                                .wrap(objectMapper.writeValueAsBytes(errorResponse))
+                )
+        );
+    }
+
 
     @ExceptionHandler(UserNotFoundException.class)
     public Mono<Void> handleUserNotFoundException(ServerWebExchange exchange, UserNotFoundException exception) throws JsonProcessingException {

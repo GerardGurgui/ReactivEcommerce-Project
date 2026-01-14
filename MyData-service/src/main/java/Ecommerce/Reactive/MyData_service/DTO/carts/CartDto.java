@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,7 +26,10 @@ public class CartDto {
     @Pattern(regexp = "^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s\\-_]+$",
             message = "Cart name can only contain letters, numbers, spaces, hyphens and underscores")
     private String name;
+    private Long id;
     private CartStatus status;
+    private Integer cartTotalItems;
+    private BigDecimal cartTotalPrice;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<CartProduct> products;
