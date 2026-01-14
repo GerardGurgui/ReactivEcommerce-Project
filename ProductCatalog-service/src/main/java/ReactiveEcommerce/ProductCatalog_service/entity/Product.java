@@ -10,6 +10,7 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 @Getter @Setter
@@ -23,7 +24,7 @@ public class Product {
 
     private String name;
     private String description;
-    private Double price;
+    private BigDecimal price;
 
     @Column("category_id")
     private Long categoryId;

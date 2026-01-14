@@ -1,6 +1,6 @@
 package Ecommerce.Reactive.MyData_service.service;
 
-import Ecommerce.Reactive.MyData_service.DTO.RemoveProductsFromCartResponseDto;
+import Ecommerce.Reactive.MyData_service.DTO.outputs.RemoveProductsFromCartResponseDto;
 import Ecommerce.Reactive.MyData_service.DTO.cartProducts.AddProductToCartRequestDto;
 import Ecommerce.Reactive.MyData_service.DTO.cartProducts.ProductDetailsDto;
 import Ecommerce.Reactive.MyData_service.DTO.cartProducts.ResponseProductToCartDto;
@@ -21,6 +21,7 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
@@ -73,25 +74,26 @@ public class CartProductService {
                 .doOnError(error -> log.error("Failed to add product {} to cart {}: {}", requestDto.getProductId(), cartId, error.getMessage()));
     }
 
-    public Mono<RemoveProductsFromCartResponseDto> removeProductsFromCart(Long cartId, Long productId){
+    public Mono<RemoveProductsFromCartResponseDto> removeProductsFromCart(Long cartId, Long productId) {
 
         log.info("Deleting product/s from cart {}, product: {}", cartId, productId);
 
         return getActiveCartIfOwnedByCurrentUser(cartId)
-                    .flatMap(cart -> cartProductsRepository.findByCartIdAndProductId(cartId, productId)
-                            .switchIfEmpty(Mono.error(new ProductNotFoundException("Product not found in cart", productId)))
-                            .flatMap(cartProduct ->
-                                    cartProductsRepository.deleteById(cartProduct.getId())
-                                            .then(updateCartTotalsDelete(cart, cartProduct))
-                                            .map(updatedCart -> buildRemoveProductResponse(updatedCart, cartProduct))
-                            )
-                    )
+                .flatMap(cart -> cartProductsRepository.findByCartIdAndProductId(cartId, productId)
+                        .flatMap(cartProduct ->
+                                cartProductsRepository.deleteById(cartProduct.getId())
+                                        .then(updateCartTotalsDelete(cart, cartProduct))
+                                        .map(updatedCart -> buildRemoveProductResponse(updatedCart, cartProduct))
+                        )
+                        .switchIfEmpty(Mono.defer(() ->   // Handle case where product is not found in cart, already removed or never added
+                                Mono.just(buildProductNotExistsInCartResponse(cartId, productId))
+                        ))
+                )
                 .as(transactionalOperator::transactional)
                 .retryWhen(Retry.backoff(3, Duration.ofMillis(100))
                         .filter(throwable -> throwable instanceof OptimisticLockingFailureException))
                 .doOnSuccess(response -> log.info("Product {} deleted from cart {} successfully", productId, cartId))
                 .doOnError(error -> log.error("Failed to delete product {} from cart {}: {}", productId, cartId, error.getMessage()));
-
     }
 
     // ==================== CART VALIDATION ====================
@@ -208,20 +210,40 @@ public class CartProductService {
         log.debug("Updating cart {} totals (Adding products)", cart.getId());
 
         cart.setTotalProducts(cart.getTotalProducts() + requestDto.getQuantity());
-        cart.setTotalPrice(cart.getTotalPrice() + (cartProduct.getProductPrice() * requestDto.getQuantity()));
+        BigDecimal priceToAdd = cartProduct.getProductPrice()
+                .multiply(BigDecimal.valueOf(requestDto.getQuantity()));
+        cart.setTotalPrice(cart.getTotalPrice().add(priceToAdd));
         cart.setUpdatedAt(LocalDateTime.now());
         return cartRepository.save(cart);
     }
 
-    private Mono<Cart> updateCartTotalsDelete(Cart cart, CartProduct cartProduct){
+    private Mono<Cart> updateCartTotalsDelete(Cart cart, CartProduct cartProduct) {
 
-        log.debug("Updating cart {} totals (Deleting products)", cart.getId());
+        int newTotalProducts = cart.getTotalProducts() - cartProduct.getQuantity();
+        BigDecimal newTotalPrice = cart.getTotalPrice()
+                .subtract(cartProduct.getProductPrice()
+                        .multiply(BigDecimal.valueOf(cartProduct.getQuantity())));
 
-        cart.setTotalProducts(cart.getTotalProducts() - cartProduct.getQuantity());
-        cart.setTotalPrice(cart.getTotalPrice() - (cartProduct.getProductPrice() * cartProduct.getQuantity()));
+        if (cart.getTotalProducts() < cartProduct.getQuantity()) {
+            log.error("Cart {} corrupted: totalProducts {} < quantity to remove {}",
+                    cart.getId(), cart.getTotalProducts(), cartProduct.getQuantity());
+            return Mono.error(new IllegalStateException(
+                    "Cart data inconsistent. Cannot remove " + cartProduct.getQuantity() +
+                            " items from cart with " + cart.getTotalProducts() + " total items."));
+        }
+
+        if (newTotalProducts < 0 || newTotalPrice.compareTo(BigDecimal.ZERO) < 0) {
+            log.error("Cart {} would have negative totals: products={}, price={}",
+                    cart.getId(), newTotalProducts, newTotalPrice);
+            return Mono.error(new IllegalStateException(
+                    "Cart data inconsistent. Operation would result in negative totals."));
+        }
+
+        cart.setTotalProducts(newTotalProducts);
+        cart.setTotalPrice(newTotalPrice);
         cart.setUpdatedAt(LocalDateTime.now());
-        return cartRepository.save(cart);
 
+        return cartRepository.save(cart);
     }
 
     // ==================== BUILDERS ====================
@@ -244,7 +266,7 @@ public class CartProductService {
     private RemoveProductsFromCartResponseDto buildRemoveProductResponse(Cart cart, CartProduct product){
 
         return RemoveProductsFromCartResponseDto.builder()
-                .message("Product/s succesfully deleted from cart")
+                .message("Removed " + product.getQuantity() + " unit(s) of " + product.getProductName() + " from cart")
                 .cartId(cart.getId())
                 .productId(product.getProductId())
                 .cartName(cart.getName())
@@ -258,6 +280,15 @@ public class CartProductService {
 
     }
 
+    private RemoveProductsFromCartResponseDto buildProductNotExistsInCartResponse(Long cartId, Long productId){
+
+        return RemoveProductsFromCartResponseDto.builder()
+                .message("Product not in cart or already removed")
+                .cartId(cartId)
+                .productId(productId)
+                .build();
+
+    }
 
     private CartProduct buildCartProduct(Long cartId,
                                          AddProductToCartRequestDto requestDto,
@@ -272,4 +303,5 @@ public class CartProductService {
                 .updatedAt(LocalDateTime.now())
                 .build();
     }
+
 }

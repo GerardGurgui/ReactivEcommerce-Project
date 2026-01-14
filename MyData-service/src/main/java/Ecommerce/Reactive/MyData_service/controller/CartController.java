@@ -1,6 +1,6 @@
 package Ecommerce.Reactive.MyData_service.controller;
 
-import Ecommerce.Reactive.MyData_service.DTO.RemoveProductsFromCartResponseDto;
+import Ecommerce.Reactive.MyData_service.DTO.outputs.RemoveProductsFromCartResponseDto;
 import Ecommerce.Reactive.MyData_service.DTO.cartProducts.AddProductToCartRequestDto;
 import Ecommerce.Reactive.MyData_service.DTO.cartProducts.ResponseProductToCartDto;
 import Ecommerce.Reactive.MyData_service.DTO.carts.CartDto;

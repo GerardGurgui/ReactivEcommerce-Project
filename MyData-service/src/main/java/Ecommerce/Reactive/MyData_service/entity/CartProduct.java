@@ -7,6 +7,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 
@@ -41,5 +42,5 @@ public class CartProduct {
     private LocalDateTime updatedAt;
 
     @Column("product_price")
-    private Double productPrice;
+    private BigDecimal productPrice;
 }

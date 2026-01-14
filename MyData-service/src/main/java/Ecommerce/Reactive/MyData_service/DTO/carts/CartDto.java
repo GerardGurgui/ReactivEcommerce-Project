@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,7 +29,7 @@ public class CartDto {
     private Long id;
     private CartStatus status;
     private Integer cartTotalItems;
-    private Double cartTotalPrice;
+    private BigDecimal cartTotalPrice;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<CartProduct> products;

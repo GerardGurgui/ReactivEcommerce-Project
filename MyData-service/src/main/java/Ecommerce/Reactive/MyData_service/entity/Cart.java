@@ -13,6 +13,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -39,7 +40,7 @@ public class Cart {
     private Integer totalProducts;
 
     @Column("total_price")
-    private Double totalPrice;
+    private BigDecimal totalPrice;
 
     @Column("status")
     private CartStatus status;
