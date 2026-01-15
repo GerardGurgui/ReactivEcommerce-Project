@@ -1,8 +1,6 @@
 package Ecommerce.usermanagement.services;
 
-import Ecommerce.usermanagement.document.Roles;
 import Ecommerce.usermanagement.document.User;
-import Ecommerce.usermanagement.dto.cart.CartLinkUserDto;
 import Ecommerce.usermanagement.dto.input.UserRegisterInternalDto;
 import Ecommerce.usermanagement.dto.output.UserCreatedResponseDto;
 import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;
@@ -40,12 +38,12 @@ public class UserManagementService {
         this.reactiveMongoTemplate = reactiveMongoTemplate;
     }
 
-    /// // CRUD
-    public Mono<UserCreatedResponseDto> createUser(UserRegisterInternalDto dto) {
+    //// --->  CRUD
+    public Mono<UserCreatedResponseDto> createUser(UserRegisterInternalDto userInputDto) {
 
-        return checkUsername(dto.getUsername())
-                .then(checkEmail(dto.getEmail()))
-                .then(Mono.just(dto))
+        return checkUsername(userInputDto.getUsername())
+                .then(Mono.defer(() -> checkEmail(userInputDto.getEmail())))
+                .then(Mono.just(userInputDto))
                 .map(Converter::convertFromDtoToUser)
                 .flatMap(userRepository::save)
                 .map(this::toUserCreatedDto);
@@ -95,7 +93,6 @@ public class UserManagementService {
 
         return userRepository.findByUuid(userUuidDto)
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User with Uuid: " + userUuidDto + " not found")))
-                .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting user by Uuid: " + userUuidDto + ", User not found")))
                 .map(Converter::convertToDtoBasic);
     }
 
@@ -104,7 +101,6 @@ public class UserManagementService {
 
         return userRepository.findByUuid(userUuidDto)
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User with Uuid: " + userUuidDto + " not found")))
-                .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting user by Uuid: " + userUuidDto + ", User not found")))
                 .map(Converter::convertToDtoInfo);
     }
 
@@ -113,7 +109,6 @@ public class UserManagementService {
 
         return userRepository.findByUsername(userName)
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User with username: " + userName + " not found")))
-                .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting user by username: " + userName + ", User not found")))
                 .map(Converter::convertToDtoBasic);
     }
 
@@ -122,7 +117,6 @@ public class UserManagementService {
 
         return userRepository.findByEmail(email)
                 .switchIfEmpty(Mono.error(new EmailNotFoundException("Email not found", email)))
-                .onErrorResume(e -> Mono.error(new EmailNotFoundException("Error getting user by email:, Email not found", email)))
                 .map(Converter::convertToDtoBasic);
     }
 
@@ -160,7 +154,6 @@ public class UserManagementService {
 
         return userRepository.findByUsername(username)
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User with username: " + username + " not found")))
-                .onErrorResume(e -> Mono.error(new UserNotFoundException("Error getting user by username: " + username + ", User not found")))
                 .map(Converter::convertToDtoLogin);
     }
 
@@ -169,7 +162,6 @@ public class UserManagementService {
 
         return userRepository.findByEmail(email)
                 .switchIfEmpty(Mono.error(new EmailNotFoundException("Email not found", email)))
-                .onErrorResume(e -> Mono.error(new EmailNotFoundException("Error getting user by email:, Email not found", email)))
                 .map(Converter::convertToDtoLogin);
 
     }
@@ -179,11 +171,6 @@ public class UserManagementService {
     /**
      * Updates the latest access timestamp for a user based on a login event.
      * This method is typically called when a user successfully logs in.
-     *
-     * @param userUuid  the UUID of the user whose latest access is being updated
-     * @param loginTime the timestamp of the login event
-     * @return a Mono that completes when the update is successful
-     * @throws org.springframework.dao.DataAccessException if the update fails due to a database error
      */
     public Mono<Void> updateLatestAccess(String userUuid, Instant loginTime) {
 

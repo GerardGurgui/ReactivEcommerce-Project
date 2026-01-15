@@ -16,7 +16,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
@@ -40,6 +42,8 @@ public class User {
     private String uuid;
 
     @Field(name = "username")
+    @NotBlank
+    @Size(min = 3, max = 30)
     @Indexed(unique = true)
     private String username;
 
@@ -54,12 +58,13 @@ public class User {
     private String phone;
 
     @Field(name = "email")
+    @NotBlank
+    @Email
     @Indexed(unique = true)
     private String email;
 
     @JsonIgnore
     @Field(name = "password")
-    @Indexed(unique = true)
     private String password;
 
     @Field(name = "total_purchase")
