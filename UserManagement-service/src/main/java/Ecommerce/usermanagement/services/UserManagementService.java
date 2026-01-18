@@ -39,6 +39,8 @@ public class UserManagementService {
     }
 
     //// --->  CRUD
+    ///  * Security note: Rate limiting is enforced at the API Gateway level
+    ///  * (5 requests/second per IP) to prevent user enumeration attacks.
     public Mono<UserCreatedResponseDto> createUser(UserRegisterInternalDto userInputDto) {
 
         return checkUsername(userInputDto.getUsername())
@@ -178,7 +180,13 @@ public class UserManagementService {
         Update update = new Update().set("latest_access", loginTime);
 
         return reactiveMongoTemplate.updateFirst(query, update, User.class)
-                .then();
+                .doOnNext(result -> {
+                    if (result.getModifiedCount() == 0){ // if no modification was made log a warning
+                        LOGGER.warning("Failed to updated latestAccess for user: " + userUuid);
+                    } else {
+                        LOGGER.info("Successfully updated latestAccess for user " + userUuid);
+                    }
+                }).then();
     }
 }
 

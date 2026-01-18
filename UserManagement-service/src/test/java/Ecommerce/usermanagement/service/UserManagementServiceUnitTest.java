@@ -8,23 +8,29 @@ import Ecommerce.usermanagement.exceptions.UserNotFoundException;
 import Ecommerce.usermanagement.exceptions.UsernameAlreadyExistsException;
 import Ecommerce.usermanagement.repository.IUsersRepository;
 import Ecommerce.usermanagement.services.UserManagementService;
+import com.mongodb.client.result.UpdateResult;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class UserManagementServiceUnitTest {
@@ -42,6 +48,7 @@ public class UserManagementServiceUnitTest {
     private UserRegisterInternalDto userDtoTest;
     private User userTest;
     private List<String> roles;
+    private Instant testLoginTime;
 
     @BeforeEach
     public void setup() {
@@ -61,6 +68,8 @@ public class UserManagementServiceUnitTest {
         roles.add(userDtoTest.getRole());
         userTest.setRoles(roles);
 
+        testLoginTime = Instant.now();
+
     }
 
     @Test
@@ -75,9 +84,13 @@ public class UserManagementServiceUnitTest {
                     assertEquals("abcd1234", response.getUuid());
                     assertEquals("testuser", response.getUsername());
                     assertEquals("testuser@test.com", response.getEmail());
-
+                    assertNotNull(response.getCreatedAt());
                 })
                 .verifyComplete();
+
+        verify(userRepository, times(1)).existsByUsername("testuser");
+        verify(userRepository, times(1)).existsByEmail("testuser@test.com");
+        verify(userRepository, times(1)).save(any(User.class));
     }
 
     @Test
@@ -88,6 +101,10 @@ public class UserManagementServiceUnitTest {
         StepVerifier.create(userMngservice.createUser(userDtoTest))
                 .expectError(UsernameAlreadyExistsException.class)
                 .verify();
+
+        verify(userRepository, times(1)).existsByUsername("testuser");
+        verify(userRepository, never()).existsByEmail(anyString());
+        verify(userRepository, never()).save(any(User.class));
 
     }
 
@@ -100,6 +117,10 @@ public class UserManagementServiceUnitTest {
         StepVerifier.create(userMngservice.createUser(userDtoTest))
                 .expectError(EmailAlreadyExistsException.class)
                 .verify();
+
+        verify(userRepository, times(1)).existsByUsername("testuser");
+        verify(userRepository, times(1)).existsByEmail("testuser@test.com");
+        verify(userRepository, never()).save(any(User.class));
 
     }
 
@@ -116,6 +137,10 @@ public class UserManagementServiceUnitTest {
         StepVerifier.create(userMngservice.createUser(userDtoTest))
                 .expectError(RuntimeException.class)
                 .verify();
+
+        verify(userRepository, times(1)).existsByUsername("testuser");
+        verify(userRepository, times(1)).existsByEmail("testuser@test.com");
+        verify(userRepository, times(1)).save(any(User.class));
     }
 
 
@@ -207,4 +232,49 @@ public class UserManagementServiceUnitTest {
                 .verify();
     }
 
+    // --> UPDATE LATEST ACCESS TEST
+
+    @Test
+    @DisplayName("updateLatestAccess - Success")
+    public void testUpdateLatestAccess_Success(){
+
+        UpdateResult updateResult = mock(UpdateResult.class);
+        when(updateResult.getModifiedCount()).thenReturn(1L);
+
+        when(
+            reactiveMongoTemplate.updateFirst(
+            any(Query.class),
+            any(Update.class),
+            eq(User.class)
+            )
+        )
+        .thenReturn(Mono.just(updateResult));
+
+        StepVerifier.create(userMngservice.updateLatestAccess("abcd1234", testLoginTime))
+                .verifyComplete();
+
+        verify(reactiveMongoTemplate, times(1))
+                .updateFirst(any(Query.class), any(Update.class), eq(User.class));
+
+    }
+
+    @Test
+    @DisplayName("updateLatestAccess - User Not Found")
+    public void testUpdateLatestAccess_UserNotFound() {
+
+        UpdateResult updateResult = mock(UpdateResult.class);
+        when(updateResult.getModifiedCount()).thenReturn(0L);  // ← NO modifications made
+
+        when(reactiveMongoTemplate.updateFirst(any(Query.class), any(Update.class), eq(User.class)))
+                .thenReturn(Mono.just(updateResult));
+
+        StepVerifier.create(userMngservice.updateLatestAccess("nonexistent", testLoginTime))
+                .verifyComplete();  // Completa pero loggea warning, no se actualiza nada
+
+        verify(reactiveMongoTemplate, times(1))
+                .updateFirst(any(Query.class), any(Update.class), eq(User.class));
+    }
+
 }
+
+
