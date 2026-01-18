@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.logging.Logger;
 
@@ -125,7 +126,7 @@ public class CartService {
                 .map(cart -> {
                     cart.setUserUuid(userUuid);
                     cart.setTotalProducts(0);
-                    cart.setTotalPrice(0.0);
+                    cart.setTotalPrice(BigDecimal.valueOf(0.0));
                     cart.setStatus(CartStatus.ACTIVE);
                     cart.setCreatedAt(LocalDateTime.now());
                     return cart;

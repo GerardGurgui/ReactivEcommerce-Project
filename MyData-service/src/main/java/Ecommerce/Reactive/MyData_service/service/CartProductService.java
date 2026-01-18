@@ -34,7 +34,6 @@ public class CartProductService {
     private final SecurityUtils securityUtils;
     private final ProductCatalogConnectorService productCatalogConnectorService;
     private final TransactionalOperator transactionalOperator;
-    private final IConverter iConverter;
 
     @Value("${cart.product.max-quantity}")
     private Integer maxQuantityPerProduct;
@@ -43,14 +42,12 @@ public class CartProductService {
                               ICartRepository cartRepository,
                               SecurityUtils securityUtils,
                               ProductCatalogConnectorService productCatalogConnectorService,
-                              TransactionalOperator transactionalOperator,
-                              IConverter iConverter) {
+                              TransactionalOperator transactionalOperator) {
         this.productCatalogConnectorService = productCatalogConnectorService;
         this.cartProductsRepository = cartProductsRepository;
         this.cartRepository = cartRepository;
         this.securityUtils = securityUtils;
         this.transactionalOperator = transactionalOperator;
-        this.iConverter = iConverter;
     }
 
     // --> PENDIENTE: IMPLEMENTAR IDEMPOTENCY KEY CUANDO SE COMPLETE TRANSACCION CON CHECKOUT
@@ -89,7 +86,7 @@ public class CartProductService {
                                 Mono.just(buildProductNotExistsInCartResponse(cartId, productId))
                         ))
                 )
-                .as(transactionalOperator::transactional)
+                .as(transactionalOperator::transactional) // Apply transactional operator to ensure atomicity of the operations
                 .retryWhen(Retry.backoff(3, Duration.ofMillis(100))
                         .filter(throwable -> throwable instanceof OptimisticLockingFailureException))
                 .doOnSuccess(response -> log.info("Product {} deleted from cart {} successfully", productId, cartId))
