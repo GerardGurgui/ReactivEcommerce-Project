@@ -70,6 +70,12 @@ public class SecurityConfig {
         return combinedValidators;
     }
 
+    private static final String[] PUBLIC_ENDPOINTS = {
+            "/auth/**",
+            "/api/usermanagement/users/**",
+            "/api/productcatalog/**",
+    };
+
 
     // Define the security web filter chain for handling HTTP security at api gateway level
     @Bean
@@ -81,9 +87,7 @@ public class SecurityConfig {
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .authorizeExchange(auth -> auth
-                        .pathMatchers("/auth/**").permitAll()
-                        .pathMatchers("/public/**").permitAll()
-                        .pathMatchers("/api/productcatalog/**").permitAll()
+                        .pathMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

@@ -9,11 +9,12 @@ import java.time.Instant;
 @Getter
 @Setter
 @Builder
-public class UserCreatedResponseDto {
+// No uuid included for privacy reasons, public profile info only
+public class UserProfileDto {
 
-    private String uuid;
     private String username;
     private String email;
-    private Instant createdAt;
+    private String name;
+    private Instant registeredAt;
 
 }

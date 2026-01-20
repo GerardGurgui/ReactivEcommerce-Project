@@ -29,6 +29,7 @@ public class UserRegistrationUseCase {
 
     public Mono<RegistrationResponseDto> register(RegisterRequestDto dto, String clientIp) {
 
+        // Hash the password at this layer before sending to UserMng Service, to avoid transmitting plain text passwords
         String passwordHash = passwordEncoder.encode(dto.getPassword());
 
         UserRegisterInternalDto internalDto = UserRegisterInternalDto.builder()
@@ -48,7 +49,7 @@ public class UserRegistrationUseCase {
                 .map(responseDto -> {
                     logger.info("User registered successfully: " + responseDto.getUuid());
                     return RegistrationResponseDto.builder()
-                            .message("User" + responseDto.getUsername() + " registered successfully")
+                            .message("User: " + responseDto.getUsername() + " registered successfully")
                             .uuid(responseDto.getUuid())
                             .username(dto.getUsername())
                             .email(dto.getEmail())

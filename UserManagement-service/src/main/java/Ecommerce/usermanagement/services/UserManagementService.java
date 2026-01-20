@@ -1,13 +1,15 @@
 package Ecommerce.usermanagement.services;
 
 import Ecommerce.usermanagement.document.User;
-import Ecommerce.usermanagement.dto.input.UserRegisterInternalDto;
-import Ecommerce.usermanagement.dto.output.UserCreatedResponseDto;
+import Ecommerce.usermanagement.dto.input.UserRegisterDto;
+import Ecommerce.usermanagement.dto.output.UserProfileDto;
+import Ecommerce.usermanagement.dto.output.UserOwnProfileDto;
 import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;
 import Ecommerce.usermanagement.dto.output.UserLoginDto;
 import Ecommerce.usermanagement.exceptions.*;
 import Ecommerce.usermanagement.mapping.Converter;
 import Ecommerce.usermanagement.repository.IUsersRepository;
+import Ecommerce.usermanagement.security.config.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -28,20 +30,21 @@ public class UserManagementService {
 
     private final IUsersRepository userRepository;
     private final ReactiveMongoTemplate reactiveMongoTemplate;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final SecurityUtils securityUtils;
 
     public UserManagementService(IUsersRepository userRepository,
-                                 ReactiveMongoTemplate reactiveMongoTemplate) {
+                                 ReactiveMongoTemplate reactiveMongoTemplate,
+                                 SecurityUtils securityUtils) {
         this.userRepository = userRepository;
         this.reactiveMongoTemplate = reactiveMongoTemplate;
+        this.securityUtils = securityUtils;
     }
+
 
     //// --->  CRUD
     ///  * Security note: Rate limiting is enforced at the API Gateway level
     ///  * (5 requests/second per IP) to prevent user enumeration attacks.
-    public Mono<UserCreatedResponseDto> createUser(UserRegisterInternalDto userInputDto) {
+    public Mono<UserOwnProfileDto> createUser(UserRegisterDto userInputDto) {
 
         return checkUsername(userInputDto.getUsername())
                 .then(Mono.defer(() -> checkEmail(userInputDto.getEmail())))
@@ -80,46 +83,57 @@ public class UserManagementService {
 
     /// //FALTA UPDATE PARA QUE EL USUARIO PUEDA MODIFICAR SUS DATOS
 
-    private UserCreatedResponseDto toUserCreatedDto(User user) {
+    private UserOwnProfileDto toUserCreatedDto(User user) {
 
-        return UserCreatedResponseDto.builder()
+        return UserOwnProfileDto.builder()
                 .uuid(user.getUuid())
                 .username(user.getUsername())
+                .name(user.getName())
                 .email(user.getEmail())
-                .createdAt(user.getLoginDate())
+                .phone(user.getPhone())
+                .registeredAt(user.getRegisteredAt())
+                .roles(user.getRoles())
+                .totalSpent(user.getTotalSpent())
+                .totalPurchase(user.getTotalPurchase())
                 .build();
     }
 
-    /// /GET
-    public Mono<UserCreatedResponseDto> getUserByUuid(String userUuidDto) {
+    /// /GETS
+    public Mono<UserOwnProfileDto> getMyProfileFromJwt() {
+
+        return securityUtils.extractUserUuidFromJwt()
+                .flatMap(this::getMyProfile);
+    }
+
+    public Mono<UserOwnProfileDto> getMyProfile(String userUuidDto) {
 
         return userRepository.findByUuid(userUuidDto)
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User with Uuid: " + userUuidDto + " not found")))
-                .map(Converter::convertToDtoBasic);
+                .map(Converter::convertToOwnProfileDto);
     }
 
 
-    public Mono<UserInfoOutputDto> getUserInfoByUuid(String userUuidDto) {
+    public Mono<UserProfileDto> getUserProfile(String userUuidDto) {
 
         return userRepository.findByUuid(userUuidDto)
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User with Uuid: " + userUuidDto + " not found")))
-                .map(Converter::convertToDtoInfo);
+                .map(Converter::convertToUserProfileDto);
     }
 
     //without password
-    public Mono<UserCreatedResponseDto> getUserByUserName(String userName) {
+    public Mono<UserProfileDto> getUserByUserName(String userName) {
 
         return userRepository.findByUsername(userName)
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User with username: " + userName + " not found")))
-                .map(Converter::convertToDtoBasic);
+                .map(Converter::convertToUserProfileDto);
     }
 
     //without password
-    public Mono<UserCreatedResponseDto> getUserByEmail(String email) {
+    public Mono<UserProfileDto> getUserByEmail(String email) {
 
         return userRepository.findByEmail(email)
                 .switchIfEmpty(Mono.error(new EmailNotFoundException("Email not found", email)))
-                .map(Converter::convertToDtoBasic);
+                .map(Converter::convertToUserProfileDto);
     }
 
 
