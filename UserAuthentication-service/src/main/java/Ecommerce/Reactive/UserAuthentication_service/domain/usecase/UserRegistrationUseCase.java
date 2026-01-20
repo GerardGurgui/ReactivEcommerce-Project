@@ -48,7 +48,7 @@ public class UserRegistrationUseCase {
                 .map(responseDto -> {
                     logger.info("User registered successfully: " + responseDto.getUuid());
                     return RegistrationResponseDto.builder()
-                            .message("User" + responseDto.getUsername() + " registered successfully")
+                            .message("User: " + responseDto.getUsername() + " registered successfully")
                             .uuid(responseDto.getUuid())
                             .username(dto.getUsername())
                             .email(dto.getEmail())

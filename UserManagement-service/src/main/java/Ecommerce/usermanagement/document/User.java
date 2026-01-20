@@ -1,6 +1,5 @@
 package Ecommerce.usermanagement.document;
 
-import Ecommerce.usermanagement.dto.cart.CartLinkUserDto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.AllArgsConstructor;
@@ -20,7 +19,6 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -67,14 +65,15 @@ public class User {
     @Field(name = "password")
     private String password;
 
+    //ACTUALIZAR DATOS CUANDO COMPELTE EL SISTEMA DE PAGOS
     @Field(name = "total_purchase")
     private Long totalPurchase;
 
     @Field(name = "total_spent")
     private int totalSpent;
 
-    @Field(name = "login_date")
-    private Instant loginDate;
+    @Field(name = "register_date")
+    private Instant registeredAt;
 
     @Field(name = "latest_access")
     private Instant latestAccess;

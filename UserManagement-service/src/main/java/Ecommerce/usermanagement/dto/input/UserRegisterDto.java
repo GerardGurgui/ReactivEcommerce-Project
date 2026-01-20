@@ -1,19 +1,17 @@
 package Ecommerce.usermanagement.dto.input;
 
-import Ecommerce.usermanagement.document.Roles;
 import lombok.*;
 
 import java.time.Instant;
-import java.util.Set;
 
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRegisterInternalDto {
+public class UserRegisterDto {
 
-    // identifyers
+    // identifyer
     private String uuid;
 
     // Credentiales
@@ -30,6 +28,6 @@ public class UserRegisterInternalDto {
     private String registrationIp;
     private Instant registeredAt;
 
-
-    private String role; // "USER", "ADMIN", etc.
+    // Role
+    private String role;
 }

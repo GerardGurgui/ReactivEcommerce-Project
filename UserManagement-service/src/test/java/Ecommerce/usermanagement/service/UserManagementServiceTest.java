@@ -1,7 +1,7 @@
 package Ecommerce.usermanagement.service;
 
 import Ecommerce.usermanagement.document.User;
-import Ecommerce.usermanagement.dto.input.UserRegisterInternalDto;
+import Ecommerce.usermanagement.dto.input.UserRegisterDto;
 import Ecommerce.usermanagement.exceptions.EmailAlreadyExistsException;
 import Ecommerce.usermanagement.exceptions.EmailNotFoundException;
 import Ecommerce.usermanagement.exceptions.UserNotFoundException;
@@ -33,7 +33,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class UserManagementServiceUnitTest {
+public class UserManagementServiceTest {
 
 
     @Mock
@@ -45,7 +45,7 @@ public class UserManagementServiceUnitTest {
     @InjectMocks
     private UserManagementService userMngservice;
 
-    private UserRegisterInternalDto userDtoTest;
+    private UserRegisterDto userDtoTest;
     private User userTest;
     private List<String> roles;
     private Instant testLoginTime;
@@ -53,7 +53,7 @@ public class UserManagementServiceUnitTest {
     @BeforeEach
     public void setup() {
 
-        userDtoTest = new UserRegisterInternalDto();
+        userDtoTest = new UserRegisterDto();
         userDtoTest.setUuid("abcd1234");
         userDtoTest.setUsername("testuser");
         userDtoTest.setEmail("testuser@test.com");
@@ -63,6 +63,7 @@ public class UserManagementServiceUnitTest {
         userTest.setUuid(userDtoTest.getUuid());
         userTest.setUsername(userDtoTest.getUsername());
         userTest.setEmail(userDtoTest.getEmail());
+        userTest.setRegisteredAt(Instant.now());
 
         roles = new ArrayList<>();
         roles.add(userDtoTest.getRole());
@@ -84,7 +85,8 @@ public class UserManagementServiceUnitTest {
                     assertEquals("abcd1234", response.getUuid());
                     assertEquals("testuser", response.getUsername());
                     assertEquals("testuser@test.com", response.getEmail());
-                    assertNotNull(response.getCreatedAt());
+                    assertNotNull(response.getRegisteredAt());
+                    assertNotNull(response.getRoles());
                 })
                 .verifyComplete();
 

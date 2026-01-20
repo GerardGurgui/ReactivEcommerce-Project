@@ -1,8 +1,9 @@
 package Ecommerce.usermanagement.mapping;
 
 import Ecommerce.usermanagement.document.User;
-import Ecommerce.usermanagement.dto.input.UserRegisterInternalDto;
-import Ecommerce.usermanagement.dto.output.UserCreatedResponseDto;
+import Ecommerce.usermanagement.dto.input.UserRegisterDto;
+import Ecommerce.usermanagement.dto.output.UserProfileDto;
+import Ecommerce.usermanagement.dto.output.UserOwnProfileDto;
 import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;
 import Ecommerce.usermanagement.dto.output.UserLoginDto;
 import org.springframework.beans.BeanUtils;
@@ -14,7 +15,7 @@ import java.util.List;
 @Component
 public class Converter {
 
-    public static User convertFromDtoToUser(UserRegisterInternalDto userDto) {
+    public static User convertFromDtoToUser(UserRegisterDto userDto) {
 
         User user = new User();
 
@@ -26,7 +27,7 @@ public class Converter {
         user.setLastname(userDto.getLastName());
         user.setPhone(userDto.getPhone());
         //timestamps
-        user.setLoginDate(userDto.getRegisteredAt());
+        user.setRegisteredAt(userDto.getRegisteredAt());
         user.setLatestAccess(userDto.getRegisteredAt());
         //roles
         user.setRoles(List.of(userDto.getRole()));
@@ -41,11 +42,25 @@ public class Converter {
 
     }
 
-    public static UserCreatedResponseDto convertToDtoBasic(User user) {
+    public static UserProfileDto convertToUserProfileDto(User user) {
 
-        UserCreatedResponseDto userDto = new UserCreatedResponseDto();
+        UserProfileDto userDto = new UserProfileDto();
 
         BeanUtils.copyProperties(user, userDto);
+
+        return userDto;
+    }
+
+    public static UserOwnProfileDto convertToOwnProfileDto(User user) {
+
+        UserOwnProfileDto userDto = new UserOwnProfileDto();
+
+        BeanUtils.copyProperties(user, userDto);
+
+        //roles
+        if(user.getRoles() != null){
+            userDto.setRoles(new ArrayList<>(user.getRoles()));
+        }
 
         return userDto;
     }
@@ -61,8 +76,6 @@ public class Converter {
             userDto.setRoles(new ArrayList<>(user.getRoles()));
         }
 
-        //carritos
-
         return userDto;
     }
 
@@ -76,8 +89,6 @@ public class Converter {
         if(user.getRoles() != null){
             userDto.setRoles(new ArrayList<>(user.getRoles()));
         }
-
-        //carritos
 
         return userDto;
     }

@@ -63,7 +63,7 @@ public class SecurityConfig {
         // 3. Default validator (checks exp, nbf, etc)
         OAuth2TokenValidator<Jwt> combinedValidators = getJwtOAuth2TokenValidator();
 
-        // 6. Apply validators
+        // 5. Apply validators
         decoder.setJwtValidator(combinedValidators);
 
         LOGGER.info("USER MNG SERVICE - JWT Decoder configured with custom validators correctly");
@@ -89,6 +89,7 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_ENDPOINTS = {
             "/auth/**",
+            "/api/usermanagement/users/**"
     };
 
     // Internal endpoints used by other services, requires api key authentication

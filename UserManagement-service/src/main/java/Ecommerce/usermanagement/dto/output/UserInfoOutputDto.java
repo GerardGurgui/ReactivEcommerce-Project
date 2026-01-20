@@ -3,10 +3,7 @@ package Ecommerce.usermanagement.dto.output;
 
 import Ecommerce.usermanagement.document.Roles;
 import Ecommerce.usermanagement.dto.cart.CartDto;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -16,6 +13,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Getter
 @Setter
+@Builder
 public class UserInfoOutputDto {
 
     private String username;

@@ -1,8 +1,8 @@
 package Ecommerce.usermanagement.controller;
 
-import Ecommerce.usermanagement.dto.cart.CartLinkUserDto;
-import Ecommerce.usermanagement.dto.input.UserRegisterInternalDto;
-import Ecommerce.usermanagement.dto.output.UserCreatedResponseDto;
+import Ecommerce.usermanagement.dto.input.UserRegisterDto;
+import Ecommerce.usermanagement.dto.output.UserProfileDto;
+import Ecommerce.usermanagement.dto.output.UserOwnProfileDto;
 import Ecommerce.usermanagement.dto.output.UserInfoOutputDto;
 import Ecommerce.usermanagement.dto.output.UserLoginDto;
 import Ecommerce.usermanagement.services.UserManagementService;
@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -18,8 +19,8 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/api/usermanagement")
 @Validated
+@RequestMapping("/api/usermanagement")
 public class UserManagementController {
 
     private final UserManagementService userManagementService;
@@ -31,44 +32,43 @@ public class UserManagementController {
 
 
     // GETS
-    @GetMapping("/get/userBasic/{uuid}")
-    public Mono<ResponseEntity<UserCreatedResponseDto>> getUserByUuidBasic(@PathVariable String uuid) {
+    //--> Basic User Info - profile
+    @GetMapping("/users/me")
+    @PreAuthorize("isAuthenticated()") // Get own profile from JWT token, only if authenticated
+    public Mono<ResponseEntity<UserOwnProfileDto>> getMyProfile() {
 
-        return userManagementService.getUserByUuid(uuid)
-                .map(user -> ResponseEntity.ok(user))
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+        return userManagementService.getMyProfileFromJwt()
+                .map(ResponseEntity::ok);
     }
 
-    @GetMapping("/get/userInfo/{uuid}")
-    public Mono<ResponseEntity<UserInfoOutputDto>> getUserInfoByUuid(@PathVariable String uuid) {
+    @GetMapping("/users/uuid/{uuid}")
+    public Mono<ResponseEntity<UserProfileDto>> getUserProfile(@PathVariable String uuid) {
 
-        return userManagementService.getUserInfoByUuid(uuid)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+        return userManagementService.getUserProfile(uuid)
+                .map(ResponseEntity::ok);
     }
 
-    @GetMapping("/get/userByEmail/{email}")
-    public Mono<ResponseEntity<UserCreatedResponseDto>> getUserByEmail(@PathVariable String email) {
+    // INTERNAL USE ONLY OR ADMIN ROLE
+    @GetMapping("/users/email/{email}")
+    public Mono<ResponseEntity<UserProfileDto>> getUserByEmail(@PathVariable String email) {
 
         return userManagementService.getUserByEmail(email)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok);
     }
 
-    @GetMapping("/get/userByUserName/{username}")
-    public Mono<ResponseEntity<UserCreatedResponseDto>> getUserBasicByUsername(@PathVariable String username) {
+    @GetMapping("/users/username/{username}")
+    public Mono<ResponseEntity<UserProfileDto>> getUserByUsername(@PathVariable String username) {
 
         return userManagementService.getUserByUserName(username)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok);
     }
 
-    @GetMapping("/get/allUsersInfo")
+    //FALTA PAGINACION Y FILTROS, SOLO ADMINS
+    @GetMapping("/users/list")
     public Mono<ResponseEntity<List<UserInfoOutputDto>>> getAllUsersInfoAsList() {
 
         return userManagementService.getAllUsersInfo()
-                .map(users -> ResponseEntity.ok(users))
-                .defaultIfEmpty(ResponseEntity.noContent().build());
+                .map(users -> ResponseEntity.ok(users));
     }
 
 
@@ -78,21 +78,19 @@ public class UserManagementController {
     public Mono<ResponseEntity<UserLoginDto>> getUserLoginByUsername(@RequestParam String username) {
 
         return userManagementService.getUserLoginByUserName(username)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok);
     }
 
     @GetMapping("/internal/getUserLoginByEmail")
     public Mono<ResponseEntity<UserLoginDto>> getUserLoginByEmail(@RequestParam String email) {
 
         return userManagementService.getUserLoginByEmail(email)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok);
     }
 
     //---> Register
     @PostMapping("/internal/addUser")
-    public Mono<ResponseEntity<UserCreatedResponseDto>> createAndSaveUser(@Valid @RequestBody UserRegisterInternalDto userInputDto) {
+    public Mono<ResponseEntity<UserOwnProfileDto>> createAndSaveUser(@Valid @RequestBody UserRegisterDto userInputDto) {
 
         return userManagementService.createUser(userInputDto)
                 .map(user -> ResponseEntity.status(HttpStatus.CREATED).body(user));
