@@ -9,6 +9,7 @@ import Ecommerce.usermanagement.dto.output.UserLoginDto;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,6 +38,9 @@ public class Converter {
         user.setEnabled(true);
         user.setAccountNonExpired(true);
         user.setAccountNonLocked(true);
+        // purchase stats(initially zero for new user)
+        user.setTotalPurchase(0L);
+        user.setTotalSpent(BigDecimal.ZERO);
 
         return user;
 

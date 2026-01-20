@@ -18,6 +18,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -70,7 +71,7 @@ public class User {
     private Long totalPurchase;
 
     @Field(name = "total_spent")
-    private int totalSpent;
+    private BigDecimal totalSpent;
 
     @Field(name = "register_date")
     private Instant registeredAt;

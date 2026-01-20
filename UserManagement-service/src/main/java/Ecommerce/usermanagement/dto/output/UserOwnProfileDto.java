@@ -3,6 +3,7 @@ package Ecommerce.usermanagement.dto.output;
 import Ecommerce.usermanagement.document.Roles;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,13 +16,19 @@ import java.util.List;
 public class UserOwnProfileDto {
 
     private String uuid;
+    //personal info
     private String username;
     private String name;
     private String email;
     private String phone;
+    //additional info
     private Instant registeredAt;
     private String bio;
     private String profilePictureUrl;
+    //roles
     private List<String> roles;
+    //purchase statistics
+    private Long totalPurchase;
+    private BigDecimal totalSpent;
 
 }

@@ -93,6 +93,8 @@ public class UserManagementService {
                 .phone(user.getPhone())
                 .registeredAt(user.getRegisteredAt())
                 .roles(user.getRoles())
+                .totalSpent(user.getTotalSpent())
+                .totalPurchase(user.getTotalPurchase())
                 .build();
     }
 
