@@ -15,6 +15,6 @@ public class UserProfileDto {
     private String username;
     private String email;
     private String name;
-    private Instant createdAt;
+    private Instant registeredAt;
 
 }

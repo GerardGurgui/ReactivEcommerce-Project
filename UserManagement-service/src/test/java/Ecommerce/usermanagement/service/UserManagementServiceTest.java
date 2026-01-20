@@ -2,15 +2,18 @@ package Ecommerce.usermanagement.service;
 
 import Ecommerce.usermanagement.document.User;
 import Ecommerce.usermanagement.dto.input.UserRegisterDto;
+import Ecommerce.usermanagement.dto.output.UserOwnProfileDto;
 import Ecommerce.usermanagement.exceptions.EmailAlreadyExistsException;
 import Ecommerce.usermanagement.exceptions.EmailNotFoundException;
 import Ecommerce.usermanagement.exceptions.UserNotFoundException;
 import Ecommerce.usermanagement.exceptions.UsernameAlreadyExistsException;
 import Ecommerce.usermanagement.repository.IUsersRepository;
+import Ecommerce.usermanagement.security.config.SecurityUtils;
 import Ecommerce.usermanagement.services.UserManagementService;
 import com.mongodb.client.result.UpdateResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -42,11 +45,17 @@ public class UserManagementServiceTest {
     @Mock
     private ReactiveMongoTemplate reactiveMongoTemplate;
 
+    @Mock
+    private SecurityUtils securityUtils;
+
     @InjectMocks
     private UserManagementService userMngservice;
 
     private UserRegisterDto userDtoTest;
+    //to check created user same as user register dto
     private User userTest;
+    //to check get my profile
+    private UserOwnProfileDto userOwnProfileDtoTest;
     private List<String> roles;
     private Instant testLoginTime;
 
@@ -65,6 +74,13 @@ public class UserManagementServiceTest {
         userTest.setEmail(userDtoTest.getEmail());
         userTest.setRegisteredAt(Instant.now());
 
+        userOwnProfileDtoTest = new UserOwnProfileDto();
+        userOwnProfileDtoTest.setUuid(userTest.getUuid());
+        userOwnProfileDtoTest.setUsername(userTest.getUsername());
+        userOwnProfileDtoTest.setEmail(userTest.getEmail());
+        userOwnProfileDtoTest.setRegisteredAt(userTest.getRegisteredAt());
+        userOwnProfileDtoTest.setRoles(roles);
+
         roles = new ArrayList<>();
         roles.add(userDtoTest.getRole());
         userTest.setRoles(roles);
@@ -73,166 +89,268 @@ public class UserManagementServiceTest {
 
     }
 
-    @Test
-    public void testCreateUser_Success() {
+    // --> CREATE USER TESTS
 
-        when(userRepository.existsByUsername(userDtoTest.getUsername())).thenReturn(Mono.just(false));
-        when(userRepository.existsByEmail(userDtoTest.getEmail())).thenReturn(Mono.just(false));
-        when(userRepository.save(any(User.class))).thenReturn(Mono.just(userTest));
+    @Nested
+    @DisplayName("Create User Tests")
+    class CreateUserTests {
 
-        StepVerifier.create(userMngservice.createUser(userDtoTest))
-                .assertNext(response -> {
-                    assertEquals("abcd1234", response.getUuid());
-                    assertEquals("testuser", response.getUsername());
-                    assertEquals("testuser@test.com", response.getEmail());
-                    assertNotNull(response.getRegisteredAt());
-                    assertNotNull(response.getRoles());
-                })
-                .verifyComplete();
+        @Test
+        void testCreateUser_Success() {
 
-        verify(userRepository, times(1)).existsByUsername("testuser");
-        verify(userRepository, times(1)).existsByEmail("testuser@test.com");
-        verify(userRepository, times(1)).save(any(User.class));
-    }
+            when(userRepository.existsByUsername(userDtoTest.getUsername())).thenReturn(Mono.just(false));
+            when(userRepository.existsByEmail(userDtoTest.getEmail())).thenReturn(Mono.just(false));
+            when(userRepository.save(any(User.class))).thenReturn(Mono.just(userTest));
 
-    @Test
-    public void testCreateUser_UsernameAlreadyExists(){
+            StepVerifier.create(userMngservice.createUser(userDtoTest))
+                    .assertNext(response -> {
+                        assertEquals("abcd1234", response.getUuid());
+                        assertEquals("testuser", response.getUsername());
+                        assertEquals("testuser@test.com", response.getEmail());
+                        assertNotNull(response.getRegisteredAt());
+                        assertNotNull(response.getRoles());
+                    })
+                    .verifyComplete();
 
-        when(userRepository.existsByUsername(userDtoTest.getUsername())).thenReturn(Mono.just(true));
+            verify(userRepository, times(1)).existsByUsername("testuser");
+            verify(userRepository, times(1)).existsByEmail("testuser@test.com");
+            verify(userRepository, times(1)).save(any(User.class));
+        }
 
-        StepVerifier.create(userMngservice.createUser(userDtoTest))
-                .expectError(UsernameAlreadyExistsException.class)
-                .verify();
+        @Test
+        void testCreateUser_UsernameAlreadyExists(){
 
-        verify(userRepository, times(1)).existsByUsername("testuser");
-        verify(userRepository, never()).existsByEmail(anyString());
-        verify(userRepository, never()).save(any(User.class));
+            when(userRepository.existsByUsername(userDtoTest.getUsername())).thenReturn(Mono.just(true));
 
-    }
+            StepVerifier.create(userMngservice.createUser(userDtoTest))
+                    .expectError(UsernameAlreadyExistsException.class)
+                    .verify();
 
-    @Test
-    public void testCreateUser_EmailAlreadyExists(){
+            verify(userRepository, times(1)).existsByUsername("testuser");
+            verify(userRepository, never()).existsByEmail(anyString());
+            verify(userRepository, never()).save(any(User.class));
 
-        when(userRepository.existsByUsername(userDtoTest.getUsername())).thenReturn(Mono.just(false));
-        when(userRepository.existsByEmail(userDtoTest.getEmail())).thenReturn(Mono.just(true));
+        }
 
-        StepVerifier.create(userMngservice.createUser(userDtoTest))
-                .expectError(EmailAlreadyExistsException.class)
-                .verify();
+        @Test
+        void testCreateUser_EmailAlreadyExists(){
 
-        verify(userRepository, times(1)).existsByUsername("testuser");
-        verify(userRepository, times(1)).existsByEmail("testuser@test.com");
-        verify(userRepository, never()).save(any(User.class));
+            when(userRepository.existsByUsername(userDtoTest.getUsername())).thenReturn(Mono.just(false));
+            when(userRepository.existsByEmail(userDtoTest.getEmail())).thenReturn(Mono.just(true));
 
-    }
+            StepVerifier.create(userMngservice.createUser(userDtoTest))
+                    .expectError(EmailAlreadyExistsException.class)
+                    .verify();
 
-    @Test
-    public void testCreateUser_DatabaseError() {
+            verify(userRepository, times(1)).existsByUsername("testuser");
+            verify(userRepository, times(1)).existsByEmail("testuser@test.com");
+            verify(userRepository, never()).save(any(User.class));
 
-        when(userRepository.existsByUsername(userDtoTest.getUsername()))
-                .thenReturn(Mono.just(false));
-        when(userRepository.existsByEmail(userDtoTest.getEmail()))
-                .thenReturn(Mono.just(false));
-        when(userRepository.save(any(User.class)))
-                .thenReturn(Mono.error(new RuntimeException("Database connection failed")));
+        }
 
-        StepVerifier.create(userMngservice.createUser(userDtoTest))
-                .expectError(RuntimeException.class)
-                .verify();
+        @Test
+        void testCreateUser_DatabaseError() {
 
-        verify(userRepository, times(1)).existsByUsername("testuser");
-        verify(userRepository, times(1)).existsByEmail("testuser@test.com");
-        verify(userRepository, times(1)).save(any(User.class));
+            when(userRepository.existsByUsername(userDtoTest.getUsername()))
+                    .thenReturn(Mono.just(false));
+            when(userRepository.existsByEmail(userDtoTest.getEmail()))
+                    .thenReturn(Mono.just(false));
+            when(userRepository.save(any(User.class)))
+                    .thenReturn(Mono.error(new RuntimeException("Database connection failed")));
+
+            StepVerifier.create(userMngservice.createUser(userDtoTest))
+                    .expectError(RuntimeException.class)
+                    .verify();
+
+            verify(userRepository, times(1)).existsByUsername("testuser");
+            verify(userRepository, times(1)).existsByEmail("testuser@test.com");
+            verify(userRepository, times(1)).save(any(User.class));
+        }
+
     }
 
 
     // --> GETS
 
+    @Nested
+    @DisplayName("Get My Profile From JWT Tests")
+    class GetMyProfileFromJwtTests {
 
-    @Test
-    public void testGetUserLoginByUsername_Success() {
+        @Test
+        @DisplayName("Success - Get own profile from JWT")
+        void getMyProfileFromJwt_Success() {
+            when(securityUtils.extractUserUuidFromJwt()).thenReturn(Mono.just("abcd1234"));
+            when(userRepository.findByUuid("abcd1234")).thenReturn(Mono.just(userTest));
 
-        User user = new User();
-        user.setUsername("testuser");
-        user.setEmail("test@test.com");
-        user.setPassword("hashedPassword123");
+            StepVerifier.create(userMngservice.getMyProfileFromJwt())
+                    .assertNext(response -> {
+                        assertEquals("abcd1234", response.getUuid());
+                        assertEquals("testuser", response.getUsername());
+                        assertEquals("testuser@test.com", response.getEmail());
+                        assertNotNull(response.getRegisteredAt());
+                        assertNotNull(response.getRoles());
+                    })
+                    .verifyComplete();
 
-        when(userRepository.findByUsername("testuser"))
-                .thenReturn(Mono.just(user));
+            verify(securityUtils, times(1)).extractUserUuidFromJwt();
+            verify(userRepository, times(1)).findByUuid("abcd1234");
+        }
 
-        StepVerifier.create(userMngservice.getUserLoginByUserName("testuser"))
-                .assertNext(response -> {
-                    assertEquals("testuser", response.getUsername());
-                    assertEquals("test@test.com", response.getEmail());
-                    assertNotNull(response.getPassword());
-                })
-                .verifyComplete();
+        @Test
+        @DisplayName("User Not Found - UUID from JWT does not exist")
+        void getMyProfileFromJwt_UserNotFound() {
+            when(securityUtils.extractUserUuidFromJwt()).thenReturn(Mono.just("nonexistent-uuid"));
+            when(userRepository.findByUuid("nonexistent-uuid"))
+                    .thenReturn(Mono.error(new UserNotFoundException("User not found with UUID: nonexistent-uuid")));
+
+            StepVerifier.create(userMngservice.getMyProfileFromJwt())
+                    .expectErrorMatches(error ->
+                            error instanceof UserNotFoundException &&
+                                    error.getMessage().contains("nonexistent-uuid"))
+                    .verify();
+
+            verify(securityUtils, times(1)).extractUserUuidFromJwt();
+            verify(userRepository, times(1)).findByUuid("nonexistent-uuid");
+        }
+
+        @Test
+        @DisplayName("JWT Extraction Error - Invalid or missing JWT")
+        void getMyProfileFromJwt_JwtExtractionError() {
+            when(securityUtils.extractUserUuidFromJwt())
+                    .thenReturn(Mono.error(new RuntimeException("Invalid JWT token")));
+
+            StepVerifier.create(userMngservice.getMyProfileFromJwt())
+                    .expectErrorMatches(error ->
+                            error instanceof RuntimeException &&
+                                    error.getMessage().equals("Invalid JWT token"))
+                    .verify();
+
+            verify(securityUtils, times(1)).extractUserUuidFromJwt();
+            verify(userRepository, never()).findByUuid(anyString());
+        }
+
+        @Test
+        @DisplayName("Database Error - Repository throws exception")
+        void getMyProfileFromJwt_DatabaseError() {
+            when(securityUtils.extractUserUuidFromJwt()).thenReturn(Mono.just("abcd1234"));
+            when(userRepository.findByUuid("abcd1234"))
+                    .thenReturn(Mono.error(new RuntimeException("Database connection error")));
+
+            StepVerifier.create(userMngservice.getMyProfileFromJwt())
+                    .expectErrorMatches(error ->
+                            error instanceof RuntimeException &&
+                                    error.getMessage().equals("Database connection error"))
+                    .verify();
+
+            verify(securityUtils, times(1)).extractUserUuidFromJwt();
+            verify(userRepository, times(1)).findByUuid("abcd1234");
+        }
+
+        @Test
+        @DisplayName("Empty UUID - JWT contains empty UUID")
+        void getMyProfileFromJwt_EmptyUuid() {
+            when(securityUtils.extractUserUuidFromJwt()).thenReturn(Mono.just(""));
+            when(userRepository.findByUuid("")).thenReturn(Mono.empty());
+
+            StepVerifier.create(userMngservice.getMyProfileFromJwt())
+                    .expectError(UserNotFoundException.class)
+                    .verify();
+
+            verify(securityUtils, times(1)).extractUserUuidFromJwt();
+            verify(userRepository, times(1)).findByUuid("");
+        }
     }
 
-    @Test
-    public void testGetUserLoginByUsername_UserNotFound() {
 
-        when(userRepository.findByUsername("nonexistent"))
-                .thenReturn(Mono.empty());
 
-        StepVerifier.create(userMngservice.getUserLoginByUserName("nonexistent"))
-                .expectError(UserNotFoundException.class)
-                .verify();
+    @Nested
+    @DisplayName("Get User Login By Email Tests")
+    class GetUserLoginByEmailTests {
+
+        @Test
+        void testGetUserLoginByEmail_Success() {
+
+            User user = new User();
+            user.setUsername("testuser");
+            user.setEmail("test@test.com");
+            user.setPassword("hashedPassword123");
+
+            when(userRepository.findByEmail("test@test.com"))
+                    .thenReturn(Mono.just(user));
+
+            StepVerifier.create(userMngservice.getUserLoginByEmail("test@test.com"))
+                    .assertNext(response -> {
+                        assertEquals("testuser", response.getUsername());
+                        assertEquals("test@test.com", response.getEmail());
+                        assertNotNull(response.getPassword());
+                    })
+                    .verifyComplete();
+        }
+
+        @Test
+        void testGetUserLoginByEmail_EmailNotFound() {
+
+            when(userRepository.findByEmail("nonexistent@test.com"))
+                    .thenReturn(Mono.empty());
+
+            StepVerifier.create(userMngservice.getUserLoginByEmail("nonexistent@test.com"))
+                    .expectError(EmailNotFoundException.class)
+                    .verify();
+        }
+
     }
 
-    @Test
-    public void testGetUserLoginByUsername_DatabaseError() {
 
-        when(userRepository.findByUsername("testuser"))
-                .thenReturn(Mono.error(new RuntimeException("DB connection failed")));
+    @Nested
+    @DisplayName("Get User Login By Username Tests")
+    class GetUserLoginByUsernameTests {
 
-        StepVerifier.create(userMngservice.getUserLoginByUserName("testuser"))
-                .expectError(RuntimeException.class)
-                .verify();
+        @Test
+        void testGetUserLoginByUsername_UserNotFound() {
+
+            when(userRepository.findByUsername("nonexistent"))
+                    .thenReturn(Mono.empty());
+
+            StepVerifier.create(userMngservice.getUserLoginByUserName("nonexistent"))
+                    .expectError(UserNotFoundException.class)
+                    .verify();
+        }
+
+
+        @Test
+        void testGetUserLoginByUsername_Success() {
+
+            User user = new User();
+            user.setUsername("testuser");
+            user.setEmail("test@test.com");
+            user.setPassword("hashedPassword123");
+
+            when(userRepository.findByUsername("testuser"))
+                    .thenReturn(Mono.just(user));
+
+            StepVerifier.create(userMngservice.getUserLoginByUserName("testuser"))
+                    .assertNext(response -> {
+                        assertEquals("testuser", response.getUsername());
+                        assertEquals("test@test.com", response.getEmail());
+                        assertNotNull(response.getPassword());
+                    })
+                    .verifyComplete();
+        }
+
+
+        @Test
+        void testGetUserLoginByUsername_DatabaseError() {
+
+            when(userRepository.findByUsername("testuser"))
+                    .thenReturn(Mono.error(new RuntimeException("DB connection failed")));
+
+            StepVerifier.create(userMngservice.getUserLoginByUserName("testuser"))
+                    .expectError(RuntimeException.class)
+                    .verify();
+        }
+
     }
 
-
-    @Test
-    public void testGetUserLoginByEmail_Success() {
-
-        User user = new User();
-        user.setUsername("testuser");
-        user.setEmail("test@test.com");
-        user.setPassword("hashedPassword123");
-
-        when(userRepository.findByEmail("test@test.com"))
-                .thenReturn(Mono.just(user));
-
-        StepVerifier.create(userMngservice.getUserLoginByEmail("test@test.com"))
-                .assertNext(response -> {
-                    assertEquals("testuser", response.getUsername());
-                    assertEquals("test@test.com", response.getEmail());
-                    assertNotNull(response.getPassword());
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    public void testGetUserLoginByEmail_EmailNotFound() {
-
-        when(userRepository.findByEmail("nonexistent@test.com"))
-                .thenReturn(Mono.empty());
-
-        StepVerifier.create(userMngservice.getUserLoginByEmail("nonexistent@test.com"))
-                .expectError(EmailNotFoundException.class)
-                .verify();
-    }
-
-    @Test
-    public void testGetUserLoginByEmail_DatabaseError() {
-
-        when(userRepository.findByEmail("test@test.com"))
-                .thenReturn(Mono.error(new RuntimeException("DB connection failed")));
-
-        StepVerifier.create(userMngservice.getUserLoginByEmail("test@test.com"))
-                .expectError(RuntimeException.class)
-                .verify();
-    }
 
     // --> UPDATE LATEST ACCESS TEST
 

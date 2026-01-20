@@ -30,14 +30,14 @@ public class UserManagementService {
 
     private final IUsersRepository userRepository;
     private final ReactiveMongoTemplate reactiveMongoTemplate;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final SecurityUtils securityUtils;
 
     public UserManagementService(IUsersRepository userRepository,
-                                 ReactiveMongoTemplate reactiveMongoTemplate) {
+                                 ReactiveMongoTemplate reactiveMongoTemplate,
+                                 SecurityUtils securityUtils) {
         this.userRepository = userRepository;
         this.reactiveMongoTemplate = reactiveMongoTemplate;
+        this.securityUtils = securityUtils;
     }
 
 
@@ -99,7 +99,7 @@ public class UserManagementService {
     /// /GETS
     public Mono<UserOwnProfileDto> getMyProfileFromJwt() {
 
-        return SecurityUtils.extractUserUuidFromJwt()
+        return securityUtils.extractUserUuidFromJwt()
                 .flatMap(this::getMyProfile);
     }
 

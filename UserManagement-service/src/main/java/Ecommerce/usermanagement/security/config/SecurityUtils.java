@@ -8,7 +8,7 @@ import reactor.core.publisher.Mono;
 @Component
 public class SecurityUtils {
 
-    public static Mono<String> extractUserUuidFromJwt() {
+    public Mono<String> extractUserUuidFromJwt() {
 
         return ReactiveSecurityContextHolder.getContext()
                 .map(ctx -> ctx.getAuthentication())
