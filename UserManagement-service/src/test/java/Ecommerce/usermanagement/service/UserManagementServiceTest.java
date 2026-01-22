@@ -199,6 +199,7 @@ public class UserManagementServiceTest {
         @Test
         @DisplayName("User Not Found - UUID from JWT does not exist")
         void getMyProfileFromJwt_UserNotFound() {
+
             when(securityUtils.extractUserUuidFromJwt()).thenReturn(Mono.just("nonexistent-uuid"));
             when(userRepository.findByUuid("nonexistent-uuid"))
                     .thenReturn(Mono.error(new UserNotFoundException("User not found with UUID: nonexistent-uuid")));

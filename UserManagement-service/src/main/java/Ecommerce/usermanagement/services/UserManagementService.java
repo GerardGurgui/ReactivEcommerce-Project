@@ -183,10 +183,9 @@ public class UserManagementService {
     }
 
     //Update the latestAccess field
-
     /**
      * Updates the latest access timestamp for a user based on a login event.
-     * This method is typically called when a user successfully logs in.
+     * This method is typically called when a user successfully logs in, by kafka listener.
      */
     public Mono<Void> updateLatestAccess(String userUuid, Instant loginTime) {
 

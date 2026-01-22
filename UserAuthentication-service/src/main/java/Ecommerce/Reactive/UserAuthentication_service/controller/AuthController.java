@@ -44,7 +44,7 @@ public class AuthController {
                                                                       ServerHttpRequest request) {
         String clientIp = getClientIp(request);
 
-        return userRegistrationUseCase.register(registerRequestDto, clientIp)
+        return userRegistrationUseCase.registerUser(registerRequestDto, clientIp)
                 .map(responseDto -> ResponseEntity.ok(responseDto));
     }
 

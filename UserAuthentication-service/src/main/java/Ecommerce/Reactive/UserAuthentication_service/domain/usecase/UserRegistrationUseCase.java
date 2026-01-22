@@ -3,6 +3,7 @@ package Ecommerce.Reactive.UserAuthentication_service.domain.usecase;
 import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.register.RegisterRequestDto;
 import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.register.RegistrationResponseDto;
 import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.register.UserRegisterInternalDto;
+import Ecommerce.Reactive.UserAuthentication_service.domain.roles.Role;
 import Ecommerce.Reactive.UserAuthentication_service.service.usermanagement.UserManagementConnectorService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,25 +28,27 @@ public class UserRegistrationUseCase {
         this.userMngConnector = userMngConnector;
     }
 
-    public Mono<RegistrationResponseDto> register(RegisterRequestDto dto, String clientIp) {
+    public Mono<RegistrationResponseDto> registerUser(RegisterRequestDto dto, String clientIp) {
 
         // Hash the password at this layer before sending to UserMng Service, to avoid transmitting plain text passwords
-        String passwordHash = passwordEncoder.encode(dto.getPassword());
 
-        UserRegisterInternalDto internalDto = UserRegisterInternalDto.builder()
-                .uuid(UUID.randomUUID().toString())
-                .username(dto.getUsername())
-                .email(dto.getEmail())
-                .passwordHash(passwordHash)
-                .name(dto.getName())
-                .lastName(dto.getLastName())
-                .phone(dto.getPhone())
-                .registrationIp(clientIp)
-                .registeredAt(Instant.now())
-                .role("USER") // default role
-                .build();
-
-        return userMngConnector.createUser(internalDto)
+        return Mono.fromCallable(() -> passwordEncoder.encode(dto.getPassword()))
+                .subscribeOn(Schedulers.boundedElastic()) //  Thread pool for blocking operations
+                .flatMap(passwordHash -> {
+                            UserRegisterInternalDto internalDto = UserRegisterInternalDto.builder()
+                                    .uuid(UUID.randomUUID().toString())
+                                    .username(dto.getUsername())
+                                    .email(dto.getEmail())
+                                    .passwordHash(passwordHash)
+                                    .name(dto.getName())
+                                    .lastName(dto.getLastName())
+                                    .phone(dto.getPhone())
+                                    .registrationIp(clientIp)
+                                    .registeredAt(Instant.now())
+                                    .role("USER")// default role
+                                    .build();
+                            return userMngConnector.createUser(internalDto);
+                        })
                 .map(responseDto -> {
                     logger.info("User registered successfully: " + responseDto.getUuid());
                     return RegistrationResponseDto.builder()
@@ -57,6 +60,6 @@ public class UserRegistrationUseCase {
                             .build();
                 })
                 .doOnSuccess(responseOk -> logger.info("RegistrationResponseDto created: " + responseOk))
-                .doOnError(resposneError -> logger.severe("Error during user registration: " + resposneError.getMessage()));
+                .doOnError(responseError -> logger.severe("Error during user registration: " + responseError.getMessage()));
     }
 }
