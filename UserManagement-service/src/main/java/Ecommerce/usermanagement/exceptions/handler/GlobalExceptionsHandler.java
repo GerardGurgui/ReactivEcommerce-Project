@@ -5,97 +5,105 @@ import Ecommerce.usermanagement.exceptions.errordetails.ErrorResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.apache.http.auth.InvalidCredentialsException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ServerErrorException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 
 @RestControllerAdvice
 public class GlobalExceptionsHandler{
 
+    private final ObjectMapper objectMapper;
 
-    @ExceptionHandler(UsernameAlreadyExistsException.class)
-    public Mono<Void> handleUsernameAlreadyExistsException(ServerWebExchange exchange, UsernameAlreadyExistsException exception) throws JsonProcessingException {
+    // Centralized Map: Exception → HttpStatus
+    private static final Map<Class<? extends Exception>, HttpStatus> EXCEPTION_STATUS_MAP = Map.of(
+            UsernameAlreadyExistsException.class, HttpStatus.CONFLICT,
+            EmailAlreadyExistsException.class, HttpStatus.CONFLICT,
+            EmailNotFoundException.class, HttpStatus.NOT_FOUND,
+            UserNotFoundException.class, HttpStatus.NOT_FOUND,
+            ServerErrorException.class, HttpStatus.INTERNAL_SERVER_ERROR
+    );
 
-        exchange.getResponse().setStatusCode(HttpStatus.CONFLICT);
-        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
 
-        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-
-        return exchange.getResponse().writeWith(
-                Mono.just(
-                        exchange.getResponse()
-                                .bufferFactory()
-                                .wrap(objectMapper.writeValueAsBytes(errorResponse))
-                )
-        );
+    public GlobalExceptionsHandler () {
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        this.objectMapper.registerModule(new JavaTimeModule());
     }
 
-    @ExceptionHandler(EmailAlreadyExistsException.class)
-    public Mono<Void> handleEmailExistsException(ServerWebExchange exchange, EmailAlreadyExistsException exception) throws JsonProcessingException {
+    /**
+     * Builds a JSON error response for exceptions
+     */
+    private Mono<Void> buildErrorResponse(ServerWebExchange exchange,
+                                          RuntimeException exception,
+                                          HttpStatus status)
+            throws JsonProcessingException {
 
-        exchange.getResponse().setStatusCode(HttpStatus.CONFLICT);
-        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
+        exchange.getResponse().setStatusCode(status);
+        exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
-        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());
+        String timestamp = extractTimestamp(exception);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        ErrorResponse errorResponse = new ErrorResponse(
+                exception.getMessage(),
+                timestamp
+        );
+
+        byte[] bytes = objectMapper.writeValueAsBytes(errorResponse);
 
         return exchange.getResponse().writeWith(
-                Mono.just(
-                        exchange.getResponse()
-                                .bufferFactory()
-                                .wrap(objectMapper.writeValueAsBytes(errorResponse))
-                )
+                Mono.just(exchange.getResponse().bufferFactory().wrap(bytes))
         );
     }
+    /**
+     * Extracts formatted timestamp from exception if available
+     */
+    private String extractTimestamp(RuntimeException exception) {
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public Mono<Void> handleUserNotFoundException(ServerWebExchange exchange, UserNotFoundException exception) throws JsonProcessingException {
-
-        exchange.getResponse().setStatusCode(HttpStatus.NOT_FOUND);
-        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
-
-        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-
-        return exchange.getResponse().writeWith(
-                Mono.just(
-                        exchange.getResponse()
-                                .bufferFactory()
-                                .wrap(objectMapper.writeValueAsBytes(errorResponse))
-                )
-        );
+        try {
+            var method = exception.getClass().getMethod("getFormattedTimestamp");
+            return (String) method.invoke(exception);
+        } catch (Exception e) {
+            return LocalDateTime.now().format(
+                    DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")
+            );
+        }
     }
 
-    @ExceptionHandler(EmailNotFoundException.class)
-    public Mono<Void> handleEmailNotFoundException(ServerWebExchange exchange, EmailNotFoundException exception) throws JsonProcessingException {
+    /**
+     * Generic handler for mapped exceptions
+     */
+    private Mono<Void> handleMappedException(ServerWebExchange exchange, RuntimeException exception)
+            throws JsonProcessingException {
 
-        exchange.getResponse().setStatusCode(HttpStatus.NOT_FOUND);
-        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
-
-        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-
-        return exchange.getResponse().writeWith(
-                Mono.just(
-                        exchange.getResponse()
-                                .bufferFactory()
-                                .wrap(objectMapper.writeValueAsBytes(errorResponse))
-                )
+        HttpStatus status = EXCEPTION_STATUS_MAP.getOrDefault(
+                exception.getClass(), HttpStatus.INTERNAL_SERVER_ERROR
         );
+        return buildErrorResponse(exchange, exception, status);
     }
 
+   @ExceptionHandler(
+           {UserNotFoundException.class,
+           EmailNotFoundException.class,
+            UsernameAlreadyExistsException.class,
+            EmailAlreadyExistsException.class,
+            ServerErrorException.class})
+    public Mono<Void> handleCustomExceptions(ServerWebExchange exchange, RuntimeException exception){
+       try {
+           return handleMappedException(exchange, exception);
+       } catch (JsonProcessingException e) {
+           exchange.getResponse().setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+           return exchange.getResponse().setComplete();
+       }}
 }

@@ -50,7 +50,10 @@ public class UserManagementService {
                 .then(Mono.defer(() -> checkEmail(userInputDto.getEmail())))
                 .then(Mono.just(userInputDto))
                 .map(Converter::convertFromDtoToUser)
-                .flatMap(userRepository::save)
+                .flatMap(user -> {
+                    user.setRegisteredAt(Instant.now());
+                    return userRepository.save(user);
+                })
                 .map(this::toUserCreatedDto);
     }
 
@@ -183,10 +186,9 @@ public class UserManagementService {
     }
 
     //Update the latestAccess field
-
     /**
      * Updates the latest access timestamp for a user based on a login event.
-     * This method is typically called when a user successfully logs in.
+     * This method is typically called when a user successfully logs in, by kafka listener.
      */
     public Mono<Void> updateLatestAccess(String userUuid, Instant loginTime) {
 

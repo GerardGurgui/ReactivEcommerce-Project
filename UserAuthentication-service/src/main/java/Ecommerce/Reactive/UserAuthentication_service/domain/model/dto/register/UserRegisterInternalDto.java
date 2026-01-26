@@ -1,7 +1,12 @@
 package Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.register;
 
+import Ecommerce.Reactive.UserAuthentication_service.domain.roles.Role;
 import lombok.*;
+import org.apache.kafka.common.protocol.types.Field;
+
 import java.time.Instant;
+import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -10,7 +15,7 @@ import java.time.Instant;
 @AllArgsConstructor
 public class UserRegisterInternalDto {
 
-    // identifyers
+    // identifiers
     private String uuid;
 
     // Credentiales
@@ -27,6 +32,5 @@ public class UserRegisterInternalDto {
     private String registrationIp;
     private Instant registeredAt;
 
-
-    private String role; // "USER", "ADMIN", etc.
+    private String role;
 }

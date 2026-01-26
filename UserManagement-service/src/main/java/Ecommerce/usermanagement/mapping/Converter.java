@@ -28,7 +28,6 @@ public class Converter {
         user.setLastname(userDto.getLastName());
         user.setPhone(userDto.getPhone());
         //timestamps
-        user.setRegisteredAt(userDto.getRegisteredAt());
         user.setLatestAccess(userDto.getRegisteredAt());
         //roles
         user.setRoles(List.of(userDto.getRole()));

@@ -1,11 +1,9 @@
 package Ecommerce.usermanagement.dto.output;
 
-import Ecommerce.usermanagement.document.Roles;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @AllArgsConstructor

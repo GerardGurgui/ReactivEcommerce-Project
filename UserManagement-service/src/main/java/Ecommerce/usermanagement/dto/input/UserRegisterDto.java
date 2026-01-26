@@ -1,5 +1,6 @@
 package Ecommerce.usermanagement.dto.input;
 
+import Ecommerce.usermanagement.document.Role;
 import lombok.*;
 
 import java.time.Instant;

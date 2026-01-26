@@ -1,6 +1,6 @@
 package Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.login;
 
-import Ecommerce.Reactive.UserAuthentication_service.domain.roles.Roles;
+import Ecommerce.Reactive.UserAuthentication_service.domain.roles.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,7 +23,7 @@ public class UserLoginDto {
     private boolean isAccountNonExpired;
     private boolean isAccountNonLocked;
     private boolean isEnabled;
-    private Set<Roles> roles;
+    private Set<Role> roles;
 
 
 }

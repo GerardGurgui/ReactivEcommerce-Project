@@ -58,11 +58,13 @@ public class UserManagementConnectorService {
                 .doOnNext(user -> LOGGER.info("Response From: getUserByEmail: User obtained: " + user))
                 .onErrorMap(UserNotFoundException.class, ex -> {
                     LOGGER.info("Response From: getUserByEmail: User not found");
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found", ex);
+                    Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found", ex));
+                    return ex;
                 })
                 .onErrorMap(ServerErrorException.class, ex -> {
                     LOGGER.info("Response From: getUserByEmail: Server error");
-                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", ex);
+                    Mono.error(new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", ex));
+                    return ex;
                 });
     }
 
@@ -93,7 +95,8 @@ public class UserManagementConnectorService {
                 .onErrorMap(throwable -> {
                     if (throwable instanceof ResponseStatusException) return throwable;
                     LOGGER.severe("Error contacting user-management: " + throwable.getMessage());
-                    return new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error contacting user-management", throwable);
+                    Mono.error(new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error contacting user-management", throwable));
+                    return throwable;
                 });
     }
 

@@ -14,6 +14,6 @@ public class UserCreatedResponseDto {
     private String uuid;
     private String username;
     private String email;
-    private Instant createdAt;
+    private Instant registeredAt;
 
 }
