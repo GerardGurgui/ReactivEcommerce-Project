@@ -3,7 +3,6 @@ package Ecommerce.Reactive.UserAuthentication_service.domain.usecase;
 import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.register.RegisterRequestDto;
 import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.register.RegistrationResponseDto;
 import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.register.UserRegisterInternalDto;
-import Ecommerce.Reactive.UserAuthentication_service.domain.roles.Role;
 import Ecommerce.Reactive.UserAuthentication_service.service.usermanagement.UserManagementConnectorService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -44,7 +43,6 @@ public class UserRegistrationUseCase {
                                     .lastName(dto.getLastName())
                                     .phone(dto.getPhone())
                                     .registrationIp(clientIp)
-                                    .registeredAt(Instant.now())
                                     .role("USER")// default role
                                     .build();
                             return userMngConnector.createUser(internalDto);
@@ -56,7 +54,7 @@ public class UserRegistrationUseCase {
                             .uuid(responseDto.getUuid())
                             .username(dto.getUsername())
                             .email(dto.getEmail())
-                            .registeredAt(Instant.now())
+                            .registeredAt(responseDto.getRegisteredAt())
                             .build();
                 })
                 .doOnSuccess(responseOk -> logger.info("RegistrationResponseDto created: " + responseOk))

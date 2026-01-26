@@ -5,137 +5,113 @@ import Ecommerce.Reactive.UserAuthentication_service.exceptions.errorDetails.Err
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ServerErrorException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionsHandler {
 
+    private final ObjectMapper objectMapper;
 
-    @ExceptionHandler(UsernameAlreadyExistsException.class)
-    public Mono<Void> handleUsernameAlreadyExistsException(ServerWebExchange exchange, UsernameAlreadyExistsException exception) {
+    // Centralized Map: Exception → HttpStatus
+    private static final Map<Class<? extends Exception>, HttpStatus> EXCEPTION_STATUS_MAP = Map.of(
+            UsernameAlreadyExistsException.class, HttpStatus.CONFLICT,
+            EmailAlreadyExistsException.class, HttpStatus.CONFLICT,
+            UserNotFoundException.class, HttpStatus.NOT_FOUND,
+            BadCredentialsException.class, HttpStatus.UNAUTHORIZED,
+            UserAccountLockedException.class, HttpStatus.LOCKED,
+            UserAccountIsExpiredException.class, HttpStatus.FORBIDDEN,
+            UserAccountNotEnabledException.class, HttpStatus.FORBIDDEN,
+            ServerErrorException.class, HttpStatus.INTERNAL_SERVER_ERROR
+    );
 
-        exchange.getResponse().setStatusCode(HttpStatus.CONFLICT);
-        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
 
-        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());
+    public GlobalExceptionsHandler () {
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        this.objectMapper.registerModule(new JavaTimeModule());
+    }
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    /**
+     * Builds a JSON error response for exceptions
+     */
+    private Mono<Void> buildErrorResponse(ServerWebExchange exchange,
+                                          RuntimeException exception,
+                                          HttpStatus status)
+            throws JsonProcessingException {
+
+        exchange.getResponse().setStatusCode(status);
+        exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
+
+        String timestamp = extractTimestamp(exception);
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                exception.getMessage(),
+                timestamp
+        );
+
+        byte[] bytes = objectMapper.writeValueAsBytes(errorResponse);
+
+        return exchange.getResponse().writeWith(
+                Mono.just(exchange.getResponse().bufferFactory().wrap(bytes))
+        );
+    }
+    /**
+     * Extracts formatted timestamp from exception if available
+     */
+    private String extractTimestamp(RuntimeException exception) {
 
         try {
-            return exchange.getResponse().writeWith(
-                    Mono.just(
-                            exchange.getResponse()
-                                    .bufferFactory()
-                                    .wrap(objectMapper.writeValueAsBytes(errorResponse))
-                    )
+            var method = exception.getClass().getMethod("getFormattedTimestamp");
+            return (String) method.invoke(exception);
+        } catch (Exception e) {
+            return LocalDateTime.now().format(
+                    DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")
             );
-        } catch (JsonProcessingException e) {
-            return Mono.error(e);
         }
     }
 
-    @ExceptionHandler(EmailAlreadyExistsException.class)
-    public Mono<Void> handleEmailAlreadyExistsException(ServerWebExchange exchange, EmailAlreadyExistsException exception) {
+    /**
+     * Generic handler for mapped exceptions
+     */
+    private Mono<Void> handleMappedException(ServerWebExchange exchange, RuntimeException exception)
+            throws JsonProcessingException {
 
-        exchange.getResponse().setStatusCode(HttpStatus.CONFLICT);
-        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
-
-        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-
-        try {
-            return exchange.getResponse().writeWith(
-                    Mono.just(
-                            exchange.getResponse()
-                                    .bufferFactory()
-                                    .wrap(objectMapper.writeValueAsBytes(errorResponse))
-                    )
-            );
-        } catch (JsonProcessingException e) {
-            return Mono.error(e);
-        }
+        HttpStatus status = EXCEPTION_STATUS_MAP.getOrDefault(
+                exception.getClass(), HttpStatus.INTERNAL_SERVER_ERROR
+        );
+        return buildErrorResponse(exchange, exception, status);
     }
 
 
-    @ExceptionHandler(BadCredentialsException.class)
-    public Mono<Void> handleBadCredentialsException(ServerWebExchange exchange, BadCredentialsException exception) {
-
-        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
-
-        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-
+    @ExceptionHandler({
+            UsernameAlreadyExistsException.class,
+            EmailAlreadyExistsException.class,
+            UserNotFoundException.class,
+            BadCredentialsException.class,
+            UserAccountLockedException.class,
+            UserAccountIsExpiredException.class,
+            UserAccountNotEnabledException.class,
+            ServerErrorException.class
+    })
+    public Mono<Void> handleCustomExceptions(ServerWebExchange exchange, RuntimeException exception) {
         try {
-            return exchange.getResponse().writeWith(
-                    Mono.just(
-                            exchange.getResponse()
-                                    .bufferFactory()
-                                    .wrap(objectMapper.writeValueAsBytes(errorResponse))
-                    )
-            );
+            return handleMappedException(exchange, exception);
         } catch (JsonProcessingException e) {
-            return Mono.error(e);
+            exchange.getResponse().setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+            return exchange.getResponse().setComplete();
         }
     }
-
-    @ExceptionHandler(UserNotFoundException.class)
-    public Mono<Void> handleUserNotFoundException(ServerWebExchange exchange, UserNotFoundException exception) {
-
-        exchange.getResponse().setStatusCode(HttpStatus.NOT_FOUND);
-        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
-
-        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-
-        try {
-            return exchange.getResponse().writeWith(
-                    Mono.just(
-                            exchange.getResponse()
-                                    .bufferFactory()
-                                    .wrap(objectMapper.writeValueAsBytes(errorResponse))
-                    )
-            );
-        } catch (JsonProcessingException e) {
-            return Mono.error(e);
-        }
-    }
-
-    @ExceptionHandler(EmptyCredentialsException.class)
-    public Mono<Void> handleEmptyCredentialsException(ServerWebExchange exchange, EmptyCredentialsException exception) {
-
-        exchange.getResponse().setStatusCode(HttpStatus.BAD_REQUEST);
-        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
-
-        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), exception.getFormattedTimestamp());
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-
-        try {
-            return exchange.getResponse().writeWith(
-                    Mono.just(
-                            exchange.getResponse()
-                                    .bufferFactory()
-                                    .wrap(objectMapper.writeValueAsBytes(errorResponse))
-                    )
-            );
-        } catch (JsonProcessingException e) {
-            return Mono.error(e);
-        }
-    }
-
 
 }
 

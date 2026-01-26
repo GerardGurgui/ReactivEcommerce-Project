@@ -92,15 +92,22 @@ public class UserRegistrationUseCaseTest {
     class RegisterMethodTests {
 
         @Test
-        @DisplayName("Register user successfully")
+        @DisplayName("Should register user successfully")
         void testRegisterUserSuccessfully() {
-
+            // Arrange
             String hashedPassword = "hashedPassword123";
+            Instant registeredTimestamp = Instant.now();
 
-            //Arrange
+            // ✅ Mock de UserManagement con timestamp
+            UserCreatedResponseDto userCreatedResponseDto = UserCreatedResponseDto.builder()
+                    .uuid("uuid1234")
+                    .username("testuser")
+                    .email("testuser@test.com")
+                    .registeredAt(registeredTimestamp)  // ✅ UserMng retorna con timestamp
+                    .build();
+
             when(passwordEncoder.encode(registerRequestDto.getPassword()))
                     .thenReturn(hashedPassword);
-
             when(userMngConnector.createUser(any()))
                     .thenReturn(Mono.just(userCreatedResponseDto));
 
@@ -108,17 +115,18 @@ public class UserRegistrationUseCaseTest {
             StepVerifier.create(useCase.registerUser(registerRequestDto, clientIp))
                     .assertNext(response -> {
                         assertThat(response).isNotNull();
-                        assertThat(response.getUuid()).isNotNull();
                         assertThat(response.getUuid()).isEqualTo("uuid1234");
                         assertThat(response.getUsername()).isEqualTo("testuser");
                         assertThat(response.getEmail()).isEqualTo("testuser@test.com");
                         assertThat(response.getMessage()).isEqualTo("User: testuser registered successfully");
+                        assertThat(response.getRegisteredAt()).isNotNull(); //mock from UserMng has timestamp
+                        assertThat(response.getRegisteredAt()).isEqualTo(registeredTimestamp);
                     })
                     .verifyComplete();
 
             verify(passwordEncoder, times(1)).encode(registerRequestDto.getPassword());
 
-            // Verify that the password sent to UserManagement is hashed and same user are passed correctly
+            // Verificar DTO enviado a UserManagement
             ArgumentCaptor<UserRegisterInternalDto> captor = ArgumentCaptor.forClass(UserRegisterInternalDto.class);
             verify(userMngConnector).createUser(captor.capture());
 
@@ -131,10 +139,12 @@ public class UserRegistrationUseCaseTest {
             assertThat(capturedDto.getPhone()).isEqualTo("+1234567890");
             assertThat(capturedDto.getEmail()).isEqualTo("testuser@test.com");
             assertThat(capturedDto.getPasswordHash()).isEqualTo(hashedPassword);
-            assertThat(capturedDto.getPasswordHash()).isNotEqualTo("Password@123"); // Ensure plain password is not sent
+            assertThat(capturedDto.getPasswordHash()).isNotEqualTo("Password@123");
             assertThat(capturedDto.getRole()).isEqualTo("USER");
-            assertThat(capturedDto.getRegisteredAt()).isNotNull();
             assertThat(capturedDto.getRegistrationIp()).isEqualTo(clientIp);
+            // El DTO enviado NO tiene timestamp (UserAuth no lo genera)
+            assertThat(capturedDto.getRegisteredAt()).isNull();
+
 
         }
 

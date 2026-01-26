@@ -15,7 +15,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class UserRegisterInternalDto {
 
-    // identifyers
+    // identifiers
     private String uuid;
 
     // Credentiales

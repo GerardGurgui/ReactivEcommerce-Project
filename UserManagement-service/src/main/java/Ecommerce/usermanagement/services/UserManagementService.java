@@ -50,7 +50,10 @@ public class UserManagementService {
                 .then(Mono.defer(() -> checkEmail(userInputDto.getEmail())))
                 .then(Mono.just(userInputDto))
                 .map(Converter::convertFromDtoToUser)
-                .flatMap(userRepository::save)
+                .flatMap(user -> {
+                    user.setRegisteredAt(Instant.now());
+                    return userRepository.save(user);
+                })
                 .map(this::toUserCreatedDto);
     }
 
