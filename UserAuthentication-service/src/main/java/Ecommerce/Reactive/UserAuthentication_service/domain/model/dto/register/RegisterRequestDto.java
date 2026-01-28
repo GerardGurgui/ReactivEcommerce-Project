@@ -2,11 +2,15 @@ package Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.register;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class RegisterRequestDto {
 
     @NotBlank(message = "The username is required")

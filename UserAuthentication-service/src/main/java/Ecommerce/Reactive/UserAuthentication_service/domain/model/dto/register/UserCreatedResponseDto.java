@@ -9,6 +9,7 @@ import java.time.Instant;
 @Getter
 @Setter
 @Builder
+//Internal DTO used to return user data after successful registration
 public class UserCreatedResponseDto {
 
     private String uuid;

@@ -6,6 +6,7 @@ import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.register.R
 import Ecommerce.Reactive.UserAuthentication_service.domain.model.dto.register.RegistrationResponseDto;
 import Ecommerce.Reactive.UserAuthentication_service.domain.usecase.LoginUseCase;
 import Ecommerce.Reactive.UserAuthentication_service.domain.usecase.UserRegistrationUseCase;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.validation.annotation.Validated;
@@ -31,21 +32,21 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public Mono<ResponseEntity<TokenDto>> login(@RequestBody LoginRequestDto loginRequestDto,
+    public Mono<ResponseEntity<TokenDto>> login(@Valid @RequestBody LoginRequestDto loginRequestDto,
                                                 ServerHttpRequest request) {
         String clientIp = getClientIp(request);
 
         return loginUseCase.login(loginRequestDto, clientIp)
-                .map(tokenDto -> ResponseEntity.ok(tokenDto));
+                .map(ResponseEntity::ok);
     }
 
     @PostMapping("/register")
-    public Mono<ResponseEntity<RegistrationResponseDto>> registerUser(@RequestBody RegisterRequestDto registerRequestDto,
+    public Mono<ResponseEntity<RegistrationResponseDto>> registerUser(@Valid @RequestBody RegisterRequestDto registerRequestDto,
                                                                       ServerHttpRequest request) {
         String clientIp = getClientIp(request);
 
         return userRegistrationUseCase.registerUser(registerRequestDto, clientIp)
-                .map(responseDto -> ResponseEntity.ok(responseDto));
+                .map(ResponseEntity::ok);
     }
 
 
